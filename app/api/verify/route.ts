@@ -1,4 +1,5 @@
 import { createX402Server, type X402Server } from "@coinbase/cdp-sdk/x402";
+import { declareDiscoveryExtension } from "@x402/extensions/bazaar";
 import { withX402FromHTTPServer } from "@x402/next";
 import { env } from "cloudflare:workers";
 import { NextRequest, NextResponse } from "next/server";
@@ -28,21 +29,33 @@ function getServer() {
           networks: ["eip155:8453"],
           maxTimeoutSeconds: 300,
           extensions: {
-            bazaar: {
-              info: {
-                input: { type: "http", method: "POST", bodyType: "json" },
-                inputSchema: {
+            bazaar: declareDiscoveryExtension({
+              method: "POST",
+              bodyType: "json",
+              input: { url: "https://example.com", expectedStatus: 200, expectedText: "Example Domain" },
+              inputSchema: {
+                type: "object",
+                properties: {
+                  url: { type: "string", format: "uri", description: "Public HTTP(S) URL to verify" },
+                  expectedStatus: { type: "integer", minimum: 100, maximum: 599 },
+                  expectedText: { type: "string", maxLength: 500 },
+                },
+                required: ["url"],
+              },
+              output: {
+                example: { verified: true, status: 200, title: "Example Domain" },
+                schema: {
                   type: "object",
                   properties: {
-                    url: { type: "string", format: "uri", description: "Public HTTP(S) URL to verify" },
-                    expectedStatus: { type: "integer", minimum: 100, maximum: 599 },
-                    expectedText: { type: "string", maxLength: 500 },
+                    verified: { type: "boolean" },
+                    status: { type: "integer" },
+                    title: { type: ["string", "null"] },
+                    observedAt: { type: "string", format: "date-time" },
                   },
-                  required: ["url"],
+                  required: ["verified", "status", "observedAt"],
                 },
-                output: { type: "object", description: "Timestamped verification evidence" },
               },
-            },
+            }),
           },
         },
       },
