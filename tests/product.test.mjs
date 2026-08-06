@@ -16,6 +16,8 @@ test("one-cent entry check is discoverable and uses Base USDC", async () => {
   assert.match(route, /\$0\.01/);
   assert.match(route, /eip155:8453/);
   assert.match(route, /declareDiscoveryExtension/);
+  assert.match(route, /\.\.\.declareDiscoveryExtension/);
+  assert.doesNotMatch(route, /bazaar:\s*declareDiscoveryExtension/);
   assert.match(route, /amountUsd: 0\.01/);
 });
 
@@ -34,6 +36,7 @@ test("paid verifier is bound to the authorized wallet and Base mainnet", async (
   assert.match(route, /eip155:8453/);
   assert.match(route, /\$0\.10/);
   assert.match(route, /withX402FromHTTPServer/);
+  assert.match(route, /\.\.\.declareDiscoveryExtension/);
 });
 
 test("verification blocks local targets and bounds response size", async () => {

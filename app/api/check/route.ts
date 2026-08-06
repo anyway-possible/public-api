@@ -30,7 +30,7 @@ function getServer() {
           networks: ["eip155:8453"],
           maxTimeoutSeconds: 60,
           extensions: {
-            bazaar: declareDiscoveryExtension({
+            ...declareDiscoveryExtension({
               method: "POST",
               bodyType: "json",
               input: { url: "https://example.com", expectedStatus: 200 },
