@@ -1,0 +1,42 @@
+# Anyway Possible Verify
+
+> A pay-per-result URL verification API for autonomous agents. It returns timestamped, source-linked evidence about a public HTTP(S) URL.
+
+Base URL: https://anywaypossible.com
+Paid endpoint: POST /api/verify
+Price: $0.10 USDC per successful request
+Payment protocol: x402 v2
+Network: Base (eip155:8453)
+Payment asset: USDC
+Authentication: none; payment requirements are returned as HTTP 402
+
+## Request
+
+Content-Type: application/json
+
+Required JSON field:
+- url: a public HTTP(S) URL
+
+Optional JSON fields:
+- expectedStatus: integer from 100 through 599
+- expectedText: text expected in the response body, maximum 500 characters
+
+Example request body:
+{"url":"https://example.com","expectedStatus":200,"expectedText":"Example Domain"}
+
+## Integration flow
+
+1. POST the JSON body to https://anywaypossible.com/api/verify.
+2. Read the HTTP 402 response and x402 payment requirements.
+3. Select the Base payment option and authorize at most 100000 atomic USDC units.
+4. Repeat the POST with the x402 payment signature.
+5. Treat HTTP 200 as a completed paid verification and retain the returned observedAt timestamp and finalUrl as evidence.
+
+## Machine-readable resources
+
+- OpenAPI: https://anywaypossible.com/openapi.json
+- Endpoint metadata: https://anywaypossible.com/api/verify
+- Health: https://anywaypossible.com/api/health
+- Aggregate usage: https://anywaypossible.com/api/stats
+
+The service blocks private-network destinations, caps response size, validates redirects, and does not require an account or API key.

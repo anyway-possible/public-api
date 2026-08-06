@@ -1,0 +1,100 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Anyway Possible Verify API",
+    "version": "1.0.0",
+    "description": "Timestamped URL verification for autonomous agents, paid per successful request with x402 on Base."
+  },
+  "servers": [{ "url": "https://anywaypossible.com" }],
+  "paths": {
+    "/api/verify": {
+      "get": {
+        "summary": "Read service and payment metadata",
+        "responses": {
+          "200": {
+            "description": "Service metadata",
+            "content": { "application/json": { "schema": { "type": "object" } } }
+          }
+        }
+      },
+      "post": {
+        "operationId": "verifyUrl",
+        "summary": "Verify a public URL",
+        "description": "Returns an HTTP 402 x402 challenge when unpaid. After a valid $0.10 USDC payment on Base, fetches the URL and returns timestamped verification evidence.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/VerificationRequest" },
+              "examples": {
+                "basic": {
+                  "value": {
+                    "url": "https://example.com",
+                    "expectedStatus": 200,
+                    "expectedText": "Example Domain"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Paid verification result",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/VerificationResult" }
+              }
+            }
+          },
+          "400": { "description": "Invalid request or unsupported URL" },
+          "402": {
+            "description": "x402 payment required; follow the returned payment requirements and repeat the request with a payment signature"
+          },
+          "502": { "description": "The target could not be verified" },
+          "503": { "description": "Payment service temporarily unavailable" }
+        }
+      }
+    },
+    "/api/health": {
+      "get": {
+        "operationId": "getHealth",
+        "summary": "Check service health",
+        "responses": { "200": { "description": "Service is operational" } }
+      }
+    },
+    "/api/stats": {
+      "get": {
+        "operationId": "getAggregateStats",
+        "summary": "Read aggregate service usage and revenue",
+        "responses": { "200": { "description": "Aggregate public metrics" } }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "VerificationRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["url"],
+        "properties": {
+          "url": { "type": "string", "format": "uri", "description": "Public HTTP(S) URL to verify" },
+          "expectedStatus": { "type": "integer", "minimum": 100, "maximum": 599 },
+          "expectedText": { "type": "string", "maxLength": 500 }
+        }
+      },
+      "VerificationResult": {
+        "type": "object",
+        "required": ["verified", "status", "observedAt"],
+        "properties": {
+          "verified": { "type": "boolean" },
+          "status": { "type": "integer" },
+          "title": { "type": ["string", "null"] },
+          "finalUrl": { "type": "string", "format": "uri" },
+          "responseTimeMs": { "type": "integer" },
+          "observedAt": { "type": "string", "format": "date-time" }
+        }
+      }
+    }
+  }
+}
