@@ -239,6 +239,16 @@ footer a { color: var(--ink); }
 .public-proof span { font-family: var(--font-geist-mono); color: #1737e8; font-size: 12px; }
 .public-proof strong { display: block; font-size: 24px; margin: 42px 0 12px; text-transform: uppercase; }
 .public-proof p { color: #55544f; line-height: 1.55; }
+.product-grid { display: grid; grid-template-columns: repeat(2, 1fr); margin: 7vw 7vw 0; border: 1px solid #101010; }
+.product-grid article { padding: clamp(30px, 4vw, 60px); min-height: 360px; display: flex; flex-direction: column; align-items: flex-start; }
+.product-grid article + article { border-left: 1px solid #101010; }
+.product-grid h2 { margin: 8px 0 24px; font-size: clamp(44px, 7vw, 86px); letter-spacing: -.07em; text-transform: uppercase; }
+.product-grid strong { font-size: clamp(30px, 4vw, 52px); letter-spacing: -.05em; }
+.product-grid strong span { color: #69665f; font-size: 12px; letter-spacing: 0; }
+.product-grid article > p:not(.eyebrow) { color: #55544f; line-height: 1.6; max-width: 520px; }
+.product-grid code { margin-top: auto; background: #101010; color: #c9ff34; padding: 11px 13px; font-size: 12px; }
+.product-grid .featured-product { background: #c9ff34; }
+.product-grid .featured-product .eyebrow { color: #1737e8; }
 .api-panel { margin: 7vw; display: grid; grid-template-columns: .8fr 1.2fr; gap: 7vw; align-items: center; }
 .api-panel h2 { font-size: clamp(36px, 5vw, 72px); letter-spacing: -.06em; margin: 12px 0 20px; }
 .api-panel p { line-height: 1.6; color: #5d5a52; }
@@ -246,4 +256,4 @@ footer a { color: var(--ink); }
 .public-footer { border-top: 1px solid #101010; min-height: 110px; padding: 30px 5vw; display: flex; align-items: center; justify-content: space-between; gap: 24px; font-size: 12px; }
 .public-footer span { color: #6b685f; }
 .public-footer a { color: #1737e8; font-weight: 800; }
-@media (max-width: 800px) { .public-proof, .api-panel { grid-template-columns: 1fr; } .public-proof article { border-right: 0; border-bottom: 1px solid #101010; } .public-footer { align-items: flex-start; flex-direction: column; } .public-nav { padding: 0 22px; } .public-hero { padding-left: 24px; padding-right: 24px; } .api-panel { margin: 64px 24px; } }
+@media (max-width: 800px) { .public-proof, .api-panel, .product-grid { grid-template-columns: 1fr; } .public-proof article { border-right: 0; border-bottom: 1px solid #101010; } .product-grid { margin: 64px 24px 0; } .product-grid article + article { border-left: 0; border-top: 1px solid #101010; } .public-footer { align-items: flex-start; flex-direction: column; } .public-nav { padding: 0 22px; } .public-nav div { gap: 14px; } .public-hero { padding-left: 24px; padding-right: 24px; } .api-panel { margin: 64px 24px; } }

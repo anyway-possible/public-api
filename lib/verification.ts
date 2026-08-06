@@ -48,7 +48,7 @@ async function readLimitedText(response: Response) {
   return new TextDecoder().decode(merged);
 }
 
-async function fetchPublic(url: URL, redirects = 0): Promise<{ response: Response; finalUrl: URL }> {
+async function fetchPublic(url: URL, redirectChain: string[] = []): Promise<{ response: Response; finalUrl: URL; redirectChain: string[] }> {
   const response = await fetch(url, {
     method: "GET",
     redirect: "manual",
@@ -56,13 +56,13 @@ async function fetchPublic(url: URL, redirects = 0): Promise<{ response: Respons
     signal: AbortSignal.timeout(9_000),
   });
   if (response.status >= 300 && response.status < 400) {
-    if (redirects >= MAX_REDIRECTS) throw new Error("redirect limit exceeded");
+    if (redirectChain.length >= MAX_REDIRECTS) throw new Error("redirect limit exceeded");
     const location = response.headers.get("location");
-    if (!location) return { response, finalUrl: url };
+    if (!location) return { response, finalUrl: url, redirectChain };
     await response.body?.cancel().catch(() => undefined);
-    return fetchPublic(parsePublicUrl(new URL(location, url).toString()), redirects + 1);
+    return fetchPublic(parsePublicUrl(new URL(location, url).toString()), [...redirectChain, url.toString()]);
   }
-  return { response, finalUrl: url };
+  return { response, finalUrl: url, redirectChain };
 }
 
 export type VerificationInput = {
@@ -70,6 +70,38 @@ export type VerificationInput = {
   expectedStatus?: number;
   expectedText?: string;
 };
+
+async function sha256(value: string) {
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value));
+  return Array.from(new Uint8Array(digest)).map((byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+
+function extractTag(body: string, expression: RegExp, maxLength: number) {
+  return body.match(expression)?.[1]?.replace(/\s+/g, " ").trim().slice(0, maxLength) ?? null;
+}
+
+export async function checkUrl(input: Pick<VerificationInput, "url" | "expectedStatus">) {
+  const requestedUrl = parsePublicUrl(input.url);
+  if (input.expectedStatus !== undefined && (!Number.isInteger(input.expectedStatus) || input.expectedStatus < 100 || input.expectedStatus > 599)) {
+    throw new Error("expectedStatus must be an integer from 100 to 599");
+  }
+  const started = Date.now();
+  const { response, finalUrl, redirectChain } = await fetchPublic(requestedUrl);
+  await response.body?.cancel().catch(() => undefined);
+  const statusMatch = input.expectedStatus === undefined ? null : response.status === input.expectedStatus;
+  return {
+    reachable: response.status < 500,
+    verified: statusMatch ?? response.status < 500,
+    requestedUrl: requestedUrl.toString(),
+    finalUrl: finalUrl.toString(),
+    status: response.status,
+    statusMatch,
+    redirectChain: [...redirectChain, finalUrl.toString()],
+    responseTimeMs: Date.now() - started,
+    contentType: response.headers.get("content-type")?.split(";")[0] ?? "unknown",
+    observedAt: new Date().toISOString(),
+  };
+}
 
 export async function verifyUrl(input: VerificationInput) {
   const requestedUrl = parsePublicUrl(input.url);
@@ -81,13 +113,19 @@ export async function verifyUrl(input: VerificationInput) {
   }
 
   const started = Date.now();
-  const { response, finalUrl } = await fetchPublic(requestedUrl);
+  const { response, finalUrl, redirectChain } = await fetchPublic(requestedUrl);
   const contentType = response.headers.get("content-type")?.split(";")[0] ?? "unknown";
   const body = await readLimitedText(response);
-  const title = body.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1]?.replace(/\s+/g, " ").trim().slice(0, 240) ?? null;
+  const title = extractTag(body, /<title[^>]*>([\s\S]*?)<\/title>/i, 240);
+  const description = extractTag(body, /<meta[^>]+name=["']description["'][^>]+content=["']([^"']*)["'][^>]*>/i, 500)
+    ?? extractTag(body, /<meta[^>]+content=["']([^"']*)["'][^>]+name=["']description["'][^>]*>/i, 500);
+  const canonicalUrl = extractTag(body, /<link[^>]+rel=["']canonical["'][^>]+href=["']([^"']+)["'][^>]*>/i, 2048)
+    ?? extractTag(body, /<link[^>]+href=["']([^"']+)["'][^>]+rel=["']canonical["'][^>]*>/i, 2048);
   const expectedTextFound = input.expectedText === undefined ? null : body.toLocaleLowerCase().includes(input.expectedText.toLocaleLowerCase());
   const statusMatch = input.expectedStatus === undefined ? null : response.status === input.expectedStatus;
   const observedAt = new Date().toISOString();
+  const contentSha256 = await sha256(body);
+  const receiptId = await sha256(JSON.stringify({ requestedUrl: requestedUrl.toString(), finalUrl: finalUrl.toString(), status: response.status, contentSha256, observedAt }));
 
   return {
     verified: (statusMatch ?? true) && (expectedTextFound ?? true),
@@ -97,10 +135,21 @@ export async function verifyUrl(input: VerificationInput) {
     statusMatch,
     expectedTextFound,
     title,
+    description,
+    canonicalUrl,
     contentType,
+    contentSha256,
+    receiptId,
+    redirectChain: [...redirectChain, finalUrl.toString()],
     responseTimeMs: Date.now() - started,
     bytesInspected: new TextEncoder().encode(body).length,
     observedAt,
-    evidence: [{ source: finalUrl.toString(), observedAt }],
+    responseHeaders: {
+      etag: response.headers.get("etag"),
+      lastModified: response.headers.get("last-modified"),
+      cacheControl: response.headers.get("cache-control"),
+      contentLanguage: response.headers.get("content-language"),
+    },
+    evidence: [{ source: finalUrl.toString(), observedAt, contentSha256 }],
   };
 }

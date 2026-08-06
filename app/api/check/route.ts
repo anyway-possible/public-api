@@ -5,7 +5,7 @@ import { env } from "cloudflare:workers";
 import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "../../../db";
 import { events } from "../../../db/schema";
-import { verifyUrl, type VerificationInput } from "../../../lib/verification";
+import { checkUrl } from "../../../lib/verification";
 
 export const runtime = "edge";
 export const dynamic = "force-dynamic";
@@ -23,39 +23,37 @@ function getServer() {
       payToConfig: { type: "address", evm: PAY_TO },
       builderCode: "anyway_possible",
       routes: {
-        "POST /api/verify": {
-          price: "$0.10",
-          description: "Verify a public URL and return timestamped assertions, redirect history, metadata, headers, and SHA-256 evidence.",
+        "POST /api/check": {
+          price: "$0.01",
+          description: "Check a public URL's live status, latency, redirects, and content type for one cent.",
           networks: ["eip155:8453"],
-          maxTimeoutSeconds: 300,
+          maxTimeoutSeconds: 60,
           extensions: {
             bazaar: declareDiscoveryExtension({
               method: "POST",
               bodyType: "json",
-              input: { url: "https://example.com", expectedStatus: 200, expectedText: "Example Domain" },
+              input: { url: "https://example.com", expectedStatus: 200 },
               inputSchema: {
                 type: "object",
                 properties: {
-                  url: { type: "string", format: "uri", description: "Public HTTP(S) URL to verify" },
+                  url: { type: "string", format: "uri", description: "Public HTTP(S) URL to check" },
                   expectedStatus: { type: "integer", minimum: 100, maximum: 599 },
-                  expectedText: { type: "string", maxLength: 500 },
                 },
                 required: ["url"],
               },
               output: {
-                example: { verified: true, status: 200, title: "Example Domain", contentSha256: "sha256 digest", receiptId: "tamper-evident receipt identifier" },
+                example: { reachable: true, verified: true, status: 200, responseTimeMs: 120 },
                 schema: {
                   type: "object",
                   properties: {
+                    reachable: { type: "boolean" },
                     verified: { type: "boolean" },
                     status: { type: "integer" },
-                    title: { type: ["string", "null"] },
                     finalUrl: { type: "string" },
-                    contentSha256: { type: "string" },
-                    receiptId: { type: "string" },
+                    responseTimeMs: { type: "integer" },
                     observedAt: { type: "string", format: "date-time" },
                   },
-                  required: ["verified", "status", "finalUrl", "contentSha256", "receiptId", "observedAt"],
+                  required: ["reachable", "verified", "status", "finalUrl", "responseTimeMs", "observedAt"],
                 },
               },
             }),
@@ -74,21 +72,21 @@ async function agentFingerprint(request: NextRequest) {
 }
 
 async function paidHandler(request: NextRequest) {
-  let input: VerificationInput;
+  let input: { url: string; expectedStatus?: number };
   try {
-    input = await request.json() as VerificationInput;
+    input = await request.json() as { url: string; expectedStatus?: number };
   } catch {
     return NextResponse.json({ error: "Request body must be valid JSON." }, { status: 400 });
   }
   try {
-    const result = await verifyUrl(input);
+    const result = await checkUrl(input);
     try {
       await getDb().insert(events).values({
         eventId: crypto.randomUUID(),
         kind: "paid_call",
-        endpoint: "/api/verify",
+        endpoint: "/api/check",
         agentId: await agentFingerprint(request),
-        amountUsd: 0.10,
+        amountUsd: 0.01,
         costUsd: 0,
         latencyMs: result.responseTimeMs,
         statusCode: 200,
@@ -96,11 +94,11 @@ async function paidHandler(request: NextRequest) {
         occurredAt: result.observedAt,
       }).run();
     } catch {
-      // Verification is still returned if analytics storage is temporarily unavailable.
+      // The paid result remains available if aggregate analytics storage is unavailable.
     }
     return NextResponse.json(result, { headers: { "cache-control": "no-store" } });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Verification failed.";
+    const message = error instanceof Error ? error.message : "URL check failed.";
     const status = /must be|not supported|valid HTTP/.test(message) ? 400 : 502;
     return NextResponse.json({ error: message }, { status });
   }
@@ -108,8 +106,7 @@ async function paidHandler(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const server = await getServer();
-    return withX402FromHTTPServer(paidHandler, server)(request);
+    return withX402FromHTTPServer(paidHandler, await getServer())(request);
   } catch (error) {
     console.error("x402 initialization failed", error);
     return NextResponse.json({ error: "Payment service is temporarily unavailable." }, { status: 503 });
@@ -118,12 +115,12 @@ export async function POST(request: NextRequest) {
 
 export async function GET() {
   return NextResponse.json({
-    service: "Anyway Possible Evidence",
-    price: "$0.10 USDC",
+    service: "Anyway Possible Check",
+    price: "$0.01 USDC",
     network: "Base (eip155:8453)",
     method: "POST",
-    request: { url: "https://example.com", expectedStatus: 200, expectedText: "Example Domain" },
-    entryCheck: "/api/check",
+    request: { url: "https://example.com", expectedStatus: 200 },
+    fullEvidence: "/api/verify",
     health: "/api/health",
   });
 }

@@ -1,12 +1,33 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Anyway Possible Verify API",
-    "version": "1.0.0",
-    "description": "Timestamped URL verification for autonomous agents, paid per successful request with x402 on Base."
+    "title": "Anyway Possible Agent Web Evidence API",
+    "version": "2.0.0",
+    "description": "One-cent URL preflight checks and full timestamped web evidence for autonomous agents, paid with x402 on Base."
   },
   "servers": [{ "url": "https://anywaypossible.com" }],
   "paths": {
+    "/api/check": {
+      "get": {
+        "summary": "Read one-cent check metadata",
+        "responses": { "200": { "description": "Service metadata" } }
+      },
+      "post": {
+        "operationId": "checkUrl",
+        "summary": "Preflight a public URL for $0.01 USDC",
+        "description": "Returns an HTTP 402 x402 challenge when unpaid, then checks reachability, status, latency, redirects, and content type.",
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CheckRequest" } } }
+        },
+        "responses": {
+          "200": { "description": "Paid preflight result", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CheckResult" } } } },
+          "400": { "description": "Invalid request or unsupported URL" },
+          "402": { "description": "x402 payment required" },
+          "502": { "description": "The target could not be checked" }
+        }
+      }
+    },
     "/api/verify": {
       "get": {
         "summary": "Read service and payment metadata",
@@ -83,14 +104,40 @@
           "expectedText": { "type": "string", "maxLength": 500 }
         }
       },
+      "CheckRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["url"],
+        "properties": {
+          "url": { "type": "string", "format": "uri", "description": "Public HTTP(S) URL to check" },
+          "expectedStatus": { "type": "integer", "minimum": 100, "maximum": 599 }
+        }
+      },
+      "CheckResult": {
+        "type": "object",
+        "required": ["reachable", "verified", "status", "finalUrl", "responseTimeMs", "observedAt"],
+        "properties": {
+          "reachable": { "type": "boolean" },
+          "verified": { "type": "boolean" },
+          "status": { "type": "integer" },
+          "finalUrl": { "type": "string", "format": "uri" },
+          "redirectChain": { "type": "array", "items": { "type": "string", "format": "uri" } },
+          "responseTimeMs": { "type": "integer" },
+          "contentType": { "type": "string" },
+          "observedAt": { "type": "string", "format": "date-time" }
+        }
+      },
       "VerificationResult": {
         "type": "object",
-        "required": ["verified", "status", "observedAt"],
+        "required": ["verified", "status", "finalUrl", "contentSha256", "receiptId", "observedAt"],
         "properties": {
           "verified": { "type": "boolean" },
           "status": { "type": "integer" },
           "title": { "type": ["string", "null"] },
           "finalUrl": { "type": "string", "format": "uri" },
+          "contentSha256": { "type": "string", "description": "SHA-256 digest of the inspected response bytes" },
+          "receiptId": { "type": "string", "description": "Deterministic digest binding URL, status, content digest, and observation time" },
+          "redirectChain": { "type": "array", "items": { "type": "string", "format": "uri" } },
           "responseTimeMs": { "type": "integer" },
           "observedAt": { "type": "string", "format": "date-time" }
         }

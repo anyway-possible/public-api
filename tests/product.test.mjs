@@ -6,9 +6,17 @@ const root = new URL("../", import.meta.url);
 
 test("public surface explains the paid agent product", async () => {
   const page = await readFile(new URL("app/page.tsx", root), "utf8");
-  for (const section of ["X402 · USDC · BASE", "Verify what other", "POST /api/verify", "Bounded execution"]) {
+  for (const section of ["X402 · USDC · BASE", "Proof before", "POST /api/check", "POST /api/verify", "Bounded execution"]) {
     assert.match(page, new RegExp(section));
   }
+});
+
+test("one-cent entry check is discoverable and uses Base USDC", async () => {
+  const route = await readFile(new URL("app/api/check/route.ts", root), "utf8");
+  assert.match(route, /\$0\.01/);
+  assert.match(route, /eip155:8453/);
+  assert.match(route, /declareDiscoveryExtension/);
+  assert.match(route, /amountUsd: 0\.01/);
 });
 
 test("paid verifier is bound to the authorized wallet and Base mainnet", async () => {
@@ -25,4 +33,6 @@ test("verification blocks local targets and bounds response size", async () => {
   assert.match(verifier, /private and local network targets/);
   assert.match(verifier, /MAX_BYTES = 128 \* 1024/);
   assert.match(verifier, /MAX_REDIRECTS = 3/);
+  assert.match(verifier, /contentSha256/);
+  assert.match(verifier, /receiptId/);
 });
