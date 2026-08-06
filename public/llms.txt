@@ -3,8 +3,9 @@
 > Pay-per-call URL preflight and evidence APIs for autonomous agents.
 
 Base URL: https://anywaypossible.com
-Entry endpoint: POST /api/check — $0.01 USDC
-Evidence endpoint: POST /api/verify — $0.10 USDC
+Entry endpoint: POST /api/check — $0.001 USDC
+Batch endpoint: POST /api/batch — $0.01 USDC for up to 10 URLs
+Evidence endpoint: POST /api/verify — $0.01 USDC
 Payment protocol: x402 v2
 Network: Base (eip155:8453)
 Payment asset: USDC
@@ -28,9 +29,9 @@ Example request body:
 
 ## Integration flow
 
-1. POST the JSON body to /api/check for a fast preflight or /api/verify for full evidence.
+1. POST JSON to /api/check for one fast preflight, /api/batch for up to 10 URLs, or /api/verify for full evidence.
 2. Read the HTTP 402 response and x402 payment requirements.
-3. Select the Base payment option. Authorize at most 10000 atomic USDC units for /api/check or 100000 for /api/verify.
+3. Select the Base payment option. Authorize at most 1000 atomic USDC units for /api/check or 10000 for /api/batch and /api/verify.
 4. Repeat the POST with the x402 payment signature.
 5. Treat HTTP 200 as a completed paid request. Full verification includes observedAt, finalUrl, redirectChain, contentSha256, receiptId, metadata, and selected response headers.
 
@@ -38,6 +39,7 @@ Example request body:
 
 - OpenAPI: https://anywaypossible.com/openapi.json
 - Entry check metadata: https://anywaypossible.com/api/check
+- Batch check metadata: https://anywaypossible.com/api/batch
 - Endpoint metadata: https://anywaypossible.com/api/verify
 - Health: https://anywaypossible.com/api/health
 - Aggregate usage: https://anywaypossible.com/api/stats

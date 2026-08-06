@@ -22,5 +22,5 @@ export async function identifyAgent(request: NextRequest) {
   const source = payer ?? request.headers.get("user-agent") ?? "unknown";
   const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(source));
   const agentId = Array.from(new Uint8Array(digest)).slice(0, 8).map((byte) => byte.toString(16).padStart(2, "0")).join("");
-  return { agentId, isSelfTest: payer === SELF_TEST_PAYER };
+  return { agentId, isSelfTest: payer === SELF_TEST_PAYER || request.headers.get("x-awp-self-test") === "1" };
 }

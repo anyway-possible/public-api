@@ -239,7 +239,7 @@ footer a { color: var(--ink); }
 .public-proof span { font-family: var(--font-geist-mono); color: #1737e8; font-size: 12px; }
 .public-proof strong { display: block; font-size: 24px; margin: 42px 0 12px; text-transform: uppercase; }
 .public-proof p { color: #55544f; line-height: 1.55; }
-.product-grid { display: grid; grid-template-columns: repeat(2, 1fr); margin: 7vw 7vw 0; border: 1px solid #101010; }
+.product-grid { display: grid; grid-template-columns: repeat(3, 1fr); margin: 7vw 7vw 0; border: 1px solid #101010; }
 .product-grid article { padding: clamp(30px, 4vw, 60px); min-height: 360px; display: flex; flex-direction: column; align-items: flex-start; }
 .product-grid article + article { border-left: 1px solid #101010; }
 .product-grid h2 { margin: 8px 0 24px; font-size: clamp(44px, 7vw, 86px); letter-spacing: -.07em; text-transform: uppercase; }

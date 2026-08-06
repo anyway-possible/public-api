@@ -25,8 +25,8 @@ function getServer() {
       builderCode: "anyway_possible",
       routes: {
         "POST /api/check": {
-          price: "$0.01",
-          description: "Check a public URL's live status, latency, redirects, and content type for one cent.",
+          price: "$0.001",
+          description: "Use before an agent follows a link, cites a source, calls an API, or continues a workflow. Check one public URL for reachability, exact HTTP status, latency, content type, and safe redirect chain. Deterministic, SSRF-safe, no account.",
           networks: ["eip155:8453"],
           maxTimeoutSeconds: 60,
           extensions: {
@@ -89,7 +89,7 @@ async function paidHandler(request: NextRequest) {
         kind: identity.isSelfTest ? "test_call" : "paid_call",
         endpoint: "/api/check",
         agentId: identity.agentId,
-        amountUsd: 0.01,
+        amountUsd: 0.001,
         costUsd: 0,
         latencyMs: result.responseTimeMs,
         statusCode: 200,
@@ -109,7 +109,14 @@ async function paidHandler(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    return withX402FromHTTPServer(paidHandler, await getServer())(request);
+    const response = await withX402FromHTTPServer(paidHandler, await getServer())(request);
+    if (response.status === 402) {
+      try {
+        const identity = await identifyAgent(request);
+        await getDb().insert(events).values({ eventId: crypto.randomUUID(), kind: identity.isSelfTest ? "test_challenge" : "payment_challenge", endpoint: "/api/check", agentId: identity.agentId, amountUsd: 0, costUsd: 0, statusCode: 402, network: "eip155:8453", occurredAt: new Date().toISOString() }).run();
+      } catch {}
+    }
+    return response;
   } catch (error) {
     console.error("x402 initialization failed", error);
     return NextResponse.json({ error: "Payment service is temporarily unavailable." }, { status: 503 });
@@ -119,11 +126,12 @@ export async function POST(request: NextRequest) {
 export async function GET() {
   return NextResponse.json({
     service: "Anyway Possible Check",
-    price: "$0.01 USDC",
+    price: "$0.001 USDC",
     network: "Base (eip155:8453)",
     method: "POST",
     request: { url: "https://example.com", expectedStatus: 200 },
     fullEvidence: "/api/verify",
+    batchCheck: "/api/batch",
     health: "/api/health",
   });
 }

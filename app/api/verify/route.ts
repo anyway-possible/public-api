@@ -25,8 +25,8 @@ function getServer() {
       builderCode: "anyway_possible",
       routes: {
         "POST /api/verify": {
-          price: "$0.10",
-          description: "Verify a public URL and return timestamped assertions, redirect history, metadata, headers, and SHA-256 evidence.",
+          price: "$0.01",
+          description: "Use when an agent must prove a source is live and contains expected status or text before citing it or acting. Returns redirects, metadata, selected headers, latency, inspected bytes, SHA-256 content digest, receipt ID, and timestamp. SSRF-safe, no account.",
           networks: ["eip155:8453"],
           maxTimeoutSeconds: 300,
           extensions: {
@@ -92,7 +92,7 @@ async function paidHandler(request: NextRequest) {
         kind: identity.isSelfTest ? "test_call" : "paid_call",
         endpoint: "/api/verify",
         agentId: identity.agentId,
-        amountUsd: 0.10,
+        amountUsd: 0.01,
         costUsd: 0,
         latencyMs: result.responseTimeMs,
         statusCode: 200,
@@ -113,7 +113,14 @@ async function paidHandler(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const server = await getServer();
-    return withX402FromHTTPServer(paidHandler, server)(request);
+    const response = await withX402FromHTTPServer(paidHandler, server)(request);
+    if (response.status === 402) {
+      try {
+        const identity = await identifyAgent(request);
+        await getDb().insert(events).values({ eventId: crypto.randomUUID(), kind: identity.isSelfTest ? "test_challenge" : "payment_challenge", endpoint: "/api/verify", agentId: identity.agentId, amountUsd: 0, costUsd: 0, statusCode: 402, network: "eip155:8453", occurredAt: new Date().toISOString() }).run();
+      } catch {}
+    }
+    return response;
   } catch (error) {
     console.error("x402 initialization failed", error);
     return NextResponse.json({ error: "Payment service is temporarily unavailable." }, { status: 503 });
@@ -123,11 +130,12 @@ export async function POST(request: NextRequest) {
 export async function GET() {
   return NextResponse.json({
     service: "Anyway Possible Evidence",
-    price: "$0.10 USDC",
+    price: "$0.01 USDC",
     network: "Base (eip155:8453)",
     method: "POST",
     request: { url: "https://example.com", expectedStatus: 200, expectedText: "Example Domain" },
     entryCheck: "/api/check",
+    batchCheck: "/api/batch",
     health: "/api/health",
   });
 }

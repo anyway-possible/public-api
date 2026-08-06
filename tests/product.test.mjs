@@ -6,19 +6,27 @@ const root = new URL("../", import.meta.url);
 
 test("public surface explains the paid agent product", async () => {
   const page = await readFile(new URL("app/page.tsx", root), "utf8");
-  for (const section of ["X402 · USDC · BASE", "Proof before", "POST /api/check", "POST /api/verify", "Bounded execution"]) {
+  for (const section of ["X402 · USDC · BASE", "Proof before", "POST /api/check", "POST /api/batch", "POST /api/verify", "Bounded execution"]) {
     assert.match(page, new RegExp(section));
   }
 });
 
 test("one-cent entry check is discoverable and uses Base USDC", async () => {
   const route = await readFile(new URL("app/api/check/route.ts", root), "utf8");
-  assert.match(route, /\$0\.01/);
+  assert.match(route, /\$0\.001/);
   assert.match(route, /eip155:8453/);
   assert.match(route, /declareDiscoveryExtension/);
   assert.match(route, /\.\.\.declareDiscoveryExtension/);
   assert.doesNotMatch(route, /bazaar:\s*declareDiscoveryExtension/);
-  assert.match(route, /amountUsd: 0\.01/);
+  assert.match(route, /amountUsd: 0\.001/);
+});
+
+test("batch endpoint checks up to ten URLs for one cent", async () => {
+  const route = await readFile(new URL("app/api/batch/route.ts", root), "utf8");
+  assert.match(route, /\$0\.01/);
+  assert.match(route, /maxItems: 10/);
+  assert.match(route, /Promise\.all/);
+  assert.match(route, /\.\.\.declareDiscoveryExtension/);
 });
 
 test("analytics separates internal validation from customer revenue", async () => {
@@ -34,7 +42,7 @@ test("paid verifier is bound to the authorized wallet and Base mainnet", async (
   const route = await readFile(new URL("app/api/verify/route.ts", root), "utf8");
   assert.match(route, /0xe5690D37805107C56f6195E65A262b234E0E5e75/);
   assert.match(route, /eip155:8453/);
-  assert.match(route, /\$0\.10/);
+  assert.match(route, /\$0\.01/);
   assert.match(route, /withX402FromHTTPServer/);
   assert.match(route, /\.\.\.declareDiscoveryExtension/);
 });

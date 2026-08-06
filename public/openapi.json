@@ -2,19 +2,19 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Anyway Possible Agent Web Evidence API",
-    "version": "2.0.0",
-    "description": "One-cent URL preflight checks and full timestamped web evidence for autonomous agents, paid with x402 on Base."
+    "version": "3.0.0",
+    "description": "Market-priced URL preflight, batch validation, and timestamped web evidence for autonomous agents, paid with x402 on Base."
   },
   "servers": [{ "url": "https://anywaypossible.com" }],
   "paths": {
     "/api/check": {
       "get": {
-        "summary": "Read one-cent check metadata",
+        "summary": "Read $0.001 check metadata",
         "responses": { "200": { "description": "Service metadata" } }
       },
       "post": {
         "operationId": "checkUrl",
-        "summary": "Preflight a public URL for $0.01 USDC",
+        "summary": "Preflight a public URL for $0.001 USDC",
         "description": "Returns an HTTP 402 x402 challenge when unpaid, then checks reachability, status, latency, redirects, and content type.",
         "requestBody": {
           "required": true,
@@ -25,6 +25,26 @@
           "400": { "description": "Invalid request or unsupported URL" },
           "402": { "description": "x402 payment required" },
           "502": { "description": "The target could not be checked" }
+        }
+      }
+    },
+    "/api/batch": {
+      "get": {
+        "summary": "Read batch check metadata",
+        "responses": { "200": { "description": "Service metadata" } }
+      },
+      "post": {
+        "operationId": "batchCheckUrls",
+        "summary": "Check up to 10 public URLs for $0.01 USDC",
+        "description": "Checks citations, links, or API dependencies in one x402 payment and isolates partial failures per result.",
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/BatchRequest" } } }
+        },
+        "responses": {
+          "200": { "description": "Paid batch result", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/BatchResult" } } } },
+          "400": { "description": "Invalid request" },
+          "402": { "description": "x402 payment required" }
         }
       }
     },
@@ -41,7 +61,7 @@
       "post": {
         "operationId": "verifyUrl",
         "summary": "Verify a public URL",
-        "description": "Returns an HTTP 402 x402 challenge when unpaid. After a valid $0.10 USDC payment on Base, fetches the URL and returns timestamped verification evidence.",
+        "description": "Returns an HTTP 402 x402 challenge when unpaid. After a valid $0.01 USDC payment on Base, fetches the URL and returns timestamped verification evidence.",
         "requestBody": {
           "required": true,
           "content": {
@@ -125,6 +145,25 @@
           "responseTimeMs": { "type": "integer" },
           "contentType": { "type": "string" },
           "observedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "BatchRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["urls"],
+        "properties": {
+          "urls": { "type": "array", "minItems": 1, "maxItems": 10, "items": { "type": "string", "format": "uri" } },
+          "expectedStatus": { "type": "integer", "minimum": 100, "maximum": 599 }
+        }
+      },
+      "BatchResult": {
+        "type": "object",
+        "required": ["verified", "count", "checkedAt", "results"],
+        "properties": {
+          "verified": { "type": "boolean" },
+          "count": { "type": "integer" },
+          "checkedAt": { "type": "string", "format": "date-time" },
+          "results": { "type": "array", "items": { "type": "object" } }
         }
       },
       "VerificationResult": {
