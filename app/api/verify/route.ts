@@ -5,6 +5,7 @@ import { env } from "cloudflare:workers";
 import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "../../../db";
 import { events } from "../../../db/schema";
+import { identifyAgent } from "../../../lib/analytics";
 import { verifyUrl, type VerificationInput } from "../../../lib/verification";
 
 export const runtime = "edge";
@@ -67,12 +68,6 @@ function getServer() {
   return serverPromise;
 }
 
-async function agentFingerprint(request: NextRequest) {
-  const source = request.headers.get("payment-signature") ?? request.headers.get("x-payment") ?? request.headers.get("user-agent") ?? "unknown";
-  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(source));
-  return Array.from(new Uint8Array(digest)).slice(0, 8).map((byte) => byte.toString(16).padStart(2, "0")).join("");
-}
-
 async function paidHandler(request: NextRequest) {
   let input: VerificationInput;
   try {
@@ -83,11 +78,12 @@ async function paidHandler(request: NextRequest) {
   try {
     const result = await verifyUrl(input);
     try {
+      const identity = await identifyAgent(request);
       await getDb().insert(events).values({
         eventId: crypto.randomUUID(),
-        kind: "paid_call",
+        kind: identity.isSelfTest ? "test_call" : "paid_call",
         endpoint: "/api/verify",
-        agentId: await agentFingerprint(request),
+        agentId: identity.agentId,
         amountUsd: 0.10,
         costUsd: 0,
         latencyMs: result.responseTimeMs,

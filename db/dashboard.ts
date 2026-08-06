@@ -6,6 +6,8 @@ export type DashboardSnapshot = {
   paidCalls: number;
   uniqueAgents: number;
   grossRevenue: number;
+  testCalls: number;
+  testVolumeUsd: number;
   operatingCost: number;
   openDecisions: number;
   openIncidents: number;
@@ -13,7 +15,7 @@ export type DashboardSnapshot = {
 };
 
 export async function getDashboardSnapshot(): Promise<DashboardSnapshot> {
-  const empty: DashboardSnapshot = { paidCalls: 0, uniqueAgents: 0, grossRevenue: 0, operatingCost: 0, openDecisions: 0, openIncidents: 0, recentSettlements: [] };
+  const empty: DashboardSnapshot = { paidCalls: 0, uniqueAgents: 0, grossRevenue: 0, testCalls: 0, testVolumeUsd: 0, operatingCost: 0, openDecisions: 0, openIncidents: 0, recentSettlements: [] };
   try {
     const db = getDb();
     const [eventRows, expenseRows, decisionRows, incidentRows, recentSettlements] = await Promise.all([
@@ -23,14 +25,20 @@ export async function getDashboardSnapshot(): Promise<DashboardSnapshot> {
       db.select().from(incidents).where(eq(incidents.status, "open")),
       db.select({ amountUsd: events.amountUsd, endpoint: events.endpoint, occurredAt: events.occurredAt, transactionHash: events.transactionHash }).from(events).where(eq(events.kind, "paid_call")).orderBy(desc(events.occurredAt)).limit(5),
     ]);
+    const seedTimes = new Set(["2026-08-06T18:59:59.282Z", "2026-08-06T19:34:06.305Z"]);
+    const isTest = (row: typeof eventRows[number]) => row.kind === "test_call" || seedTimes.has(row.occurredAt);
+    const customerEvents = eventRows.filter((row) => row.kind === "paid_call" && !isTest(row));
+    const testEvents = eventRows.filter(isTest);
     return {
-      paidCalls: eventRows.filter((row) => row.kind === "paid_call").length,
-      uniqueAgents: new Set(eventRows.map((row) => row.agentId).filter(Boolean)).size,
-      grossRevenue: eventRows.reduce((sum, row) => sum + row.amountUsd, 0),
+      paidCalls: customerEvents.length,
+      uniqueAgents: new Set(customerEvents.map((row) => row.agentId).filter(Boolean)).size,
+      grossRevenue: customerEvents.reduce((sum, row) => sum + row.amountUsd, 0),
+      testCalls: testEvents.length,
+      testVolumeUsd: testEvents.reduce((sum, row) => sum + row.amountUsd, 0),
       operatingCost: expenseRows.reduce((sum, row) => sum + row.amountUsd, 0) + eventRows.reduce((sum, row) => sum + row.costUsd, 0),
       openDecisions: decisionRows.length,
       openIncidents: incidentRows.length,
-      recentSettlements,
+      recentSettlements: recentSettlements.filter((row) => !seedTimes.has(row.occurredAt)),
     };
   } catch {
     return empty;

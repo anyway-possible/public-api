@@ -19,6 +19,15 @@ test("one-cent entry check is discoverable and uses Base USDC", async () => {
   assert.match(route, /amountUsd: 0\.01/);
 });
 
+test("analytics separates internal validation from customer revenue", async () => {
+  const analytics = await readFile(new URL("lib/analytics.ts", root), "utf8");
+  const dashboard = await readFile(new URL("db/dashboard.ts", root), "utf8");
+  assert.match(analytics, /SELF_TEST_PAYER/);
+  assert.match(analytics, /payload\?\.authorization\?\.from/);
+  assert.match(dashboard, /testVolumeUsd/);
+  assert.match(dashboard, /customerEvents/);
+});
+
 test("paid verifier is bound to the authorized wallet and Base mainnet", async () => {
   const route = await readFile(new URL("app/api/verify/route.ts", root), "utf8");
   assert.match(route, /0xe5690D37805107C56f6195E65A262b234E0E5e75/);
