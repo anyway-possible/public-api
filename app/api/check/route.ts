@@ -43,7 +43,14 @@ function getServer() {
                 required: ["url"],
               },
               output: {
-                example: { reachable: true, verified: true, status: 200, responseTimeMs: 120 },
+                example: {
+                  reachable: true,
+                  verified: true,
+                  status: 200,
+                  finalUrl: "https://example.com/",
+                  responseTimeMs: 120,
+                  observedAt: "2026-01-01T00:00:00.000Z",
+                },
                 schema: {
                   type: "object",
                   properties: {

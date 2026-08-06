@@ -44,7 +44,15 @@ function getServer() {
                 required: ["url"],
               },
               output: {
-                example: { verified: true, status: 200, title: "Example Domain", contentSha256: "sha256 digest", receiptId: "tamper-evident receipt identifier" },
+                example: {
+                  verified: true,
+                  status: 200,
+                  title: "Example Domain",
+                  finalUrl: "https://example.com/",
+                  contentSha256: "6f5635035f36ad500b4fc4bb7816bb72ef5594e1bcae44fa074c5e988fc4c0fe",
+                  receiptId: "f06d5ef0db3b95b4c11768a3f53519dc60e9e911adf3187ca73703a4a32eae6d",
+                  observedAt: "2026-01-01T00:00:00.000Z",
+                },
                 schema: {
                   type: "object",
                   properties: {
