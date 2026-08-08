@@ -2,6 +2,11 @@ import { desc, eq } from "drizzle-orm";
 import { getDb } from "./index";
 import { decisions, events, expenses, incidents } from "./schema";
 
+// Challenge conversion measurement started after the market-priced release was
+// deployed and its Coinbase validation/indexing probes completed. Earlier 402s
+// were launch verification traffic, not prospective customers.
+const CHALLENGE_MEASUREMENT_START = "2026-08-08T23:40:00.000Z";
+
 export type DashboardSnapshot = {
   paidCalls: number;
   uniqueAgents: number;
@@ -32,7 +37,9 @@ export async function getDashboardSnapshot(): Promise<DashboardSnapshot> {
     const isTest = (row: typeof eventRows[number]) => row.kind === "test_call" || seedTimes.has(row.occurredAt);
     const customerEvents = eventRows.filter((row) => row.kind === "paid_call" && !isTest(row));
     const testEvents = eventRows.filter(isTest);
-    const paymentChallenges = eventRows.filter((row) => row.kind === "payment_challenge").length;
+    const paymentChallenges = eventRows.filter(
+      (row) => row.kind === "payment_challenge" && row.occurredAt >= CHALLENGE_MEASUREMENT_START,
+    ).length;
     const callsByEndpoint = customerEvents.reduce<Record<string, number>>((counts, row) => {
       const endpoint = row.endpoint ?? "unknown";
       counts[endpoint] = (counts[endpoint] ?? 0) + 1;

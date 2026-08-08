@@ -20,7 +20,17 @@ function paymentPayer(request: NextRequest) {
 export async function identifyAgent(request: NextRequest) {
   const payer = paymentPayer(request)?.toLowerCase() ?? null;
   const source = payer ?? request.headers.get("user-agent") ?? "unknown";
+  const userAgent = request.headers.get("user-agent") ?? "";
+  const isInfrastructureProbe =
+    userAgent.includes("CoinbaseBazaarDiscovery/") ||
+    request.nextUrl.searchParams.has("release");
   const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(source));
   const agentId = Array.from(new Uint8Array(digest)).slice(0, 8).map((byte) => byte.toString(16).padStart(2, "0")).join("");
-  return { agentId, isSelfTest: payer === SELF_TEST_PAYER || request.headers.get("x-awp-self-test") === "1" };
+  return {
+    agentId,
+    isSelfTest:
+      payer === SELF_TEST_PAYER ||
+      request.headers.get("x-awp-self-test") === "1" ||
+      isInfrastructureProbe,
+  };
 }
