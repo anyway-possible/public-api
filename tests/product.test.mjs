@@ -21,6 +21,7 @@ test("Base wallet balance follows demonstrated agent demand", async () => {
   assert.match(route, /0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913/);
   assert.match(route, /\$0\.001/);
   assert.match(route, /agent treasury/);
+  assert.match(route, /ethAtomic: "0", usdcAtomic: "0"/);
 });
 
 test("one-cent entry check is discoverable and uses Base USDC", async () => {

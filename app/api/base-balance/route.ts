@@ -47,7 +47,7 @@ function getServer() {
                 required: ["address"],
               },
               output: {
-                example: { address: "0x0000000000000000000000000000000000000000", network: "Base", chainId: 8453, eth: "0", usdc: "0", blockNumber: 12345678, observedAt: "2026-01-01T00:00:00.000Z" },
+                example: { address: "0x0000000000000000000000000000000000000000", network: "Base", chainId: 8453, eth: "0", usdc: "0", ethAtomic: "0", usdcAtomic: "0", blockNumber: 12345678, observedAt: "2026-01-01T00:00:00.000Z" },
                 schema: {
                   type: "object",
                   properties: {
