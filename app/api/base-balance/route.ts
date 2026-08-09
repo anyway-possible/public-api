@@ -11,7 +11,12 @@ export const runtime = "edge";
 export const dynamic = "force-dynamic";
 
 const PAY_TO = "0xe5690D37805107C56f6195E65A262b234E0E5e75" as const;
-const BASE_RPC = "https://mainnet.base.org";
+const BASE_RPCS = [
+  "https://base-rpc.publicnode.com",
+  "https://base-mainnet.public.blastapi.io",
+  "https://base.drpc.org",
+  "https://mainnet.base.org",
+] as const;
 const BASE_USDC = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
 let serverPromise: Promise<X402Server> | undefined;
 
@@ -63,16 +68,24 @@ function getServer() {
 }
 
 async function rpc(method: string, params: unknown[]) {
-  const response = await fetch(BASE_RPC, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params }),
-    signal: AbortSignal.timeout(8_000),
-  });
-  if (!response.ok) throw new Error(`Base RPC returned HTTP ${response.status}.`);
-  const payload = await response.json() as { result?: string; error?: { message?: string } };
-  if (!payload.result) throw new Error(payload.error?.message ?? "Base RPC returned no result.");
-  return payload.result;
+  let lastError = "No Base RPC endpoint responded.";
+  for (const endpoint of BASE_RPCS) {
+    try {
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params }),
+        signal: AbortSignal.timeout(6_000),
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const payload = await response.json() as { result?: string; error?: { message?: string } };
+      if (!payload.result) throw new Error(payload.error?.message ?? "missing result");
+      return payload.result;
+    } catch (error) {
+      lastError = error instanceof Error ? error.message : "unknown upstream error";
+    }
+  }
+  throw new Error(`Base RPC unavailable: ${lastError}`);
 }
 
 function formatUnits(value: bigint, decimals: number) {
@@ -109,6 +122,7 @@ async function paidHandler(request: NextRequest) {
     } catch {}
     return NextResponse.json(result, { headers: { "cache-control": "no-store" } });
   } catch (error) {
+    console.error("Base balance lookup failed", error);
     return NextResponse.json({ error: error instanceof Error ? error.message : "Base balance lookup failed." }, { status: 502 });
   }
 }

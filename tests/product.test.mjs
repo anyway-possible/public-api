@@ -15,6 +15,8 @@ test("Base wallet balance follows demonstrated agent demand", async () => {
   const route = await readFile(new URL("app/api/base-balance/route.ts", root), "utf8");
   assert.match(route, /Anyway Possible Base Wallet Balance/);
   assert.match(route, /eth_getBalance/);
+  assert.match(route, /base-rpc\.publicnode\.com/);
+  assert.match(route, /base-mainnet\.public\.blastapi\.io/);
   assert.match(route, /70a08231/);
   assert.match(route, /0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913/);
   assert.match(route, /\$0\.001/);
