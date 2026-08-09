@@ -23,6 +23,7 @@ export async function identifyAgent(request: NextRequest) {
   const userAgent = request.headers.get("user-agent") ?? "";
   const isInfrastructureProbe =
     userAgent.includes("CoinbaseBazaarDiscovery/") ||
+    (userAgent === "node" && request.headers.get("content-length") === "2") ||
     request.nextUrl.searchParams.has("release");
   const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(source));
   const agentId = Array.from(new Uint8Array(digest)).slice(0, 8).map((byte) => byte.toString(16).padStart(2, "0")).join("");

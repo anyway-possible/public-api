@@ -5,7 +5,7 @@ import { decisions, events, expenses, incidents } from "./schema";
 // Challenge conversion measurement started after the market-priced release was
 // deployed and its Coinbase validation/indexing probes completed. Earlier 402s
 // were launch verification traffic, not prospective customers.
-const CHALLENGE_MEASUREMENT_START = "2026-08-08T23:40:00.000Z";
+const CHALLENGE_MEASUREMENT_START = "2026-08-09T21:00:00.000Z";
 
 export type DashboardSnapshot = {
   paidCalls: number;

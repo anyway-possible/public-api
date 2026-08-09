@@ -15,6 +15,8 @@ test("one-cent entry check is discoverable and uses Base USDC", async () => {
   const route = await readFile(new URL("app/api/check/route.ts", root), "utf8");
   assert.match(route, /\$0\.001/);
   assert.match(route, /eip155:8453/);
+  assert.match(route, /serviceName: "Anyway Possible URL Check"/);
+  assert.match(route, /tags: \["url", "uptime", "website health"/);
   assert.match(route, /declareDiscoveryExtension/);
   assert.match(route, /\.\.\.declareDiscoveryExtension/);
   assert.doesNotMatch(route, /bazaar:\s*declareDiscoveryExtension/);
@@ -25,6 +27,7 @@ test("batch endpoint checks up to ten URLs for one cent", async () => {
   const route = await readFile(new URL("app/api/batch/route.ts", root), "utf8");
   assert.match(route, /\$0\.01/);
   assert.match(route, /maxItems: 10/);
+  assert.match(route, /serviceName: "Anyway Possible Batch URL Validator"/);
   assert.match(route, /Promise\.all/);
   assert.match(route, /\.\.\.declareDiscoveryExtension/);
 });
@@ -34,6 +37,7 @@ test("analytics separates internal validation from customer revenue", async () =
   const dashboard = await readFile(new URL("db/dashboard.ts", root), "utf8");
   assert.match(analytics, /SELF_TEST_PAYER/);
   assert.match(analytics, /payload\?\.authorization\?\.from/);
+  assert.match(analytics, /userAgent === "node"/);
   assert.match(dashboard, /testVolumeUsd/);
   assert.match(dashboard, /customerEvents/);
 });
@@ -44,6 +48,7 @@ test("paid verifier is bound to the authorized wallet and Base mainnet", async (
   assert.match(route, /eip155:8453/);
   assert.match(route, /\$0\.01/);
   assert.match(route, /withX402FromHTTPServer/);
+  assert.match(route, /serviceName: "Anyway Possible Web Evidence"/);
   assert.match(route, /\.\.\.declareDiscoveryExtension/);
 });
 

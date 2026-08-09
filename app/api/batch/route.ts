@@ -25,10 +25,17 @@ function getServer() {
       builderCode: "anyway_possible",
       routes: {
         "POST /api/batch": {
-          price: "$0.01",
-          description: "Use to validate up to 10 citations, links, or API endpoints in one payment. Returns reachability, exact status, latency, content type, final URL, and safe redirect chain for each public HTTP(S) URL. Partial failures are isolated per result.",
-          networks: ["eip155:8453"],
-          maxTimeoutSeconds: 120,
+          accepts: {
+            scheme: "exact",
+            price: "$0.01",
+            network: "eip155:8453",
+            payTo: PAY_TO,
+            maxTimeoutSeconds: 120,
+          },
+          serviceName: "Anyway Possible Batch URL Validator",
+          tags: ["batch url check", "citation validation", "link checker", "api monitoring", "website health"],
+          iconUrl: "https://anywaypossible.com/favicon.svg",
+          description: "Batch URL validation for AI agents. Check up to 10 citations, links, websites, or API endpoints in one payment. Returns reachability, exact status, latency, content type, final URL, and safe redirects; partial failures stay isolated.",
           extensions: {
             ...declareDiscoveryExtension({
               method: "POST",

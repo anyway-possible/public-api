@@ -25,10 +25,17 @@ function getServer() {
       builderCode: "anyway_possible",
       routes: {
         "POST /api/verify": {
-          price: "$0.01",
-          description: "Use when an agent must prove a source is live and contains expected status or text before citing it or acting. Returns redirects, metadata, selected headers, latency, inspected bytes, SHA-256 content digest, receipt ID, and timestamp. SSRF-safe, no account.",
-          networks: ["eip155:8453"],
-          maxTimeoutSeconds: 300,
+          accepts: {
+            scheme: "exact",
+            price: "$0.01",
+            network: "eip155:8453",
+            payTo: PAY_TO,
+            maxTimeoutSeconds: 300,
+          },
+          serviceName: "Anyway Possible Web Evidence",
+          tags: ["web evidence", "citation verification", "content hash", "source validation", "proof of content"],
+          iconUrl: "https://anywaypossible.com/favicon.svg",
+          description: "Web evidence and citation verification for AI agents. Prove a source is live and contains expected text or status before citing or acting. Returns redirects, metadata, headers, latency, SHA-256 content digest, receipt ID, and timestamp. SSRF-safe, no account.",
           extensions: {
             ...declareDiscoveryExtension({
               method: "POST",

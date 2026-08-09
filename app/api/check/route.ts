@@ -25,10 +25,17 @@ function getServer() {
       builderCode: "anyway_possible",
       routes: {
         "POST /api/check": {
-          price: "$0.001",
-          description: "Use before an agent follows a link, cites a source, calls an API, or continues a workflow. Check one public URL for reachability, exact HTTP status, latency, content type, and safe redirect chain. Deterministic, SSRF-safe, no account.",
-          networks: ["eip155:8453"],
-          maxTimeoutSeconds: 60,
+          accepts: {
+            scheme: "exact",
+            price: "$0.001",
+            network: "eip155:8453",
+            payTo: PAY_TO,
+            maxTimeoutSeconds: 60,
+          },
+          serviceName: "Anyway Possible URL Check",
+          tags: ["url", "uptime", "website health", "http status", "link safety", "agent preflight"],
+          iconUrl: "https://anywaypossible.com/favicon.svg",
+          description: "URL uptime and website health check for AI agents. Verify reachability, exact HTTP status, latency, content type, and safe redirect chain before following a link, citing a source, or calling an API. Deterministic, SSRF-safe, no account.",
           extensions: {
             ...declareDiscoveryExtension({
               method: "POST",
