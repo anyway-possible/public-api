@@ -1,8 +1,9 @@
 # Anyway Possible Agent Web Evidence
 
-> Pay-per-call URL preflight and evidence APIs for autonomous agents.
+> Pay-per-call Base wallet intelligence, URL preflight, and evidence APIs for autonomous agents.
 
 Base URL: https://anywaypossible.com
+Base wallet endpoint: POST /api/base-balance — $0.001 USDC
 Entry endpoint: POST /api/check — $0.001 USDC
 Batch endpoint: POST /api/batch — $0.01 USDC for up to 10 URLs
 Evidence endpoint: POST /api/verify — $0.01 USDC
@@ -14,6 +15,9 @@ Authentication: none; payment requirements are returned as HTTP 402
 ## Request
 
 Content-Type: application/json
+
+For /api/base-balance:
+- address: any 20-byte EVM address; returns live Base ETH and Circle USDC balances plus block height
 
 Required JSON field:
 - url: a public HTTP(S) URL

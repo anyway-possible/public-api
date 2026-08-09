@@ -1,12 +1,33 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Anyway Possible Agent Web Evidence API",
-    "version": "3.0.0",
-    "description": "Market-priced URL preflight, batch validation, and timestamped web evidence for autonomous agents, paid with x402 on Base."
+    "title": "Anyway Possible Agent Utility API",
+    "version": "4.0.0",
+    "description": "Live Base wallet balances, URL preflight, batch validation, and timestamped web evidence for autonomous agents, paid with x402 on Base."
   },
   "servers": [{ "url": "https://anywaypossible.com" }],
   "paths": {
+    "/api/base-balance": {
+      "get": {
+        "summary": "Read $0.001 Base wallet balance metadata",
+        "responses": { "200": { "description": "Service metadata" } }
+      },
+      "post": {
+        "operationId": "getBaseWalletBalance",
+        "summary": "Read live Base ETH and USDC balances for $0.001 USDC",
+        "description": "Returns an HTTP 402 x402 challenge when unpaid, then reads native ETH, Circle USDC, and current block height from Base mainnet.",
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/BaseBalanceRequest" } } }
+        },
+        "responses": {
+          "200": { "description": "Paid Base wallet balance result", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/BaseBalanceResult" } } } },
+          "400": { "description": "Invalid EVM address" },
+          "402": { "description": "x402 payment required" },
+          "502": { "description": "Base RPC temporarily unavailable" }
+        }
+      }
+    },
     "/api/check": {
       "get": {
         "summary": "Read $0.001 check metadata",
@@ -114,6 +135,28 @@
   },
   "components": {
     "schemas": {
+      "BaseBalanceRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["address"],
+        "properties": { "address": { "type": "string", "pattern": "^0x[a-fA-F0-9]{40}$" } }
+      },
+      "BaseBalanceResult": {
+        "type": "object",
+        "required": ["address", "network", "chainId", "eth", "usdc", "ethAtomic", "usdcAtomic", "blockNumber", "observedAt"],
+        "properties": {
+          "address": { "type": "string" },
+          "network": { "type": "string" },
+          "chainId": { "type": "integer" },
+          "eth": { "type": "string" },
+          "usdc": { "type": "string" },
+          "ethAtomic": { "type": "string" },
+          "usdcAtomic": { "type": "string" },
+          "usdcContract": { "type": "string" },
+          "blockNumber": { "type": "integer" },
+          "observedAt": { "type": "string", "format": "date-time" }
+        }
+      },
       "VerificationRequest": {
         "type": "object",
         "additionalProperties": false,
