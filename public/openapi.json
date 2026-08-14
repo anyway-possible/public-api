@@ -185,7 +185,17 @@
           "alerts": { "type": "array", "items": { "type": "string" } },
           "usdcContract": { "type": "string" },
           "blockNumber": { "type": "integer" },
-          "observedAt": { "type": "string", "format": "date-time" }
+          "observedAt": { "type": "string", "format": "date-time" },
+          "recommendedNext": {
+            "type": "object",
+            "description": "Machine-readable upgrade path from raw balance data to a Treasury readiness decision.",
+            "properties": {
+              "endpoint": { "type": "string", "format": "uri" },
+              "priceUsd": { "type": "string" },
+              "reason": { "type": "string" },
+              "request": { "type": "object" }
+            }
+          }
         }
       },
       "BaseBalanceRequest": {

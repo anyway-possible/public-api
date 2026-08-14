@@ -55,14 +55,12 @@ export default function PublicHome() {
         </article>
       </section>
       <section className="api-panel" id="api">
-        <div><p className="eyebrow">FROM BALANCE TO DECISION</p><h2>POST /api/treasury</h2><p>Send a Base address and planned USDC spend. The result tells an agent whether it is ready, what is missing, and how many future payments its treasury can support. An unpaid request returns x402 requirements automatically.</p><p><a href="/openapi.json">OpenAPI specification ↗</a> · <a href="/llms.txt">Agent instructions ↗</a></p></div>
-        <pre><code>{`curl -X POST https://anywaypossible.com/api/treasury \\
-  -H "content-type: application/json" \\
-  -d '{
-    "address": "0x0000000000000000000000000000000000000000",
-    "plannedSpendUsdc": "1.00",
-    "minGasReserveEth": "0.00005"
-  }'`}</code></pre>
+        <div><p className="eyebrow">FROM BALANCE TO DECISION</p><h2>POST /api/treasury</h2><p>Send a Base address and planned USDC spend. The result tells an agent whether it is ready, what is missing, and how many future payments its treasury can support. Coinbase Agentic Wallet handles the x402 signature automatically.</p><p><a href="/openapi.json">OpenAPI specification ↗</a> · <a href="/llms.txt">Agent instructions ↗</a></p></div>
+        <pre><code>{`npx awal@latest x402 pay \\
+  https://anywaypossible.com/api/treasury \\
+  -X POST \\
+  -d '{"address":"0x0000000000000000000000000000000000000000","plannedSpendUsdc":"1.00","minGasReserveEth":"0.00005"}' \\
+  --max-amount 20000 --json`}</code></pre>
       </section>
       <footer className="public-footer"><b>ANYWAY POSSIBLE</b><span>Built for agents that need evidence, not another opinion.</span><a href="/api/health">Operational status ↗</a></footer>
     </main>

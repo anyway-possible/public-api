@@ -35,7 +35,7 @@ function getServer() {
           serviceName: "Anyway Possible Base Wallet Balance",
           tags: ["base", "wallet balance", "usdc balance", "eth balance", "onchain data", "agent treasury"],
           iconUrl: "https://anywaypossible.com/favicon.svg",
-          description: "Live Base wallet balance for AI agents. Returns native ETH and Circle USDC balances, atomic values, block height, contract address, and observation time for any EVM address. Use before an autonomous payment or transaction. No API key.",
+          description: "Live Base wallet balance for AI agents. Returns native ETH and Circle USDC balances, atomic values, block height, contract address, and observation time for any EVM address. Includes a machine-readable upgrade path to treasury readiness for spend, gas-reserve, and wallet-health decisions. No API key.",
           extensions: {
             ...declareDiscoveryExtension({
               method: "POST",
@@ -47,13 +47,13 @@ function getServer() {
                 required: ["address"],
               },
               output: {
-                example: { address: "0x0000000000000000000000000000000000000000", network: "Base", chainId: 8453, eth: "0", usdc: "0", ethAtomic: "0", usdcAtomic: "0", blockNumber: 12345678, observedAt: "2026-01-01T00:00:00.000Z" },
+                example: { address: "0x0000000000000000000000000000000000000000", network: "Base", chainId: 8453, eth: "0", usdc: "0", ethAtomic: "0", usdcAtomic: "0", blockNumber: 12345678, observedAt: "2026-01-01T00:00:00.000Z", recommendedNext: { endpoint: "https://anywaypossible.com/api/treasury", priceUsd: "0.02", reason: "Check spend readiness, gas reserve, and exact funding shortfalls." } },
                 schema: {
                   type: "object",
                   properties: {
                     address: { type: "string" }, network: { type: "string" }, chainId: { type: "integer" },
                     eth: { type: "string" }, usdc: { type: "string" }, ethAtomic: { type: "string" },
-                    usdcAtomic: { type: "string" }, blockNumber: { type: "integer" }, observedAt: { type: "string", format: "date-time" },
+                    usdcAtomic: { type: "string" }, blockNumber: { type: "integer" }, observedAt: { type: "string", format: "date-time" }, recommendedNext: { type: "object" },
                   },
                   required: ["address", "network", "chainId", "eth", "usdc", "ethAtomic", "usdcAtomic", "blockNumber", "observedAt"],
                 },
@@ -115,7 +115,17 @@ async function paidHandler(request: NextRequest) {
     const ethAtomic = BigInt(ethHex);
     const usdcAtomic = BigInt(usdcHex);
     const observedAt = new Date().toISOString();
-    const result = { address, network: "Base", chainId: 8453, eth: formatUnits(ethAtomic, 18), usdc: formatUnits(usdcAtomic, 6), ethAtomic: ethAtomic.toString(), usdcAtomic: usdcAtomic.toString(), usdcContract: BASE_USDC, blockNumber: Number(BigInt(blockHex)), observedAt };
+    const result = {
+      address, network: "Base", chainId: 8453, eth: formatUnits(ethAtomic, 18), usdc: formatUnits(usdcAtomic, 6),
+      ethAtomic: ethAtomic.toString(), usdcAtomic: usdcAtomic.toString(), usdcContract: BASE_USDC,
+      blockNumber: Number(BigInt(blockHex)), observedAt,
+      recommendedNext: {
+        endpoint: "https://anywaypossible.com/api/treasury",
+        priceUsd: "0.02",
+        reason: "Check whether this wallet can fund a planned USDC spend while preserving its ETH gas reserve.",
+        request: { address, plannedSpendUsdc: "1.00", minGasReserveEth: "0.00005" },
+      },
+    };
     try {
       const identity = await identifyAgent(request);
       await getDb().insert(events).values({ eventId: crypto.randomUUID(), kind: identity.isSelfTest ? "test_call" : "paid_call", endpoint: "/api/base-balance", agentId: identity.agentId, amountUsd: 0.001, costUsd: 0, latencyMs: Date.now() - started, statusCode: 200, network: "eip155:8453", occurredAt: observedAt }).run();
@@ -144,5 +154,5 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET() {
-  return NextResponse.json({ service: "Anyway Possible Base Wallet Balance", price: "$0.001 USDC", network: "Base (eip155:8453)", method: "POST", request: { address: "0x0000000000000000000000000000000000000000" }, returns: ["ETH balance", "USDC balance", "block height", "observation time"] });
+  return NextResponse.json({ service: "Anyway Possible Base Wallet Balance", price: "$0.001 USDC", network: "Base (eip155:8453)", method: "POST", request: { address: "0x0000000000000000000000000000000000000000" }, returns: ["ETH balance", "USDC balance", "block height", "observation time", "Treasury upgrade recommendation"], recommendedNext: { endpoint: "/api/treasury", price: "$0.02 USDC", useWhen: "An agent needs wallet readiness, gas reserve, or funding-shortfall decisions." } });
 }

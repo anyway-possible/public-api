@@ -32,10 +32,10 @@ function getServer() {
       routes: {
         "POST /api/treasury": {
           accepts: { scheme: "exact", price: "$0.02", network: "eip155:8453", payTo: PAY_TO, maxTimeoutSeconds: 60 },
-          serviceName: "Anyway Possible Agent Treasury Readiness",
-          tags: ["agent treasury", "wallet monitoring", "Base wallet", "USDC balance", "gas reserve", "payment readiness", "onchain data"],
+          serviceName: "Anyway Possible Base Wallet Readiness",
+          tags: ["agent treasury", "wallet readiness", "wallet health", "wallet monitoring", "Base wallet", "USDC balance", "Base gas reserve", "spend readiness", "autonomous payments", "onchain data"],
           iconUrl: "https://anywaypossible.com/favicon.svg",
-          description: "Treasury readiness for autonomous agents on Base. Checks live ETH gas and Circle USDC balances against a planned spend, reports exact shortfalls, and calculates remaining x402 payment capacity. No account or API key.",
+          description: "Base wallet readiness and gas-reserve check for AI agent treasuries. Before an autonomous payment, compare live ETH and Circle USDC balances with a planned spend, receive exact funding shortfalls, and calculate remaining x402 payment capacity. No account or API key.",
           extensions: {
             ...declareDiscoveryExtension({
               method: "POST",
@@ -198,7 +198,7 @@ export async function POST(request: NextRequest) {
 
 export async function GET() {
   return NextResponse.json({
-    service: "Anyway Possible Agent Treasury Readiness", price: "$0.02 USDC", network: "Base (eip155:8453)", method: "POST",
+    service: "Anyway Possible Base Wallet Readiness", price: "$0.02 USDC", network: "Base (eip155:8453)", method: "POST",
     request: { address: "0x0000000000000000000000000000000000000000", plannedSpendUsdc: "1.00", minGasReserveEth: "0.00005" },
     returns: ["treasury readiness", "ETH gas reserve", "USDC spend capacity", "exact shortfalls", "x402 payment capacity"],
   });

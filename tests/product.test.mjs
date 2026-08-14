@@ -13,7 +13,7 @@ test("public surface explains the paid agent product", async () => {
 
 test("agent treasury readiness is the higher-value product", async () => {
   const route = await readFile(new URL("app/api/treasury/route.ts", root), "utf8");
-  assert.match(route, /Anyway Possible Agent Treasury Readiness/);
+  assert.match(route, /Anyway Possible Base Wallet Readiness/);
   assert.match(route, /\$0\.02/);
   assert.match(route, /plannedSpendUsdc/);
   assert.match(route, /minGasReserveEth/);
@@ -21,6 +21,8 @@ test("agent treasury readiness is the higher-value product", async () => {
   assert.match(route, /gasShortfallEth/);
   assert.match(route, /paymentCapacity/);
   assert.match(route, /agent treasury/);
+  assert.match(route, /wallet readiness/);
+  assert.match(route, /Base gas reserve/);
   assert.match(route, /amountUsd: 0\.02/);
 });
 
@@ -35,6 +37,8 @@ test("Base wallet balance follows demonstrated agent demand", async () => {
   assert.match(route, /\$0\.001/);
   assert.match(route, /agent treasury/);
   assert.match(route, /ethAtomic: "0", usdcAtomic: "0"/);
+  assert.match(route, /recommendedNext/);
+  assert.match(route, /https:\/\/anywaypossible\.com\/api\/treasury/);
 });
 
 test("one-cent entry check is discoverable and uses Base USDC", async () => {

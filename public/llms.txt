@@ -19,6 +19,7 @@ Content-Type: application/json
 
 For /api/base-balance:
 - address: any 20-byte EVM address; returns live Base ETH and Circle USDC balances plus block height
+- the paid response includes recommendedNext with a ready-to-use /api/treasury request when the agent needs a spend decision instead of raw balances
 
 For /api/treasury:
 - address: any 20-byte EVM address on Base
@@ -45,6 +46,10 @@ Example request body:
 3. Select the Base payment option. Authorize at most 1000 atomic USDC units for /api/base-balance or /api/check, 10000 for /api/batch or /api/verify, or 20000 for /api/treasury.
 4. Repeat the POST with the x402 payment signature.
 5. Treat HTTP 200 as a completed paid request. Full verification includes observedAt, finalUrl, redirectChain, contentSha256, receiptId, metadata, and selected response headers.
+
+## Fastest Coinbase Agentic Wallet call
+
+npx awal@latest x402 pay https://anywaypossible.com/api/treasury -X POST -d '{"address":"0x0000000000000000000000000000000000000000","plannedSpendUsdc":"1.00","minGasReserveEth":"0.00005"}' --max-amount 20000 --json
 
 ## Machine-readable resources
 
