@@ -6,9 +6,22 @@ const root = new URL("../", import.meta.url);
 
 test("public surface explains the paid agent product", async () => {
   const page = await readFile(new URL("app/page.tsx", root), "utf8");
-  for (const section of ["X402 · USDC · BASE", "Proof before", "POST /api/base-balance", "POST /api/check", "POST /api/batch", "POST /api/verify", "Bounded execution"]) {
+  for (const section of ["X402 · USDC · BASE", "Proof before", "POST /api/treasury", "POST /api/base-balance", "POST /api/check", "POST /api/batch", "POST /api/verify", "Bounded execution"]) {
     assert.match(page, new RegExp(section));
   }
+});
+
+test("agent treasury readiness is the higher-value product", async () => {
+  const route = await readFile(new URL("app/api/treasury/route.ts", root), "utf8");
+  assert.match(route, /Anyway Possible Agent Treasury Readiness/);
+  assert.match(route, /\$0\.02/);
+  assert.match(route, /plannedSpendUsdc/);
+  assert.match(route, /minGasReserveEth/);
+  assert.match(route, /usdcShortfall/);
+  assert.match(route, /gasShortfallEth/);
+  assert.match(route, /paymentCapacity/);
+  assert.match(route, /agent treasury/);
+  assert.match(route, /amountUsd: 0\.02/);
 });
 
 test("Base wallet balance follows demonstrated agent demand", async () => {

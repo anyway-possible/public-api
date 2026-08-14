@@ -2,11 +2,32 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Anyway Possible Agent Utility API",
-    "version": "4.0.0",
-    "description": "Live Base wallet balances, URL preflight, batch validation, and timestamped web evidence for autonomous agents, paid with x402 on Base."
+    "version": "5.0.0",
+    "description": "Base treasury readiness, live wallet balances, URL preflight, batch validation, and timestamped web evidence for autonomous agents, paid with x402 on Base."
   },
   "servers": [{ "url": "https://anywaypossible.com" }],
   "paths": {
+    "/api/treasury": {
+      "get": {
+        "summary": "Read $0.02 agent treasury metadata",
+        "responses": { "200": { "description": "Service metadata" } }
+      },
+      "post": {
+        "operationId": "getAgentTreasuryReadiness",
+        "summary": "Check Base agent treasury readiness for $0.02 USDC",
+        "description": "Checks live ETH gas and Circle USDC balances against a planned spend, reports exact shortfalls, and calculates x402 payment capacity.",
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TreasuryRequest" } } }
+        },
+        "responses": {
+          "200": { "description": "Paid treasury readiness result", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TreasuryResult" } } } },
+          "400": { "description": "Invalid address or decimal threshold" },
+          "402": { "description": "x402 payment required" },
+          "502": { "description": "Base RPC temporarily unavailable" }
+        }
+      }
+    },
     "/api/base-balance": {
       "get": {
         "summary": "Read $0.001 Base wallet balance metadata",
@@ -135,6 +156,38 @@
   },
   "components": {
     "schemas": {
+      "TreasuryRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["address"],
+        "properties": {
+          "address": { "type": "string", "pattern": "^0x[a-fA-F0-9]{40}$" },
+          "plannedSpendUsdc": { "type": "string", "pattern": "^[0-9]+(\\.[0-9]{1,6})?$", "default": "1.00" },
+          "minGasReserveEth": { "type": "string", "pattern": "^[0-9]+(\\.[0-9]{1,18})?$", "default": "0.00005" }
+        }
+      },
+      "TreasuryResult": {
+        "type": "object",
+        "required": ["address", "network", "chainId", "status", "ready", "eth", "usdc", "plannedSpendUsdc", "minGasReserveEth", "usdcShortfall", "gasShortfallEth", "paymentCapacity", "alerts", "blockNumber", "observedAt"],
+        "properties": {
+          "address": { "type": "string" },
+          "network": { "type": "string" },
+          "chainId": { "type": "integer" },
+          "status": { "type": "string", "enum": ["ready", "needs_usdc", "needs_gas", "needs_funding"] },
+          "ready": { "type": "boolean" },
+          "eth": { "type": "string" },
+          "usdc": { "type": "string" },
+          "plannedSpendUsdc": { "type": "string" },
+          "minGasReserveEth": { "type": "string" },
+          "usdcShortfall": { "type": "string" },
+          "gasShortfallEth": { "type": "string" },
+          "paymentCapacity": { "type": "object", "additionalProperties": { "type": "string" } },
+          "alerts": { "type": "array", "items": { "type": "string" } },
+          "usdcContract": { "type": "string" },
+          "blockNumber": { "type": "integer" },
+          "observedAt": { "type": "string", "format": "date-time" }
+        }
+      },
       "BaseBalanceRequest": {
         "type": "object",
         "additionalProperties": false,

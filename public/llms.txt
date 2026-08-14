@@ -1,8 +1,9 @@
-# Anyway Possible Agent Web Evidence
+# Anyway Possible Agent Treasury and Web Evidence
 
-> Pay-per-call Base wallet intelligence, URL preflight, and evidence APIs for autonomous agents.
+> Pay-per-call Base treasury readiness, wallet intelligence, URL preflight, and evidence APIs for autonomous agents.
 
 Base URL: https://anywaypossible.com
+Treasury endpoint: POST /api/treasury — $0.02 USDC
 Base wallet endpoint: POST /api/base-balance — $0.001 USDC
 Entry endpoint: POST /api/check — $0.001 USDC
 Batch endpoint: POST /api/batch — $0.01 USDC for up to 10 URLs
@@ -19,6 +20,12 @@ Content-Type: application/json
 For /api/base-balance:
 - address: any 20-byte EVM address; returns live Base ETH and Circle USDC balances plus block height
 
+For /api/treasury:
+- address: any 20-byte EVM address on Base
+- plannedSpendUsdc: optional decimal string, defaults to "1.00"
+- minGasReserveEth: optional decimal string, defaults to "0.00005"
+- returns readiness, exact USDC and gas shortfalls, alerts, and remaining x402 payment capacity
+
 Required JSON field:
 - url: a public HTTP(S) URL
 
@@ -33,15 +40,16 @@ Example request body:
 
 ## Integration flow
 
-1. POST JSON to /api/check for one fast preflight, /api/batch for up to 10 URLs, or /api/verify for full evidence.
+1. POST JSON to /api/treasury for spend readiness, /api/base-balance for raw balances, /api/check for one fast preflight, /api/batch for up to 10 URLs, or /api/verify for full evidence.
 2. Read the HTTP 402 response and x402 payment requirements.
-3. Select the Base payment option. Authorize at most 1000 atomic USDC units for /api/check or 10000 for /api/batch and /api/verify.
+3. Select the Base payment option. Authorize at most 1000 atomic USDC units for /api/base-balance or /api/check, 10000 for /api/batch or /api/verify, or 20000 for /api/treasury.
 4. Repeat the POST with the x402 payment signature.
 5. Treat HTTP 200 as a completed paid request. Full verification includes observedAt, finalUrl, redirectChain, contentSha256, receiptId, metadata, and selected response headers.
 
 ## Machine-readable resources
 
 - OpenAPI: https://anywaypossible.com/openapi.json
+- Treasury readiness metadata: https://anywaypossible.com/api/treasury
 - Entry check metadata: https://anywaypossible.com/api/check
 - Batch check metadata: https://anywaypossible.com/api/batch
 - Endpoint metadata: https://anywaypossible.com/api/verify

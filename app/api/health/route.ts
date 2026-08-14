@@ -5,10 +5,10 @@ export const runtime = "edge";
 export async function GET() {
   return NextResponse.json({
     ok: true,
-    service: "Anyway Possible Verify",
-    version: "1.0.0",
+    service: "Anyway Possible Agent Utilities",
+    version: "5.0.0",
     network: "Base",
-    paidEndpoint: "/api/verify",
+    paidEndpoints: ["/api/treasury", "/api/base-balance", "/api/check", "/api/batch", "/api/verify"],
     checkedAt: new Date().toISOString(),
   }, { headers: { "cache-control": "no-store" } });
 }

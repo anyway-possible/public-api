@@ -10,10 +10,10 @@ export async function generateMetadata(): Promise<Metadata> {
   const requestHeaders = await headers();
   const host = requestHeaders.get("x-forwarded-host") ?? requestHeaders.get("host") ?? "anywaypossible.com";
   const protocol = requestHeaders.get("x-forwarded-proto") ?? (host.includes("localhost") ? "http" : "https");
-  const image = `${protocol}://${host}/og.png`;
-  const description = "Paid, timestamped URL verification for AI agents—with adoption, revenue, costs, reliability, and owner decisions in one control center.";
+  const image = `${protocol}://${host}/og-treasury.png`;
+  const description = "Pay-per-call Base treasury readiness, wallet intelligence, and web evidence for autonomous agents using USDC and x402.";
   return {
-    title: "Anyway Possible — Paid Verification for AI Agents",
+    title: "Anyway Possible — Treasury Intelligence for AI Agents",
     description,
     openGraph: { title: "Anyway Possible", description, images: [{ url: image, width: 1200, height: 630 }] },
     twitter: { card: "summary_large_image", title: "Anyway Possible", description, images: [image] },
