@@ -6,20 +6,29 @@ const root = new URL("../", import.meta.url);
 
 test("public surface explains the paid agent product", async () => {
   const page = await readFile(new URL("app/page.tsx", root), "utf8");
-  for (const section of ["X402 · USDC · BASE", "Proof before", "POST /api/treasury", "POST /api/base-balance", "POST /api/check", "POST /api/batch", "POST /api/verify", "Bounded execution"]) {
+  for (const section of ["X402 · USDC · BASE", "Preflight before", "POST /api/treasury", "POST /api/base-balance", "POST /api/check", "POST /api/batch", "POST /api/verify", "Bounded execution"]) {
     assert.match(page, new RegExp(section));
   }
 });
 
-test("agent treasury readiness is the higher-value product", async () => {
+test("Base payment preflight is the higher-value product", async () => {
   const route = await readFile(new URL("app/api/treasury/route.ts", root), "utf8");
-  assert.match(route, /Anyway Possible Base Wallet Readiness/);
+  assert.match(route, /Anyway Possible Base Payment Preflight/);
   assert.match(route, /\$0\.02/);
   assert.match(route, /plannedSpendUsdc/);
   assert.match(route, /minGasReserveEth/);
   assert.match(route, /usdcShortfall/);
   assert.match(route, /gasShortfallEth/);
   assert.match(route, /paymentCapacity/);
+  assert.match(route, /destinationAddress/);
+  assert.match(route, /safeToProceed/);
+  assert.match(route, /safe_to_pay/);
+  assert.match(route, /review_destination/);
+  assert.match(route, /destinationIsZero/);
+  assert.match(route, /destinationIsTokenContract/);
+  assert.match(route, /eth_getCode/);
+  assert.match(route, /expectedChainId/);
+  assert.match(route, /limitations/);
   assert.match(route, /agent treasury/);
   assert.match(route, /wallet readiness/);
   assert.match(route, /Base gas reserve/);
@@ -70,6 +79,19 @@ test("analytics separates internal validation from customer revenue", async () =
   assert.match(analytics, /userAgent === "node"/);
   assert.match(dashboard, /testVolumeUsd/);
   assert.match(dashboard, /customerEvents/);
+  assert.match(dashboard, /challengesByEndpoint/);
+});
+
+test("agent documentation describes the transaction-level decision", async () => {
+  const [openapi, instructions] = await Promise.all([
+    readFile(new URL("public/openapi.json", root), "utf8"),
+    readFile(new URL("public/llms.txt", root), "utf8"),
+  ]);
+  assert.doesNotThrow(() => JSON.parse(openapi));
+  assert.match(openapi, /preflightBaseUsdcPayment/);
+  assert.match(openapi, /destinationAddress/);
+  assert.match(openapi, /safeToProceed/);
+  assert.match(instructions, /proceed\/fund\/review\/reject/);
 });
 
 test("paid verifier is bound to the authorized wallet and Base mainnet", async () => {

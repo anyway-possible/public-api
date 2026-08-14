@@ -2,26 +2,26 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Anyway Possible Agent Utility API",
-    "version": "5.0.0",
-    "description": "Base treasury readiness, live wallet balances, URL preflight, batch validation, and timestamped web evidence for autonomous agents, paid with x402 on Base."
+    "version": "6.0.0",
+    "description": "Base USDC payment preflight, live wallet balances, URL checks, batch validation, and timestamped web evidence for autonomous agents, paid with x402 on Base."
   },
   "servers": [{ "url": "https://anywaypossible.com" }],
   "paths": {
     "/api/treasury": {
       "get": {
-        "summary": "Read $0.02 agent treasury metadata",
+        "summary": "Read $0.02 Base USDC payment-preflight metadata",
         "responses": { "200": { "description": "Service metadata" } }
       },
       "post": {
-        "operationId": "getAgentTreasuryReadiness",
-        "summary": "Check Base agent treasury readiness for $0.02 USDC",
-        "description": "Checks live ETH gas and Circle USDC balances against a planned spend, reports exact shortfalls, and calculates x402 payment capacity.",
+        "operationId": "preflightBaseUsdcPayment",
+        "summary": "Preflight a Base USDC payment for $0.02 USDC",
+        "description": "Checks live funding and gas, confirms Base chain intent, classifies the destination, catches basic payment hazards, and returns a machine-readable proceed, fund, review, or reject decision.",
         "requestBody": {
           "required": true,
           "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TreasuryRequest" } } }
         },
         "responses": {
-          "200": { "description": "Paid treasury readiness result", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TreasuryResult" } } } },
+          "200": { "description": "Paid payment-preflight result", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TreasuryResult" } } } },
           "400": { "description": "Invalid address or decimal threshold" },
           "402": { "description": "x402 payment required" },
           "502": { "description": "Base RPC temporarily unavailable" }
@@ -162,19 +162,27 @@
         "required": ["address"],
         "properties": {
           "address": { "type": "string", "pattern": "^0x[a-fA-F0-9]{40}$" },
+          "destinationAddress": { "type": "string", "pattern": "^0x[a-fA-F0-9]{40}$", "description": "Optional intended payment recipient; enables destination hazard checks" },
           "plannedSpendUsdc": { "type": "string", "pattern": "^[0-9]+(\\.[0-9]{1,6})?$", "default": "1.00" },
-          "minGasReserveEth": { "type": "string", "pattern": "^[0-9]+(\\.[0-9]{1,18})?$", "default": "0.00005" }
+          "minGasReserveEth": { "type": "string", "pattern": "^[0-9]+(\\.[0-9]{1,18})?$", "default": "0.00005" },
+          "expectedChainId": { "type": "integer", "enum": [8453], "default": 8453 }
         }
       },
       "TreasuryResult": {
         "type": "object",
-        "required": ["address", "network", "chainId", "status", "ready", "eth", "usdc", "plannedSpendUsdc", "minGasReserveEth", "usdcShortfall", "gasShortfallEth", "paymentCapacity", "alerts", "blockNumber", "observedAt"],
+        "required": ["address", "destinationAddress", "destinationKind", "network", "chainId", "status", "ready", "safeToProceed", "decision", "riskLevel", "recommendedAction", "eth", "usdc", "plannedSpendUsdc", "minGasReserveEth", "usdcShortfall", "gasShortfallEth", "paymentCapacity", "checks", "alerts", "limitations", "blockNumber", "observedAt"],
         "properties": {
           "address": { "type": "string" },
+          "destinationAddress": { "type": ["string", "null"] },
+          "destinationKind": { "type": "string", "enum": ["not_provided", "eoa", "contract"] },
           "network": { "type": "string" },
           "chainId": { "type": "integer" },
           "status": { "type": "string", "enum": ["ready", "needs_usdc", "needs_gas", "needs_funding"] },
           "ready": { "type": "boolean" },
+          "safeToProceed": { "type": "boolean" },
+          "decision": { "type": "string", "enum": ["safe_to_pay", "needs_funding", "needs_gas", "review_destination", "reject"] },
+          "riskLevel": { "type": "string", "enum": ["low", "medium", "high"] },
+          "recommendedAction": { "type": "string" },
           "eth": { "type": "string" },
           "usdc": { "type": "string" },
           "plannedSpendUsdc": { "type": "string" },
@@ -182,20 +190,12 @@
           "usdcShortfall": { "type": "string" },
           "gasShortfallEth": { "type": "string" },
           "paymentCapacity": { "type": "object", "additionalProperties": { "type": "string" } },
+          "checks": { "type": "array", "items": { "type": "object" } },
           "alerts": { "type": "array", "items": { "type": "string" } },
+          "limitations": { "type": "array", "items": { "type": "string" } },
           "usdcContract": { "type": "string" },
           "blockNumber": { "type": "integer" },
-          "observedAt": { "type": "string", "format": "date-time" },
-          "recommendedNext": {
-            "type": "object",
-            "description": "Machine-readable upgrade path from raw balance data to a Treasury readiness decision.",
-            "properties": {
-              "endpoint": { "type": "string", "format": "uri" },
-              "priceUsd": { "type": "string" },
-              "reason": { "type": "string" },
-              "request": { "type": "object" }
-            }
-          }
+          "observedAt": { "type": "string", "format": "date-time" }
         }
       },
       "BaseBalanceRequest": {

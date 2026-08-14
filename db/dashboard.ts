@@ -16,6 +16,7 @@ export type DashboardSnapshot = {
   paymentChallenges: number;
   conversionRate: number;
   callsByEndpoint: Record<string, number>;
+  challengesByEndpoint: Record<string, number>;
   operatingCost: number;
   openDecisions: number;
   openIncidents: number;
@@ -23,7 +24,7 @@ export type DashboardSnapshot = {
 };
 
 export async function getDashboardSnapshot(): Promise<DashboardSnapshot> {
-  const empty: DashboardSnapshot = { paidCalls: 0, uniqueAgents: 0, grossRevenue: 0, testCalls: 0, testVolumeUsd: 0, paymentChallenges: 0, conversionRate: 0, callsByEndpoint: {}, operatingCost: 0, openDecisions: 0, openIncidents: 0, recentSettlements: [] };
+  const empty: DashboardSnapshot = { paidCalls: 0, uniqueAgents: 0, grossRevenue: 0, testCalls: 0, testVolumeUsd: 0, paymentChallenges: 0, conversionRate: 0, callsByEndpoint: {}, challengesByEndpoint: {}, operatingCost: 0, openDecisions: 0, openIncidents: 0, recentSettlements: [] };
   try {
     const db = getDb();
     const [eventRows, expenseRows, decisionRows, incidentRows, recentSettlements] = await Promise.all([
@@ -37,10 +38,16 @@ export async function getDashboardSnapshot(): Promise<DashboardSnapshot> {
     const isTest = (row: typeof eventRows[number]) => row.kind === "test_call" || seedTimes.has(row.occurredAt);
     const customerEvents = eventRows.filter((row) => row.kind === "paid_call" && !isTest(row));
     const testEvents = eventRows.filter(isTest);
-    const paymentChallenges = eventRows.filter(
+    const challengeEvents = eventRows.filter(
       (row) => row.kind === "payment_challenge" && row.occurredAt >= CHALLENGE_MEASUREMENT_START,
-    ).length;
+    );
+    const paymentChallenges = challengeEvents.length;
     const callsByEndpoint = customerEvents.reduce<Record<string, number>>((counts, row) => {
+      const endpoint = row.endpoint ?? "unknown";
+      counts[endpoint] = (counts[endpoint] ?? 0) + 1;
+      return counts;
+    }, {});
+    const challengesByEndpoint = challengeEvents.reduce<Record<string, number>>((counts, row) => {
       const endpoint = row.endpoint ?? "unknown";
       counts[endpoint] = (counts[endpoint] ?? 0) + 1;
       return counts;
@@ -54,6 +61,7 @@ export async function getDashboardSnapshot(): Promise<DashboardSnapshot> {
       paymentChallenges,
       conversionRate: paymentChallenges ? Math.min(100, (customerEvents.length / paymentChallenges) * 100) : 0,
       callsByEndpoint,
+      challengesByEndpoint,
       operatingCost: expenseRows.reduce((sum, row) => sum + row.amountUsd, 0) + eventRows.reduce((sum, row) => sum + row.costUsd, 0),
       openDecisions: decisionRows.length,
       openIncidents: incidentRows.length,

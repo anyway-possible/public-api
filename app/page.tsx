@@ -8,8 +8,8 @@ export default function PublicHome() {
       <nav className="public-nav"><Link href="/">ANYWAY POSSIBLE</Link><div><a href="/api/health">STATUS</a><a href="/openapi.json">OPENAPI</a><a href="#api">API</a></div></nav>
       <section className="public-hero">
         <p className="eyebrow">X402 · USDC · BASE · FROM $0.001</p>
-        <h1>Proof before<br />agents proceed.</h1>
-        <p className="lede">Live Base treasury readiness, wallet balances, URL preflight checks, and tamper-evident web evidence for autonomous agents. No account, API key, or subscription.</p>
+        <h1>Preflight before<br />agents pay.</h1>
+        <p className="lede">A machine-readable Base USDC payment decision before an autonomous agent signs—plus wallet balances, URL checks, and tamper-evident web evidence. No account, API key, or subscription.</p>
         <div className="public-actions"><a href="#api">Call the API →</a><a className="ghost" href="/api/health">Check status</a></div>
       </section>
       <section className="public-proof">
@@ -19,10 +19,10 @@ export default function PublicHome() {
       </section>
       <section className="product-grid" aria-label="API products">
         <article className="featured-product">
-          <p className="eyebrow">AGENT TREASURY READINESS</p>
-          <h2>Treasury</h2>
+          <p className="eyebrow">BASE USDC PAYMENT PREFLIGHT</p>
+          <h2>Preflight</h2>
           <strong>$0.02 <span>USDC / call</span></strong>
-          <p>Check whether a Base wallet can fund a planned USDC action, preserve its ETH gas reserve, and see exact shortfalls and remaining payment capacity.</p>
+          <p>Check funding and gas, confirm Base chain intent, classify the recipient, catch common destination hazards, and receive a proceed, fund, review, or reject decision.</p>
           <code>POST /api/treasury</code>
         </article>
         <article>
@@ -55,11 +55,11 @@ export default function PublicHome() {
         </article>
       </section>
       <section className="api-panel" id="api">
-        <div><p className="eyebrow">FROM BALANCE TO DECISION</p><h2>POST /api/treasury</h2><p>Send a Base address and planned USDC spend. The result tells an agent whether it is ready, what is missing, and how many future payments its treasury can support. Coinbase Agentic Wallet handles the x402 signature automatically.</p><p><a href="/openapi.json">OpenAPI specification ↗</a> · <a href="/llms.txt">Agent instructions ↗</a></p></div>
+        <div><p className="eyebrow">FROM INTENT TO DECISION</p><h2>POST /api/treasury</h2><p>Send the paying wallet, intended recipient, and USDC amount. The result tells an agent whether to proceed, fund, review, or reject—with every check and limitation returned as structured data. Coinbase Agentic Wallet handles the x402 signature automatically.</p><p><a href="/openapi.json">OpenAPI specification ↗</a> · <a href="/llms.txt">Agent instructions ↗</a></p></div>
         <pre><code>{`npx awal@latest x402 pay \\
   https://anywaypossible.com/api/treasury \\
   -X POST \\
-  -d '{"address":"0x0000000000000000000000000000000000000000","plannedSpendUsdc":"1.00","minGasReserveEth":"0.00005"}' \\
+  -d '{"address":"0x1111111111111111111111111111111111111111","destinationAddress":"0x2222222222222222222222222222222222222222","plannedSpendUsdc":"1.00","minGasReserveEth":"0.00005","expectedChainId":8453}' \\
   --max-amount 20000 --json`}</code></pre>
       </section>
       <footer className="public-footer"><b>ANYWAY POSSIBLE</b><span>Built for agents that need evidence, not another opinion.</span><a href="/api/health">Operational status ↗</a></footer>

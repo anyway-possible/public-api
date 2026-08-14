@@ -1,6 +1,6 @@
-# Anyway Possible Agent Treasury and Web Evidence
+# Anyway Possible Agent Payment Preflight and Web Evidence
 
-> Pay-per-call Base treasury readiness, wallet intelligence, URL preflight, and evidence APIs for autonomous agents.
+> Pay-per-call Base USDC payment decisions, wallet intelligence, URL preflight, and evidence APIs for autonomous agents.
 
 Base URL: https://anywaypossible.com
 Treasury endpoint: POST /api/treasury — $0.02 USDC
@@ -23,9 +23,11 @@ For /api/base-balance:
 
 For /api/treasury:
 - address: any 20-byte EVM address on Base
+- destinationAddress: optional intended recipient; enables transaction-level destination checks
 - plannedSpendUsdc: optional decimal string, defaults to "1.00"
 - minGasReserveEth: optional decimal string, defaults to "0.00005"
-- returns readiness, exact USDC and gas shortfalls, alerts, and remaining x402 payment capacity
+- expectedChainId: optional integer; when supplied it must be Base mainnet chain ID 8453
+- returns safeToProceed, a proceed/fund/review/reject decision, risk level, individual checks, destination classification, exact shortfalls, alerts, limitations, and remaining x402 payment capacity
 
 Required JSON field:
 - url: a public HTTP(S) URL
@@ -49,7 +51,7 @@ Example request body:
 
 ## Fastest Coinbase Agentic Wallet call
 
-npx awal@latest x402 pay https://anywaypossible.com/api/treasury -X POST -d '{"address":"0x0000000000000000000000000000000000000000","plannedSpendUsdc":"1.00","minGasReserveEth":"0.00005"}' --max-amount 20000 --json
+npx awal@latest x402 pay https://anywaypossible.com/api/treasury -X POST -d '{"address":"0x1111111111111111111111111111111111111111","destinationAddress":"0x2222222222222222222222222222222222222222","plannedSpendUsdc":"1.00","minGasReserveEth":"0.00005","expectedChainId":8453}' --max-amount 20000 --json
 
 ## Machine-readable resources
 
@@ -61,4 +63,4 @@ npx awal@latest x402 pay https://anywaypossible.com/api/treasury -X POST -d '{"a
 - Health: https://anywaypossible.com/api/health
 - Aggregate usage: https://anywaypossible.com/api/stats
 
-The service blocks private-network destinations, caps response size, validates redirects, and does not require an account or API key.
+Payment preflight checks current Base state and basic destination hazards. It does not guarantee recipient identity, legality, sanctions status, contract behavior, or future settlement success. URL services block private-network destinations, cap response size, and validate redirects. No service requires an account or API key.
