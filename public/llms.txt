@@ -5,6 +5,7 @@
 Primary buyer intents: why is my x402 API not selling; increase x402 revenue; x402 seller intelligence; Coinbase Bazaar audit; x402 merchant score.
 
 Base URL: https://anywaypossible.com
+Payment guard: POST /api/payment-guard — $0.01 USDC
 Merchant snapshot: POST /api/merchant-snapshot — $0.05 USDC
 Merchant audit: POST /api/merchant-audit — $0.50 USDC
 Treasury endpoint: POST /api/treasury — $0.02 USDC
@@ -20,6 +21,14 @@ Authentication: none; payment requirements are returned as HTTP 402
 ## Request
 
 Content-Type: application/json
+
+For /api/payment-guard:
+- payerAddress: required buyer wallet on Base
+- serviceUrl: required x402 endpoint to validate before signing
+- maxAmountUsdc: required buyer price ceiling
+- expectedPayTo: optional expected recipient; a mismatch is rejected
+- minGasReserveEth: optional gas floor, defaults to 0 for sponsored-payment compatibility
+- returns safe_to_sign, needs_funding, review_recipient, or reject with contract, network, asset, price, recipient, funding, gas, and destination checks
 
 For /api/merchant-audit:
 - payTo: required 20-byte seller wallet on Base

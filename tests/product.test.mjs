@@ -6,9 +6,19 @@ const root = new URL("../", import.meta.url);
 
 test("public surface explains the paid agent product", async () => {
   const page = await readFile(new URL("app/page.tsx", root), "utf8");
-  for (const section of ["X402 API REVENUE DIAGNOSIS", "Why isn’t your", "POST /api/merchant-snapshot", "POST /api/merchant-audit", "POST /api/treasury", "POST /api/base-balance", "POST /api/check", "POST /api/batch", "POST /api/verify", "Prioritized action"]) {
+  for (const section of ["X402 API REVENUE DIAGNOSIS", "Why isn’t your", "POST /api/payment-guard", "POST /api/merchant-snapshot", "POST /api/merchant-audit", "POST /api/treasury", "POST /api/base-balance", "POST /api/check", "POST /api/batch", "POST /api/verify", "Prioritized action"]) {
     assert.match(page, new RegExp(section));
   }
+});
+
+test("payment guard validates a purchase before an agent signs", async () => {
+  const route = await readFile(new URL("app/api/payment-guard/route.ts", root), "utf8");
+  assert.match(route, /x402 Payment Guard/);
+  assert.match(route, /\$0\.01/);
+  assert.match(route, /platform\/v2\/x402\/validate/);
+  assert.match(route, /price_ceiling/);
+  assert.match(route, /safe_to_sign/);
+  assert.match(route, /expectedPayTo/);
 });
 
 test("merchant snapshot is the low-friction audit funnel", async () => {

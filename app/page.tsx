@@ -18,6 +18,10 @@ export default function PublicHome() {
         <article><span>03</span><strong>Prioritized action</strong><p>Receive a score, reliability checks, listing defects, competitor context, and three concrete next moves.</p></article>
       </section>
       <section className="product-grid" aria-label="API products">
+        <article className="guard-product">
+          <p className="eyebrow">BUYER-SIDE TRANSACTION SAFETY</p><h2>Payment Guard</h2><strong>$0.01 <span>USDC / decision</span></strong>
+          <p>Before signing, verify the live x402 challenge, Base network, USDC asset, price ceiling, recipient, buyer funding, gas reserve, and destination hazards.</p><code>POST /api/payment-guard</code>
+        </article>
         <article className="featured-product">
           <p className="eyebrow">LOW-FRICTION DIAGNOSIS</p>
           <h2>Snapshot</h2>

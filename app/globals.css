@@ -250,6 +250,8 @@ footer a { color: var(--ink); }
 .product-grid article > p:not(.eyebrow) { color: #55544f; line-height: 1.6; max-width: 520px; }
 .product-grid code { margin-top: auto; background: #101010; color: #c9ff34; padding: 11px 13px; font-size: 12px; }
 .product-grid .featured-product { background: #c9ff34; }
+.product-grid .guard-product { background: #101010; color: white; }
+.product-grid .guard-product .eyebrow, .product-grid .guard-product strong span, .product-grid .guard-product > p:not(.eyebrow) { color: #c9ff34; }
 .product-grid .featured-product .eyebrow { color: #1737e8; }
 .product-grid .audit-product { background: #1737e8; color: white; }
 .product-grid .audit-product .eyebrow, .product-grid .audit-product strong span, .product-grid .audit-product > p:not(.eyebrow) { color: #dbe0ff; }
