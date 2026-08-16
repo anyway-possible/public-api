@@ -78,16 +78,21 @@ export async function auditMerchant(input: MerchantAuditInput) {
   const excluded = new Set((input.excludePayers ?? []).map((value) => value.toLowerCase()));
   const merchantUrl = `${COINBASE}/merchant?payTo=${encodeURIComponent(payTo)}`;
   const blockscoutUrl = `${BLOCKSCOUT}/addresses/${payTo}/token-transfers?type=ERC-20`;
-  const [merchantRaw, searchResults, transfersRaw] = await Promise.all([
-    getJson<{ resources?: Resource[] } | Resource[]>(merchantUrl),
-    Promise.all(input.queries.map(async (query) => {
+  // Start every independent upstream immediately. Reliability depends only on
+  // merchant discovery, so it should overlap with semantic search and chain data.
+  const merchantPromise = getJson<{ resources?: Resource[] } | Resource[]>(merchantUrl);
+  const searchPromise = Promise.all(input.queries.map(async (query) => {
       try { return await getJson<{ resources?: Resource[] } | Resource[]>(`${COINBASE}/search?query=${encodeURIComponent(query)}&limit=10`); }
       catch { return { resources: [] as Resource[] }; }
-    })),
-    getJson<{ items?: Array<{ token?: { address_hash?: string }; total?: { value?: string; decimals?: string }; from?: { hash?: string }; to?: { hash?: string }; transaction_hash?: string; timestamp?: string }>; next_page_params?: unknown }>(blockscoutUrl).catch(() => ({ items: [] })),
-  ]);
+    }));
+  const transfersPromise = getJson<{ items?: Array<{ token?: { address_hash?: string }; total?: { value?: string; decimals?: string }; from?: { hash?: string }; to?: { hash?: string }; transaction_hash?: string; timestamp?: string }>; next_page_params?: unknown }>(blockscoutUrl).catch(() => ({ items: [] }));
+  const merchantRaw = await merchantPromise;
   const resources = (Array.isArray(merchantRaw) ? merchantRaw : merchantRaw.resources ?? []).slice(0, 5);
-  const reliability = await Promise.all(resources.map(inspectResource));
+  const [searchResults, transfersRaw, reliability] = await Promise.all([
+    searchPromise,
+    transfersPromise,
+    Promise.all(resources.map(inspectResource)),
+  ]);
   const listings = resources.map((resource, index) => ({
     resource: resource.resource, serviceName: resource.serviceName ?? null, description: resource.description ?? null,
     priceUsd: priceUsd(resource), lastUpdated: resource.lastUpdated ?? null, quality: resource.quality ?? {},
