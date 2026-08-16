@@ -21,6 +21,18 @@ test("payment guard validates a purchase before an agent signs", async () => {
   assert.match(route, /expectedPayTo/);
 });
 
+test("guarded purchase workflow routes readiness into the final signing guard", async () => {
+  const [treasury, recipe] = await Promise.all([
+    readFile(new URL("app/api/treasury/route.ts", root), "utf8"),
+    readFile(new URL("public/guarded-purchase.json", root), "utf8"),
+  ]);
+  assert.match(treasury, /recommendedNext/);
+  assert.match(treasury, /\/api\/payment-guard/);
+  const workflow = JSON.parse(recipe);
+  assert.equal(workflow.steps.length, 4);
+  assert.equal(workflow.steps[2].endpoint, "https://anywaypossible.com/api/payment-guard");
+});
+
 test("merchant snapshot is the low-friction audit funnel", async () => {
   const route = await readFile(new URL("app/api/merchant-snapshot/route.ts", root), "utf8");
   assert.match(route, /Why Is My x402 API Not Selling/);

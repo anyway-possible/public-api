@@ -1,0 +1,15 @@
+{
+  "name": "Anyway Possible guarded x402 purchase",
+  "version": "1.0.0",
+  "network": "eip155:8453",
+  "asset": "USDC",
+  "objective": "Validate wallet readiness and the live merchant payment contract before signing.",
+  "steps": [
+    { "order": 1, "endpoint": "https://anywaypossible.com/api/base-balance", "priceUsd": 0.001, "input": { "address": "${payerAddress}" }, "continueWhen": "USDC balance is available" },
+    { "order": 2, "endpoint": "https://anywaypossible.com/api/treasury", "priceUsd": 0.02, "input": { "address": "${payerAddress}", "destinationAddress": "${expectedPayTo}", "plannedSpendUsdc": "${maxAmountUsdc}", "expectedChainId": 8453 }, "continueWhen": "decision is safe_to_pay or review_destination is explicitly accepted" },
+    { "order": 3, "endpoint": "https://anywaypossible.com/api/payment-guard", "priceUsd": 0.01, "input": { "payerAddress": "${payerAddress}", "serviceUrl": "${serviceUrl}", "maxAmountUsdc": "${maxAmountUsdc}", "expectedPayTo": "${expectedPayTo}", "minGasReserveEth": "0" }, "continueWhen": "decision equals safe_to_sign" },
+    { "order": 4, "action": "sign_and_submit", "constraints": ["Use only the payment requirements validated in step 3", "Do not exceed maxAmountUsdc", "Stop if the challenge changes"] }
+  ],
+  "abortOn": ["reject", "needs_funding", "network mismatch", "asset mismatch", "recipient mismatch", "price ceiling exceeded"],
+  "privacy": "No account or API key is required. Payment signatures identify payers only for aggregate usage measurement."
+}

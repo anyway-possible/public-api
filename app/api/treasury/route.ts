@@ -225,6 +225,12 @@ async function paidHandler(request: NextRequest) {
         at0_05: (usdcAtomic / 50_000n).toString(), at0_10: (usdcAtomic / 100_000n).toString(),
       },
       checks, alerts,
+      recommendedNext: {
+        endpoint: "https://anywaypossible.com/api/payment-guard",
+        priceUsd: 0.01,
+        when: "Before signing an x402 purchase, validate the live challenge against this wallet, intended recipient, and price ceiling.",
+        request: { payerAddress: address, serviceUrl: "https://merchant.example/api/product", maxAmountUsdc: formatUnits(plannedAtomic, 6), ...(destinationAddress ? { expectedPayTo: destinationAddress } : {}), minGasReserveEth: formatUnits(gasReserveAtomic, 18) },
+      },
       limitations: ["This preflight checks onchain state and basic destination hazards; it does not guarantee recipient identity, legality, sanctions status, contract behavior, or future settlement success."],
       usdcContract: BASE_USDC, blockNumber: Number(BigInt(blockHex)), observedAt,
     };
@@ -259,6 +265,6 @@ export async function GET() {
   return NextResponse.json({
     service: "Anyway Possible Base Payment Preflight", price: "$0.02 USDC", network: "Base (eip155:8453)", method: "POST",
     request: { address: "0x1111111111111111111111111111111111111111", destinationAddress: "0x2222222222222222222222222222222222222222", plannedSpendUsdc: "1.00", minGasReserveEth: "0.00005", expectedChainId: 8453 },
-    returns: ["safe-to-proceed decision", "destination classification", "basic payment hazards", "treasury readiness", "exact funding shortfalls", "x402 payment capacity"],
+    returns: ["safe-to-proceed decision", "destination classification", "basic payment hazards", "treasury readiness", "exact funding shortfalls", "x402 payment capacity", "prefilled Payment Guard request"],
   });
 }

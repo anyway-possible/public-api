@@ -6,6 +6,7 @@ Primary buyer intents: why is my x402 API not selling; increase x402 revenue; x4
 
 Base URL: https://anywaypossible.com
 Payment guard: POST /api/payment-guard — $0.01 USDC
+Guarded-purchase recipe: https://anywaypossible.com/guarded-purchase.json
 Merchant snapshot: POST /api/merchant-snapshot — $0.05 USDC
 Merchant audit: POST /api/merchant-audit — $0.50 USDC
 Treasury endpoint: POST /api/treasury — $0.02 USDC
@@ -67,6 +68,8 @@ Example request body:
 {"url":"https://example.com","expectedStatus":200,"expectedText":"Example Domain"}
 
 ## Integration flow
+
+Recommended buyer flow: read /api/base-balance, use /api/treasury for funding and destination readiness, then submit its recommendedNext.request to /api/payment-guard immediately before signing the merchant payment. The canonical machine-readable workflow is /guarded-purchase.json.
 
 1. POST JSON to /api/merchant-snapshot for a low-friction score, /api/merchant-audit for full seller intelligence, /api/treasury for spend readiness, /api/base-balance for raw balances, /api/check for one fast preflight, /api/batch for up to 10 URLs, or /api/verify for full evidence.
 2. Read the HTTP 402 response and x402 payment requirements.
