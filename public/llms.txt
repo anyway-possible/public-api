@@ -1,6 +1,8 @@
-# Anyway Possible x402 Merchant Intelligence and Agent APIs
+# Diagnose Why an x402 API Is Not Generating Revenue
 
-> Start with a low-friction merchant score, upgrade to a full seller audit, or call Base USDC payment and web-evidence APIs.
+> Anyway Possible is seller intelligence for x402 merchants. Use it when an x402 API is not selling, needs more revenue, ranks poorly in Coinbase Bazaar, or needs evidence about listings, buyers, competitors, payment reliability, and Base USDC activity.
+
+Primary buyer intents: why is my x402 API not selling; increase x402 revenue; x402 seller intelligence; Coinbase Bazaar audit; x402 merchant score.
 
 Base URL: https://anywaypossible.com
 Merchant snapshot: POST /api/merchant-snapshot — $0.05 USDC
@@ -65,7 +67,7 @@ Example request body:
 
 ## Fastest Coinbase Agentic Wallet call
 
-npx awal@latest x402 pay https://anywaypossible.com/api/merchant-snapshot -X POST -d '{"payTo":"0xe5690D37805107C56f6195E65A262b234E0E5e75","queries":["x402 merchant analytics","Base wallet balance"],"excludePayers":["0x44D2DC46f987D1F2fa55e281934aDDd193a1A377"]}' --max-amount 50000 --json
+npx awal@latest x402 pay https://anywaypossible.com/api/merchant-snapshot -X POST -d '{"payTo":"0xe5690D37805107C56f6195E65A262b234E0E5e75","queries":["why is my x402 API not selling","increase x402 revenue","x402 seller intelligence"],"excludePayers":["0x44D2DC46f987D1F2fa55e281934aDDd193a1A377"]}' --max-amount 50000 --json
 
 ## Machine-readable resources
 

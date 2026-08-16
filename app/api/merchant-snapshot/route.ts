@@ -32,13 +32,13 @@ function getServer() {
     serverPromise = createX402Server({ apiKeyId: runtimeEnv.CDP_API_KEY_ID, apiKeySecret: runtimeEnv.CDP_API_KEY_SECRET, environment: "production", payToConfig: { type: "address", evm: PAY_TO }, builderCode: "anyway_possible", routes: {
       "POST /api/merchant-snapshot": {
         accepts: { scheme: "exact", price: "$0.05", network: "eip155:8453", payTo: PAY_TO, maxTimeoutSeconds: 60 },
-        serviceName: "Anyway Possible x402 Merchant Snapshot",
-        tags: ["x402 merchant analytics", "seller intelligence", "Bazaar ranking", "x402 revenue", "merchant score"],
+        serviceName: "Why Is My x402 API Not Selling? — Revenue Snapshot",
+        tags: ["x402 API not selling", "increase x402 revenue", "x402 seller intelligence", "Coinbase Bazaar audit", "x402 merchant score"],
         iconUrl: "https://anywaypossible.com/favicon.svg",
-        description: "Get a fast x402 merchant score before buying a full audit. Check Coinbase Bazaar inventory, semantic-search visibility, live 402 reliability, 30-day buyer signals, and observed Base USDC activity, then receive the single biggest revenue issue and a machine-readable upgrade path. No account or API key.",
+        description: "Diagnose why an x402 API is not generating revenue. This $0.05 seller-intelligence snapshot scores Coinbase Bazaar discovery, buyer-search visibility, live payment reliability, 30-day demand signals, and observed Base USDC activity, then returns the biggest revenue issue and a full-audit upgrade. No account or API key.",
         extensions: { ...declareDiscoveryExtension({
           method: "POST", bodyType: "json",
-          input: { payTo: PAY_TO, queries: ["x402 merchant analytics", "Base wallet balance"], excludePayers: ["0x44D2DC46f987D1F2fa55e281934aDDd193a1A377"] },
+          input: { payTo: PAY_TO, queries: ["why is my x402 API not selling", "increase x402 revenue", "x402 seller intelligence"], excludePayers: ["0x44D2DC46f987D1F2fa55e281934aDDd193a1A377"] },
           inputSchema: { type: "object", properties: { payTo: { type: "string", pattern: "^0x[a-fA-F0-9]{40}$", description: "Seller wallet on Base" }, queries: { type: "array", minItems: 1, maxItems: 3, items: { type: "string", minLength: 2, maxLength: 100 } }, excludePayers: { type: "array", maxItems: 10, items: { type: "string", pattern: "^0x[a-fA-F0-9]{40}$" } } }, required: ["payTo", "queries"] },
           output: { example: EXAMPLE, schema: { type: "object", properties: { snapshotId: { type: "string" }, merchant: { type: "string" }, network: { type: "string" }, observedAt: { type: "string" }, score: { type: "integer" }, grade: { type: "string" }, signals: { type: "object" }, visibility: { type: "array", items: { type: "object" } }, biggestIssue: { type: "string" }, upgrade: { type: "object" }, limitations: { type: "array", items: { type: "string" } } }, required: ["snapshotId", "merchant", "network", "observedAt", "score", "grade", "signals", "visibility", "biggestIssue", "upgrade", "limitations"] } },
         }) },
@@ -75,4 +75,4 @@ export async function POST(request: NextRequest) {
   catch (error) { console.error("x402 initialization failed", error); return NextResponse.json({ error: "Payment service is temporarily unavailable." }, { status: 503 }); }
 }
 
-export async function GET() { return NextResponse.json({ service: "Anyway Possible x402 Merchant Snapshot", price: "$0.05 USDC", network: "Base (eip155:8453)", method: "POST", request: { payTo: PAY_TO, queries: ["x402 merchant analytics", "Base wallet balance"], excludePayers: ["0x44D2DC46f987D1F2fa55e281934aDDd193a1A377"] }, returns: ["merchant score and grade", "Bazaar inventory", "semantic visibility", "buyer and USDC signals", "biggest revenue issue", "$0.50 full-audit upgrade"] }); }
+export async function GET() { return NextResponse.json({ service: "Why Is My x402 API Not Selling? — Revenue Snapshot", useWhen: "An x402 seller needs to diagnose weak discovery, demand, or revenue before purchasing a full audit.", price: "$0.05 USDC", network: "Base (eip155:8453)", method: "POST", request: { payTo: PAY_TO, queries: ["why is my x402 API not selling", "increase x402 revenue", "x402 seller intelligence"], excludePayers: ["0x44D2DC46f987D1F2fa55e281934aDDd193a1A377"] }, returns: ["merchant score and grade", "Bazaar inventory", "semantic visibility", "buyer and USDC signals", "biggest revenue issue", "$0.50 full-audit upgrade"] }); }

@@ -11,9 +11,9 @@ export async function generateMetadata(): Promise<Metadata> {
   const host = requestHeaders.get("x-forwarded-host") ?? requestHeaders.get("host") ?? "anywaypossible.com";
   const protocol = requestHeaders.get("x-forwarded-proto") ?? (host.includes("localhost") ? "http" : "https");
   const image = `${protocol}://${host}/og.png`;
-  const description = "Start with a $0.05 x402 Merchant Snapshot, then upgrade to a full audit of Bazaar rankings, reliability, competitors, buyer signals, and Base USDC activity.";
+  const description = "Diagnose why your x402 API is not generating revenue. Start with a $0.05 seller-intelligence snapshot, then upgrade to a full Coinbase Bazaar revenue audit.";
   return {
-    title: "Anyway Possible — x402 Merchant Intelligence",
+    title: "Why Is My x402 API Not Selling? — Anyway Possible",
     description,
     icons: { icon: "/favicon.svg" },
     openGraph: { title: "Anyway Possible", description, images: [{ url: image, width: 1200, height: 630 }] },

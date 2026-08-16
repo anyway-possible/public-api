@@ -7,9 +7,9 @@ export default function PublicHome() {
     <main className="public-shell">
       <nav className="public-nav"><Link href="/">ANYWAY POSSIBLE</Link><div><a href="/api/health">STATUS</a><a href="/openapi.json">OPENAPI</a><a href="#api">API</a></div></nav>
       <section className="public-hero">
-        <p className="eyebrow">X402 · SELLER INTELLIGENCE · FROM $0.05</p>
-        <h1>Know why your<br />API isn’t selling.</h1>
-        <p className="lede">Start with a $0.05 merchant score. Upgrade to a full audit for Bazaar rankings, competitor prices, 402 reliability, buyer signals, Base USDC evidence, and the three fixes most likely to move revenue.</p>
+        <p className="eyebrow">X402 API REVENUE DIAGNOSIS · FROM $0.05</p>
+        <h1>Why isn’t your<br />x402 API selling?</h1>
+        <p className="lede">Diagnose weak x402 revenue. Start with a $0.05 seller-intelligence snapshot, then upgrade for Coinbase Bazaar rankings, competitor prices, payment reliability, buyer signals, Base USDC evidence, and three prioritized fixes.</p>
         <div className="public-actions"><a href="#api">Call the API →</a><a className="ghost" href="/api/health">Check status</a></div>
       </section>
       <section className="public-proof">
@@ -22,14 +22,14 @@ export default function PublicHome() {
           <p className="eyebrow">LOW-FRICTION DIAGNOSIS</p>
           <h2>Snapshot</h2>
           <strong>$0.05 <span>USDC / score</span></strong>
-          <p>Get the merchant grade, inventory, semantic visibility, public buyer signals, observed external USDC, live 402 count, and the single biggest revenue issue.</p>
+          <p>Diagnose why an x402 API is not generating revenue. Get the merchant grade, Bazaar visibility, buyer signals, observed external USDC, live payment count, and the single biggest issue.</p>
           <code>POST /api/merchant-snapshot</code>
         </article>
         <article className="audit-product">
           <p className="eyebrow">X402 SELLER INTELLIGENCE</p>
           <h2>Merchant Audit</h2>
           <strong>$0.50 <span>USDC / report</span></strong>
-          <p>Audit Bazaar visibility, listing quality, competitor pricing, x402 reliability, buyer reach, and inbound Base USDC—then get three prioritized revenue actions.</p>
+          <p>Run a full x402 revenue audit across Coinbase Bazaar ranking, listing quality, competitor pricing, payment reliability, buyer reach, and inbound Base USDC—then get three prioritized actions.</p>
           <code>POST /api/merchant-audit</code>
         </article>
         <article>
@@ -70,9 +70,9 @@ export default function PublicHome() {
       </section>
       <section className="sample-report" aria-labelledby="sample-title">
         <div className="sample-intro"><p className="eyebrow">REAL REPORT · ANYWAY POSSIBLE</p><h2 id="sample-title">See the signal<br />before you pay.</h2><p>This is a public example generated from our own merchant wallet. Internal validation payments are excluded from customer revenue.</p><a href="#api">Run your snapshot →</a></div>
-        <div className="sample-score"><span>Merchant score</span><strong>86<small>/100</small></strong><b>B</b><p>Technically healthy. Discovery for merchant analytics remains the main gap.</p></div>
+        <div className="sample-score"><span>Merchant score</span><strong>88<small>/100</small></strong><b>B</b><p>Technically healthy. Discovery for x402 revenue searches remains the main gap.</p></div>
         <dl className="sample-facts">
-          <div><dt>Catalog</dt><dd>6 listings</dd></div>
+          <div><dt>Catalog</dt><dd>7 listings</dd></div>
           <div><dt>Reliability sample</dt><dd>5 / 5 ready</dd></div>
           <div><dt>“Base wallet balance”</dt><dd>#1</dd></div>
           <div><dt>“Agent treasury”</dt><dd>#2</dd></div>
