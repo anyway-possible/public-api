@@ -2,11 +2,26 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Anyway Possible Agent Utility API",
-    "version": "7.0.0",
-    "description": "x402 merchant intelligence, Base USDC payment preflight, wallet balances, URL checks, and web evidence for autonomous agents."
+    "version": "8.0.0",
+    "description": "A $0.05 x402 Merchant Snapshot, $0.50 full Merchant Audit, Base USDC payment preflight, wallet balances, URL checks, and web evidence for autonomous agents."
   },
   "servers": [{ "url": "https://anywaypossible.com" }],
   "paths": {
+    "/api/merchant-snapshot": {
+      "get": { "summary": "Read $0.05 x402 Merchant Snapshot metadata", "responses": { "200": { "description": "Service metadata" } } },
+      "post": {
+        "operationId": "snapshotX402Merchant",
+        "summary": "Score an x402 merchant for $0.05 USDC",
+        "description": "Returns a merchant score, Bazaar inventory, semantic visibility, public buyer and Base USDC signals, live 402 count, biggest revenue issue, and machine-readable upgrade to the $0.50 full audit.",
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MerchantSnapshotRequest" } } } },
+        "responses": {
+          "200": { "description": "Paid merchant snapshot", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MerchantSnapshotResult" } } } },
+          "400": { "description": "Invalid wallet, queries, or exclusions" },
+          "402": { "description": "x402 payment required" },
+          "502": { "description": "A required public data source was unavailable" }
+        }
+      }
+    },
     "/api/merchant-audit": {
       "get": { "summary": "Read $0.50 x402 Merchant Audit metadata", "responses": { "200": { "description": "Service metadata" } } },
       "post": {
@@ -171,6 +186,33 @@
   },
   "components": {
     "schemas": {
+      "MerchantSnapshotRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["payTo", "queries"],
+        "properties": {
+          "payTo": { "type": "string", "pattern": "^0x[a-fA-F0-9]{40}$" },
+          "queries": { "type": "array", "minItems": 1, "maxItems": 3, "items": { "type": "string", "minLength": 2, "maxLength": 100 } },
+          "excludePayers": { "type": "array", "maxItems": 10, "items": { "type": "string", "pattern": "^0x[a-fA-F0-9]{40}$" } }
+        }
+      },
+      "MerchantSnapshotResult": {
+        "type": "object",
+        "required": ["snapshotId", "merchant", "network", "observedAt", "score", "grade", "signals", "visibility", "biggestIssue", "upgrade", "limitations"],
+        "properties": {
+          "snapshotId": { "type": "string" },
+          "merchant": { "type": "string" },
+          "network": { "type": "string" },
+          "observedAt": { "type": "string", "format": "date-time" },
+          "score": { "type": "integer", "minimum": 0, "maximum": 100 },
+          "grade": { "type": "string", "enum": ["A", "B", "C", "D", "F"] },
+          "signals": { "type": "object" },
+          "visibility": { "type": "array", "items": { "type": "object" } },
+          "biggestIssue": { "type": "string" },
+          "upgrade": { "type": "object" },
+          "limitations": { "type": "array", "items": { "type": "string" } }
+        }
+      },
       "MerchantAuditRequest": {
         "type": "object",
         "additionalProperties": false,

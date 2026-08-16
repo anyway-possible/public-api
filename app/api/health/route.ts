@@ -6,9 +6,9 @@ export async function GET() {
   return NextResponse.json({
     ok: true,
     service: "Anyway Possible Agent Utilities",
-    version: "7.0.0",
+    version: "8.0.0",
     network: "Base",
-    paidEndpoints: ["/api/merchant-audit", "/api/treasury", "/api/base-balance", "/api/check", "/api/batch", "/api/verify"],
+    paidEndpoints: ["/api/merchant-snapshot", "/api/merchant-audit", "/api/treasury", "/api/base-balance", "/api/check", "/api/batch", "/api/verify"],
     checkedAt: new Date().toISOString(),
   }, { headers: { "cache-control": "no-store" } });
 }

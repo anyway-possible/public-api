@@ -10,10 +10,10 @@ export async function generateMetadata(): Promise<Metadata> {
   const requestHeaders = await headers();
   const host = requestHeaders.get("x-forwarded-host") ?? requestHeaders.get("host") ?? "anywaypossible.com";
   const protocol = requestHeaders.get("x-forwarded-proto") ?? (host.includes("localhost") ? "http" : "https");
-  const image = `${protocol}://${host}/og-treasury.png`;
-  const description = "A pay-per-report x402 Merchant Audit for Bazaar rankings, listing reliability, buyer signals, competitor pricing, and Base USDC activity.";
+  const image = `${protocol}://${host}/og.png`;
+  const description = "Start with a $0.05 x402 Merchant Snapshot, then upgrade to a full audit of Bazaar rankings, reliability, competitors, buyer signals, and Base USDC activity.";
   return {
-    title: "Anyway Possible — x402 Merchant Audit",
+    title: "Anyway Possible — x402 Merchant Intelligence",
     description,
     icons: { icon: "/favicon.svg" },
     openGraph: { title: "Anyway Possible", description, images: [{ url: image, width: 1200, height: 630 }] },

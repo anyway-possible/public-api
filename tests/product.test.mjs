@@ -6,9 +6,20 @@ const root = new URL("../", import.meta.url);
 
 test("public surface explains the paid agent product", async () => {
   const page = await readFile(new URL("app/page.tsx", root), "utf8");
-  for (const section of ["X402 · SELLER INTELLIGENCE", "Know why your", "POST /api/merchant-audit", "POST /api/treasury", "POST /api/base-balance", "POST /api/check", "POST /api/batch", "POST /api/verify", "Prioritized action"]) {
+  for (const section of ["X402 · SELLER INTELLIGENCE", "Know why your", "POST /api/merchant-snapshot", "POST /api/merchant-audit", "POST /api/treasury", "POST /api/base-balance", "POST /api/check", "POST /api/batch", "POST /api/verify", "Prioritized action"]) {
     assert.match(page, new RegExp(section));
   }
+});
+
+test("merchant snapshot is the low-friction audit funnel", async () => {
+  const route = await readFile(new URL("app/api/merchant-snapshot/route.ts", root), "utf8");
+  assert.match(route, /Anyway Possible x402 Merchant Snapshot/);
+  assert.match(route, /\$0\.05/);
+  assert.match(route, /amountUsd: 0\.05/);
+  assert.match(route, /x402 merchant analytics/);
+  assert.match(route, /biggestIssue/);
+  assert.match(route, /\/api\/merchant-audit/);
+  assert.match(route, /priceUsd: 0\.5/);
 });
 
 test("merchant audit is the flagship revenue product", async () => {

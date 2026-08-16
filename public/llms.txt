@@ -1,8 +1,9 @@
-# Anyway Possible x402 Merchant Audit and Agent APIs
+# Anyway Possible x402 Merchant Intelligence and Agent APIs
 
-> Pay-per-report seller intelligence plus Base USDC payment and web-evidence APIs for autonomous agents.
+> Start with a low-friction merchant score, upgrade to a full seller audit, or call Base USDC payment and web-evidence APIs.
 
 Base URL: https://anywaypossible.com
+Merchant snapshot: POST /api/merchant-snapshot — $0.05 USDC
 Merchant audit: POST /api/merchant-audit — $0.50 USDC
 Treasury endpoint: POST /api/treasury — $0.02 USDC
 Base wallet endpoint: POST /api/base-balance — $0.001 USDC
@@ -23,6 +24,12 @@ For /api/merchant-audit:
 - queries: required array of 1 to 5 buyer-intent search phrases
 - excludePayers: optional array of known internal or funding wallets
 - returns a 0–100 score and grade, Bazaar listing defects, live 402 reliability, semantic rankings, competitor prices, buyer signals, observed inbound USDC, and three prioritized actions
+
+For /api/merchant-snapshot:
+- payTo: required 20-byte seller wallet on Base
+- queries: required array of 1 to 3 buyer-intent search phrases
+- excludePayers: optional array of known internal or funding wallets
+- returns the score and grade, catalog inventory, visibility, public buyer and USDC signals, reliable-listing count, single biggest issue, and an upgrade request for /api/merchant-audit
 
 For /api/base-balance:
 - address: any 20-byte EVM address; returns live Base ETH and Circle USDC balances plus block height
@@ -50,19 +57,20 @@ Example request body:
 
 ## Integration flow
 
-1. POST JSON to /api/merchant-audit for seller intelligence, /api/treasury for spend readiness, /api/base-balance for raw balances, /api/check for one fast preflight, /api/batch for up to 10 URLs, or /api/verify for full evidence.
+1. POST JSON to /api/merchant-snapshot for a low-friction score, /api/merchant-audit for full seller intelligence, /api/treasury for spend readiness, /api/base-balance for raw balances, /api/check for one fast preflight, /api/batch for up to 10 URLs, or /api/verify for full evidence.
 2. Read the HTTP 402 response and x402 payment requirements.
-3. Select the Base payment option. Authorize at most 500000 atomic USDC units for /api/merchant-audit, 1000 for /api/base-balance or /api/check, 10000 for /api/batch or /api/verify, or 20000 for /api/treasury.
+3. Select the Base payment option. Authorize at most 50000 atomic USDC units for /api/merchant-snapshot, 500000 for /api/merchant-audit, 1000 for /api/base-balance or /api/check, 10000 for /api/batch or /api/verify, or 20000 for /api/treasury.
 4. Repeat the POST with the x402 payment signature.
 5. Treat HTTP 200 as a completed paid request. Full verification includes observedAt, finalUrl, redirectChain, contentSha256, receiptId, metadata, and selected response headers.
 
 ## Fastest Coinbase Agentic Wallet call
 
-npx awal@latest x402 pay https://anywaypossible.com/api/merchant-audit -X POST -d '{"payTo":"0xe5690D37805107C56f6195E65A262b234E0E5e75","queries":["x402 merchant analytics","Base wallet balance"],"excludePayers":["0x44D2DC46f987D1F2fa55e281934aDDd193a1A377"]}' --max-amount 500000 --json
+npx awal@latest x402 pay https://anywaypossible.com/api/merchant-snapshot -X POST -d '{"payTo":"0xe5690D37805107C56f6195E65A262b234E0E5e75","queries":["x402 merchant analytics","Base wallet balance"],"excludePayers":["0x44D2DC46f987D1F2fa55e281934aDDd193a1A377"]}' --max-amount 50000 --json
 
 ## Machine-readable resources
 
 - OpenAPI: https://anywaypossible.com/openapi.json
+- Merchant snapshot metadata: https://anywaypossible.com/api/merchant-snapshot
 - Merchant audit metadata: https://anywaypossible.com/api/merchant-audit
 - Treasury readiness metadata: https://anywaypossible.com/api/treasury
 - Entry check metadata: https://anywaypossible.com/api/check
