@@ -26,6 +26,8 @@ test("merchant audit is the flagship revenue product", async () => {
   assert.match(audit, /parsePublicUrl/);
   assert.match(audit, /x-awp-self-test/);
   assert.match(audit, /scoreBreakdown/);
+  assert.match(audit, /analyzedListingCount/);
+  assert.match(audit, /listingSampleLimited/);
   assert.match(audit, /topCompetitors/);
   assert.match(audit, /limitations/);
 });

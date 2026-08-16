@@ -93,14 +93,16 @@ export async function auditMerchant(input: MerchantAuditInput) {
   const blockscoutUrl = `${BLOCKSCOUT}/addresses/${payTo}/token-transfers?type=ERC-20`;
   // Start every independent upstream immediately. Reliability depends only on
   // merchant discovery, so it should overlap with semantic search and chain data.
-  const merchantPromise = getJson<{ resources?: Resource[] } | Resource[]>(merchantUrl);
+  const merchantPromise = getJson<{ resources?: Resource[]; pagination?: { total?: number } } | Resource[]>(merchantUrl);
   const searchPromise = Promise.all(input.queries.map(async (query) => {
       try { return await getJson<{ resources?: Resource[] } | Resource[]>(`${COINBASE}/search?query=${encodeURIComponent(query)}&limit=10`); }
       catch { return { resources: [] as Resource[] }; }
     }));
   const transfersPromise = getJson<{ items?: Array<{ token?: { address_hash?: string }; total?: { value?: string; decimals?: string }; from?: { hash?: string }; to?: { hash?: string }; transaction_hash?: string; timestamp?: string }>; next_page_params?: unknown }>(blockscoutUrl).catch(() => ({ items: [] }));
   const merchantRaw = await merchantPromise;
-  const resources = (Array.isArray(merchantRaw) ? merchantRaw : merchantRaw.resources ?? []).slice(0, 5);
+  const allResources = Array.isArray(merchantRaw) ? merchantRaw : merchantRaw.resources ?? [];
+  const catalogListingCount = Array.isArray(merchantRaw) ? allResources.length : merchantRaw.pagination?.total ?? allResources.length;
+  const resources = allResources.slice(0, 5);
   const [searchResults, transfersRaw, reliability] = await Promise.all([
     searchPromise,
     transfersPromise,
@@ -125,11 +127,11 @@ export async function auditMerchant(input: MerchantAuditInput) {
   });
   const external = inbound.filter((item) => !item.excluded);
   const total = (items: typeof inbound) => Number(items.reduce((sum, item) => sum + item.amountUsdc, 0).toFixed(6));
-  const latestActivity = [...inbound.map((item) => item.timestamp), ...resources.map((resource) => resource.quality?.lastCalledAt)].filter(Boolean).sort().at(-1) ?? null;
+  const latestActivity = [...inbound.map((item) => item.timestamp), ...allResources.map((resource) => resource.quality?.lastCalledAt)].filter(Boolean).sort().at(-1) ?? null;
   const averageMetadata = listings.length ? listings.reduce((sum, item) => sum + item.metadataCompleteness, 0) / listings.length : 0;
   const reliabilityScore = listings.length ? reliability.filter((item) => item.x402Ready).length / listings.length : 0;
   const rankingScore = rankings.length ? rankings.reduce((sum, item) => sum + (item.rank && item.rank <= 3 ? 1 : item.rank && item.rank <= 10 ? 0.5 : 0), 0) / rankings.length : 0;
-  const maxUniquePayers = Math.max(0, ...resources.map((resource) => resource.quality?.l30DaysUniquePayers ?? 0));
+  const maxUniquePayers = Math.max(0, ...allResources.map((resource) => resource.quality?.l30DaysUniquePayers ?? 0));
   const age = latestActivity ? (Date.now() - Date.parse(latestActivity)) / 86_400_000 : Infinity;
   const scoreBreakdown = { listings: resources.length ? 20 : 0, reliability: Math.round(reliabilityScore * 20), metadata: Math.round(averageMetadata * 0.2), visibility: Math.round(rankingScore * 20), recency: age <= 7 ? 10 : age <= 30 ? 5 : 0, buyerReach: maxUniquePayers >= 3 ? 10 : maxUniquePayers >= 1 ? 5 : 0 };
   const score = Object.values(scoreBreakdown).reduce((sum, value) => sum + value, 0);
@@ -140,7 +142,7 @@ export async function auditMerchant(input: MerchantAuditInput) {
   if (maxUniquePayers < 3) actions.push("Publish a copy-paste buyer example and recruit three independent agents before adding more endpoints.");
   if (!actions.length) actions.push("Hold the current listing contract and test a higher price with the next five independent buyers.");
   const observedAt = new Date().toISOString();
-  const summary = { listingCount: listings.length, indexedCalls30d: resources.reduce((sum, resource) => sum + (resource.quality?.l30DaysTotalCalls ?? 0), 0), maxResourceUniquePayers30d: maxUniquePayers, onchainInboundUsdc: total(inbound), externalInboundUsdc: total(external), excludedInboundUsdc: total(inbound.filter((item) => item.excluded)), uniqueExternalPayers: new Set(external.map((item) => item.payer)).size, latestActivity };
+  const summary = { listingCount: catalogListingCount, analyzedListingCount: listings.length, listingSampleLimited: catalogListingCount > listings.length, indexedCalls30d: allResources.reduce((sum, resource) => sum + (resource.quality?.l30DaysTotalCalls ?? 0), 0), maxResourceUniquePayers30d: Math.max(0, ...allResources.map((resource) => resource.quality?.l30DaysUniquePayers ?? 0)), onchainInboundUsdc: total(inbound), externalInboundUsdc: total(external), excludedInboundUsdc: total(inbound.filter((item) => item.excluded)), uniqueExternalPayers: new Set(external.map((item) => item.payer)).size, latestActivity };
   const auditId = await digest(JSON.stringify({ payTo, observedAt, score, summary, rankings: rankings.map(({ query, rank }) => ({ query, rank })) }));
-  return { auditId, merchant: payTo, network: "Base (eip155:8453)", observedAt, score, grade: grade(score), scoreBreakdown, summary, listings, rankings, onchain: { ...summary, sampleLimited: !!transfersRaw.next_page_params, recentInboundUsdc: inbound.slice(0, 10) }, actions: actions.slice(0, 3), limitations: ["Public discovery and onchain transfers cannot prove that every inbound payment is customer revenue.", "Unique payer counts can overlap across resources; the summary reports the largest per-resource Bazaar value.", "Blockscout results may be page-limited; sampleLimited indicates when older transfers were not inspected."] };
+  return { auditId, merchant: payTo, network: "Base (eip155:8453)", observedAt, score, grade: grade(score), scoreBreakdown, summary, listings, rankings, onchain: { ...summary, sampleLimited: !!transfersRaw.next_page_params, recentInboundUsdc: inbound.slice(0, 10) }, actions: actions.slice(0, 3), limitations: ["Public discovery and onchain transfers cannot prove that every inbound payment is customer revenue.", "Unique payer counts can overlap across resources; the summary reports the largest per-resource Bazaar value.", "At most five merchant listings receive full reliability and metadata analysis; listingSampleLimited indicates a larger catalog.", "Blockscout results may be page-limited; sampleLimited indicates when older transfers were not inspected."] };
 }
