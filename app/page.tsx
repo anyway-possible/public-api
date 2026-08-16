@@ -7,18 +7,25 @@ export default function PublicHome() {
     <main className="public-shell">
       <nav className="public-nav"><Link href="/">ANYWAY POSSIBLE</Link><div><a href="/api/health">STATUS</a><a href="/openapi.json">OPENAPI</a><a href="#api">API</a></div></nav>
       <section className="public-hero">
-        <p className="eyebrow">X402 · USDC · BASE · FROM $0.001</p>
-        <h1>Preflight before<br />agents pay.</h1>
-        <p className="lede">A machine-readable Base USDC payment decision before an autonomous agent signs—plus wallet balances, URL checks, and tamper-evident web evidence. No account, API key, or subscription.</p>
+        <p className="eyebrow">X402 · SELLER INTELLIGENCE · $0.50</p>
+        <h1>Know why your<br />API isn’t selling.</h1>
+        <p className="lede">One paid audit of your Bazaar listings, semantic-search rank, competitor prices, 402 reliability, buyer signals, and Base USDC activity—with the three fixes most likely to move revenue.</p>
         <div className="public-actions"><a href="#api">Call the API →</a><a className="ghost" href="/api/health">Check status</a></div>
       </section>
       <section className="public-proof">
-        <article><span>01</span><strong>Machine evidence</strong><p>Assertions, redirect history, metadata, response headers, content hash, and observation time.</p></article>
-        <article><span>02</span><strong>Agent-native payment</strong><p>HTTP 402 settlement in USDC on Base. No keys to provision for buyers.</p></article>
-        <article><span>03</span><strong>Bounded execution</strong><p>Private-network blocking, response caps, redirect validation, and deterministic structured output.</p></article>
+        <article><span>01</span><strong>Discovery evidence</strong><p>See exactly where your resources rank for the phrases buyers actually search.</p></article>
+        <article><span>02</span><strong>Revenue reality</strong><p>Separate listing claims, public buyer signals, and observed Base USDC transfers without pretending they mean the same thing.</p></article>
+        <article><span>03</span><strong>Prioritized action</strong><p>Receive a score, reliability checks, listing defects, competitor context, and three concrete next moves.</p></article>
       </section>
       <section className="product-grid" aria-label="API products">
         <article className="featured-product">
+          <p className="eyebrow">X402 SELLER INTELLIGENCE</p>
+          <h2>Merchant Audit</h2>
+          <strong>$0.50 <span>USDC / report</span></strong>
+          <p>Audit Bazaar visibility, listing quality, competitor pricing, x402 reliability, buyer reach, and inbound Base USDC—then get three prioritized revenue actions.</p>
+          <code>POST /api/merchant-audit</code>
+        </article>
+        <article>
           <p className="eyebrow">BASE USDC PAYMENT PREFLIGHT</p>
           <h2>Preflight</h2>
           <strong>$0.02 <span>USDC / call</span></strong>
@@ -55,14 +62,14 @@ export default function PublicHome() {
         </article>
       </section>
       <section className="api-panel" id="api">
-        <div><p className="eyebrow">FROM INTENT TO DECISION</p><h2>POST /api/treasury</h2><p>Send the paying wallet, intended recipient, and USDC amount. The result tells an agent whether to proceed, fund, review, or reject—with every check and limitation returned as structured data. Coinbase Agentic Wallet handles the x402 signature automatically.</p><p><a href="/openapi.json">OpenAPI specification ↗</a> · <a href="/llms.txt">Agent instructions ↗</a></p></div>
+        <div><p className="eyebrow">FROM LISTING TO ACTION</p><h2>POST /api/merchant-audit</h2><p>Send a seller wallet and one to five buyer-intent searches. The report connects discovery, metadata, live 402 behavior, public usage signals, competitor prices, and inbound USDC without overstating what public data proves.</p><p><a href="/openapi.json">OpenAPI specification ↗</a> · <a href="/llms.txt">Agent instructions ↗</a></p></div>
         <pre><code>{`npx awal@latest x402 pay \\
-  https://anywaypossible.com/api/treasury \\
+  https://anywaypossible.com/api/merchant-audit \\
   -X POST \\
-  -d '{"address":"0x1111111111111111111111111111111111111111","destinationAddress":"0x2222222222222222222222222222222222222222","plannedSpendUsdc":"1.00","minGasReserveEth":"0.00005","expectedChainId":8453}' \\
-  --max-amount 20000 --json`}</code></pre>
+  -d '{"payTo":"0xe5690D37805107C56f6195E65A262b234E0E5e75","queries":["x402 merchant analytics","Base wallet balance"],"excludePayers":["0x44D2DC46f987D1F2fa55e281934aDDd193a1A377"]}' \\
+  --max-amount 500000 --json`}</code></pre>
       </section>
-      <footer className="public-footer"><b>ANYWAY POSSIBLE</b><span>Built for agents that need evidence, not another opinion.</span><a href="/api/health">Operational status ↗</a></footer>
+      <footer className="public-footer"><b>ANYWAY POSSIBLE</b><span>Seller intelligence for the agent-to-agent economy.</span><a href="/api/health">Operational status ↗</a></footer>
     </main>
   );
 }

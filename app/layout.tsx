@@ -11,9 +11,9 @@ export async function generateMetadata(): Promise<Metadata> {
   const host = requestHeaders.get("x-forwarded-host") ?? requestHeaders.get("host") ?? "anywaypossible.com";
   const protocol = requestHeaders.get("x-forwarded-proto") ?? (host.includes("localhost") ? "http" : "https");
   const image = `${protocol}://${host}/og-treasury.png`;
-  const description = "Pay-per-call Base USDC payment preflight, wallet intelligence, and web evidence for autonomous agents using x402.";
+  const description = "A pay-per-report x402 Merchant Audit for Bazaar rankings, listing reliability, buyer signals, competitor pricing, and Base USDC activity.";
   return {
-    title: "Anyway Possible — Payment Preflight for AI Agents",
+    title: "Anyway Possible — x402 Merchant Audit",
     description,
     icons: { icon: "/favicon.svg" },
     openGraph: { title: "Anyway Possible", description, images: [{ url: image, width: 1200, height: 630 }] },

@@ -6,9 +6,27 @@ const root = new URL("../", import.meta.url);
 
 test("public surface explains the paid agent product", async () => {
   const page = await readFile(new URL("app/page.tsx", root), "utf8");
-  for (const section of ["X402 · USDC · BASE", "Preflight before", "POST /api/treasury", "POST /api/base-balance", "POST /api/check", "POST /api/batch", "POST /api/verify", "Bounded execution"]) {
+  for (const section of ["X402 · SELLER INTELLIGENCE", "Know why your", "POST /api/merchant-audit", "POST /api/treasury", "POST /api/base-balance", "POST /api/check", "POST /api/batch", "POST /api/verify", "Prioritized action"]) {
     assert.match(page, new RegExp(section));
   }
+});
+
+test("merchant audit is the flagship revenue product", async () => {
+  const [route, audit] = await Promise.all([
+    readFile(new URL("app/api/merchant-audit/route.ts", root), "utf8"),
+    readFile(new URL("lib/merchant-audit.ts", root), "utf8"),
+  ]);
+  assert.match(route, /Anyway Possible x402 Merchant Audit/);
+  assert.match(route, /\$0\.50/);
+  assert.match(route, /amountUsd: 0\.5/);
+  assert.match(route, /x402 analytics/);
+  assert.match(audit, /api\.cdp\.coinbase\.com/);
+  assert.match(audit, /base\.blockscout\.com/);
+  assert.match(audit, /parsePublicUrl/);
+  assert.match(audit, /x-awp-self-test/);
+  assert.match(audit, /scoreBreakdown/);
+  assert.match(audit, /topCompetitors/);
+  assert.match(audit, /limitations/);
 });
 
 test("Base payment preflight is the higher-value product", async () => {

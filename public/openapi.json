@@ -2,11 +2,26 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Anyway Possible Agent Utility API",
-    "version": "6.0.0",
-    "description": "Base USDC payment preflight, live wallet balances, URL checks, batch validation, and timestamped web evidence for autonomous agents, paid with x402 on Base."
+    "version": "7.0.0",
+    "description": "x402 merchant intelligence, Base USDC payment preflight, wallet balances, URL checks, and web evidence for autonomous agents."
   },
   "servers": [{ "url": "https://anywaypossible.com" }],
   "paths": {
+    "/api/merchant-audit": {
+      "get": { "summary": "Read $0.50 x402 Merchant Audit metadata", "responses": { "200": { "description": "Service metadata" } } },
+      "post": {
+        "operationId": "auditX402Merchant",
+        "summary": "Audit an x402 merchant for $0.50 USDC",
+        "description": "Scores Bazaar listings, semantic-search visibility, competitor prices, unpaid 402 reliability, public buyer signals, and inbound Base USDC, then returns three prioritized revenue actions.",
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MerchantAuditRequest" } } } },
+        "responses": {
+          "200": { "description": "Paid merchant audit", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MerchantAuditResult" } } } },
+          "400": { "description": "Invalid wallet, queries, or exclusions" },
+          "402": { "description": "x402 payment required" },
+          "502": { "description": "A required public data source was unavailable" }
+        }
+      }
+    },
     "/api/treasury": {
       "get": {
         "summary": "Read $0.02 Base USDC payment-preflight metadata",
@@ -156,6 +171,35 @@
   },
   "components": {
     "schemas": {
+      "MerchantAuditRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["payTo", "queries"],
+        "properties": {
+          "payTo": { "type": "string", "pattern": "^0x[a-fA-F0-9]{40}$" },
+          "queries": { "type": "array", "minItems": 1, "maxItems": 5, "items": { "type": "string", "minLength": 2, "maxLength": 100 } },
+          "excludePayers": { "type": "array", "maxItems": 10, "items": { "type": "string", "pattern": "^0x[a-fA-F0-9]{40}$" }, "description": "Known internal or funding wallets to exclude from external-inbound totals" }
+        }
+      },
+      "MerchantAuditResult": {
+        "type": "object",
+        "required": ["auditId", "merchant", "network", "observedAt", "score", "grade", "scoreBreakdown", "summary", "listings", "rankings", "onchain", "actions", "limitations"],
+        "properties": {
+          "auditId": { "type": "string" },
+          "merchant": { "type": "string" },
+          "network": { "type": "string" },
+          "observedAt": { "type": "string", "format": "date-time" },
+          "score": { "type": "integer", "minimum": 0, "maximum": 100 },
+          "grade": { "type": "string", "enum": ["A", "B", "C", "D", "F"] },
+          "scoreBreakdown": { "type": "object" },
+          "summary": { "type": "object" },
+          "listings": { "type": "array", "items": { "type": "object" } },
+          "rankings": { "type": "array", "items": { "type": "object" } },
+          "onchain": { "type": "object" },
+          "actions": { "type": "array", "items": { "type": "string" } },
+          "limitations": { "type": "array", "items": { "type": "string" } }
+        }
+      },
       "TreasuryRequest": {
         "type": "object",
         "additionalProperties": false,
