@@ -51,6 +51,19 @@ async function inspectResource(resource: Resource) {
     const url = parsePublicUrl(resource.resource);
     const input = resource.extensions?.bazaar?.info?.input;
     const method = input?.method?.toUpperCase() === "GET" ? "GET" : "POST";
+    // Cloudflare Workers cannot reliably fetch their own routed hostname from
+    // inside the same invocation. Use Coinbase's public preflight for our own
+    // listings; it performs the same 402 and Bazaar-contract checks externally.
+    if (url.hostname === "anywaypossible.com" || url.hostname === "www.anywaypossible.com" || url.hostname === "anyway-possible-api.jchromem.chatgpt.site") {
+      const response = await fetch("https://api.cdp.coinbase.com/platform/v2/x402/validate", {
+        method: "POST",
+        headers: { accept: "application/json", "content-type": "application/json" },
+        body: JSON.stringify({ resource: url.toString(), method }),
+        signal: AbortSignal.timeout(8_000),
+      });
+      const validation = await response.json() as { valid?: boolean; statusCode?: number; simulation?: { outcome?: string; rejectionReason?: string } };
+      return { status: validation.statusCode ?? response.status, x402Ready: validation.valid === true && validation.simulation?.outcome === "accepted", responseTimeMs: Date.now() - started, error: validation.valid ? null : validation.simulation?.rejectionReason ?? `Validation returned HTTP ${response.status}` };
+    }
     const response = await fetch(url, {
       method,
       redirect: "manual",

@@ -22,6 +22,7 @@ test("merchant audit is the flagship revenue product", async () => {
   assert.match(route, /x402 analytics/);
   assert.match(audit, /api\.cdp\.coinbase\.com/);
   assert.match(audit, /base\.blockscout\.com/);
+  assert.match(audit, /platform\/v2\/x402\/validate/);
   assert.match(audit, /parsePublicUrl/);
   assert.match(audit, /x-awp-self-test/);
   assert.match(audit, /scoreBreakdown/);
