@@ -53,3 +53,18 @@ export const decisions = sqliteTable("decisions", {
   createdAt: text("created_at").notNull(),
   resolvedAt: text("resolved_at"),
 });
+
+export const sourcingRequests = sqliteTable("sourcing_requests", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  requestId: text("request_id").notNull().unique(),
+  status: text("status").notNull().default("new"),
+  name: text("name").notNull(),
+  email: text("email").notNull(),
+  company: text("company").notNull().default(""),
+  description: text("description").notNull(),
+  quantity: text("quantity").notNull(),
+  neededBy: text("needed_by").notNull().default(""),
+  budgetRange: text("budget_range").notNull().default(""),
+  drawingUrl: text("drawing_url").notNull().default(""),
+  createdAt: text("created_at").notNull(),
+});
