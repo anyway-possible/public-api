@@ -1,0 +1,5 @@
+Contact: https://github.com/anyway-possible/public-api/security/advisories/new
+Expires: 2027-09-01T00:00:00Z
+Preferred-Languages: en
+Canonical: https://anywaypossible.com/.well-known/security.txt
+Policy: https://github.com/anyway-possible/public-api/blob/main/SECURITY.md

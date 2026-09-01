@@ -25,8 +25,13 @@ test("public discovery metadata identifies the canonical service", async () => {
   assert.match(sitemap, /https:\/\/anywaypossible\.com\/status/);
 });
 
-test("public stats expose retention and product concentration without payer identities", async () => {
+test("commercial metrics require a private bearer token and exclude payer identities", async () => {
+  const route = await readFile(new URL("app/api/stats/route.ts", root), "utf8");
   const dashboard = await readFile(new URL("db/dashboard.ts", root), "utf8");
+  assert.match(route, /METRICS_TOKEN/);
+  assert.match(route, /authorization/);
+  assert.match(route, /status: 401/);
+  assert.match(route, /status: 503/);
   assert.match(dashboard, /repeatAgents/);
   assert.match(dashboard, /multiDayAgents/);
   assert.match(dashboard, /repeatRate/);
@@ -230,6 +235,22 @@ test("verification blocks local targets and bounds response size", async () => {
   assert.match(verifier, /private and local network targets/);
   assert.match(verifier, /MAX_BYTES = 128 \* 1024/);
   assert.match(verifier, /MAX_REDIRECTS = 3/);
+  assert.match(verifier, /cloudflare-dns\.com\/dns-query/);
+  assert.match(verifier, /assertPublicDns/);
+  assert.match(verifier, /a === 100 && b >= 64/);
+  assert.match(verifier, /a === 203 && b === 0/);
   assert.match(verifier, /contentSha256/);
   assert.match(verifier, /receiptId/);
+});
+
+test("public responses define defense-in-depth browser headers and a security contact", async () => {
+  const [config, security] = await Promise.all([
+    readFile(new URL("next.config.ts", root), "utf8"),
+    readFile(new URL("public/.well-known/security.txt", root), "utf8"),
+  ]);
+  for (const header of ["Strict-Transport-Security", "Content-Security-Policy", "X-Content-Type-Options", "X-Frame-Options", "Referrer-Policy", "Permissions-Policy"]) {
+    assert.match(config, new RegExp(header));
+  }
+  assert.match(security, /Contact:/);
+  assert.match(security, /Canonical: https:\/\/anywaypossible\.com\/\.well-known\/security\.txt/);
 });

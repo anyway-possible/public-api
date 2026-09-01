@@ -13,7 +13,7 @@ const paidEndpoints = ["/api/payment-guard", "/api/merchant-snapshot", "/api/mer
 const mcpTools = ["merchant_snapshot", "treasury_preflight", "verify_web_evidence", "batch_check_urls"];
 
 export default function StatusPage() {
-  const health = { service: "Anyway Possible Agent Utilities", version: "10.0.0", network: "Base", paidEndpoints, mcp: { endpoint: "/api/mcp", tools: mcpTools }, checkedAt: new Date().toISOString() };
+  const health = { service: "Anyway Possible Agent Utilities", release: "Stable", network: "Base", paidEndpoints, mcp: { endpoint: "/api/mcp", tools: mcpTools }, checkedAt: new Date().toISOString() };
   return (
     <main className="public-shell status-page">
       <nav className="public-nav">
@@ -22,7 +22,7 @@ export default function StatusPage() {
       </nav>
       <section className="status-hero">
         <div><p className="eyebrow"><span />LIVE SERVICE STATUS</p><h1>Service is responding.</h1><p>The public gateway is available and advertising its configured API and MCP capabilities.</p></div>
-        <aside className="status-summary"><span><i />Operational</span><strong>{health.service}</strong><dl><div><dt>Network</dt><dd>{health.network}</dd></div><div><dt>Version</dt><dd>{health.version}</dd></div><div><dt>Checked</dt><dd>{new Date(health.checkedAt).toLocaleString("en-US", { timeZone: "UTC", dateStyle: "medium", timeStyle: "short" })} UTC</dd></div></dl></aside>
+        <aside className="status-summary"><span><i />Operational</span><strong>{health.service}</strong><dl><div><dt>Network</dt><dd>{health.network}</dd></div><div><dt>Release</dt><dd>{health.release}</dd></div><div><dt>Checked</dt><dd>{new Date(health.checkedAt).toLocaleString("en-US", { timeZone: "UTC", dateStyle: "medium", timeStyle: "short" })} UTC</dd></div></dl></aside>
       </section>
       <section className="status-content">
         <div className="status-grid"><article><span>API</span><strong>{health.paidEndpoints.length} paid routes</strong><p>Account-free HTTP endpoints with x402 payment requirements.</p></article><article><span>MCP</span><strong>{health.mcp.tools.length} agent tools</strong><p>Remote streamable HTTP server available at <code>{health.mcp.endpoint}</code>.</p></article><article><span>PAYMENTS</span><strong>Base · USDC</strong><p>Per-call pricing through the x402 payment protocol.</p></article></div>
