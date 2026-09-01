@@ -37,6 +37,9 @@ test("commercial metrics require a private bearer token and exclude payer identi
   assert.match(dashboard, /repeatRate/);
   assert.match(dashboard, /revenueByEndpoint/);
   assert.match(dashboard, /lastPaidAt/);
+  assert.match(dashboard, /dailyActivity/);
+  assert.match(dashboard, /lastUtcDays\(30\)/);
+  assert.match(dashboard, /paymentChallenges: challengeEvents\.filter/);
   assert.match(dashboard, /mcpInitializations/);
   assert.match(dashboard, /mcpPaymentChallenges/);
   assert.match(dashboard, /mcpConversionRate/);

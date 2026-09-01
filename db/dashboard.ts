@@ -33,10 +33,17 @@ export type DashboardSnapshot = {
   openDecisions: number;
   openIncidents: number;
   recentSettlements: Array<{ amountUsd: number; endpoint: string | null; occurredAt: string; transactionHash: string | null }>;
+  dailyActivity: Array<{ date: string; paidCalls: number; paymentChallenges: number; revenueUsd: number }>;
 };
 
+function lastUtcDays(count: number) {
+  const today = new Date();
+  const end = Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate());
+  return Array.from({ length: count }, (_, index) => new Date(end - (count - index - 1) * 86_400_000).toISOString().slice(0, 10));
+}
+
 export async function getDashboardSnapshot(): Promise<DashboardSnapshot> {
-  const empty: DashboardSnapshot = { paidCalls: 0, uniqueAgents: 0, grossRevenue: 0, testCalls: 0, testVolumeUsd: 0, paymentChallenges: 0, conversionRate: 0, callsByEndpoint: {}, revenueByEndpoint: {}, challengesByEndpoint: {}, mcpInitializations: 0, mcpToolLists: 0, mcpPaymentChallenges: 0, mcpPaidCalls: 0, mcpUniqueAgents: 0, mcpConversionRate: 0, mcpChallengesByTool: {}, repeatAgents: 0, multiDayAgents: 0, repeatRate: 0, lastPaidAt: null, operatingCost: 0, openDecisions: 0, openIncidents: 0, recentSettlements: [] };
+  const empty: DashboardSnapshot = { paidCalls: 0, uniqueAgents: 0, grossRevenue: 0, testCalls: 0, testVolumeUsd: 0, paymentChallenges: 0, conversionRate: 0, callsByEndpoint: {}, revenueByEndpoint: {}, challengesByEndpoint: {}, mcpInitializations: 0, mcpToolLists: 0, mcpPaymentChallenges: 0, mcpPaidCalls: 0, mcpUniqueAgents: 0, mcpConversionRate: 0, mcpChallengesByTool: {}, repeatAgents: 0, multiDayAgents: 0, repeatRate: 0, lastPaidAt: null, operatingCost: 0, openDecisions: 0, openIncidents: 0, recentSettlements: [], dailyActivity: [] };
   try {
     const db = getDb();
     const [eventRows, expenseRows, decisionRows, incidentRows, recentSettlements] = await Promise.all([
@@ -92,6 +99,15 @@ export async function getDashboardSnapshot(): Promise<DashboardSnapshot> {
       counts[endpoint] = (counts[endpoint] ?? 0) + 1;
       return counts;
     }, {});
+    const dailyActivity = lastUtcDays(30).map((date) => {
+      const paid = customerEvents.filter((row) => row.occurredAt.startsWith(date));
+      return {
+        date,
+        paidCalls: paid.length,
+        paymentChallenges: challengeEvents.filter((row) => row.occurredAt.startsWith(date)).length,
+        revenueUsd: paid.reduce((sum, row) => sum + row.amountUsd, 0),
+      };
+    });
     return {
       paidCalls: customerEvents.length,
       uniqueAgents,
@@ -118,6 +134,7 @@ export async function getDashboardSnapshot(): Promise<DashboardSnapshot> {
       openDecisions: decisionRows.length,
       openIncidents: incidentRows.length,
       recentSettlements: recentSettlements.filter((row) => !seedTimes.has(row.occurredAt)),
+      dailyActivity,
     };
   } catch {
     return empty;
