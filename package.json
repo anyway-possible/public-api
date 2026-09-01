@@ -13,6 +13,9 @@
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
     "db:generate": "drizzle-kit generate"
   },
+  "overrides": {
+    "ws": "8.21.3"
+  },
   "dependencies": {
     "@coinbase/cdp-sdk": "^1.55.0",
     "@x402/core": "^2.21.0",
@@ -21,7 +24,7 @@
     "@x402/next": "^2.21.0",
     "@x402/svm": "^2.21.0",
     "drizzle-orm": "0.45.2",
-    "next": "16.2.6",
+    "next": "16.3.4",
     "react": "19.2.6",
     "react-dom": "19.2.6"
   },
@@ -36,7 +39,7 @@
     "cross-env": "10.1.0",
     "drizzle-kit": "0.31.10",
     "eslint": "9.39.4",
-    "eslint-config-next": "16.2.6",
+    "eslint-config-next": "16.3.4",
     "react-server-dom-webpack": "19.2.6",
     "tailwindcss": "4.2.1",
     "typescript": "5.9.3",
