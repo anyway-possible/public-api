@@ -12,6 +12,7 @@ import { events } from "../db/schema";
 import { createMerchantSnapshot } from "./merchant-snapshot";
 import { createTreasuryPreflight } from "./treasury";
 import { checkUrl, verifyUrl } from "./verification";
+import { recordMcpEvent } from "./mcp-analytics";
 
 const PAY_TO = "0xe5690D37805107C56f6195E65A262b234E0E5e75" as const;
 const NETWORK = "eip155:8453" as const;
@@ -127,7 +128,7 @@ async function getToolSet() {
           toolName: "merchant_snapshot",
           price: "$0.05",
           amountUsd: 0.05,
-          endpoint: "/mcp#merchant_snapshot",
+          endpoint: "/api/mcp#merchant_snapshot",
           serviceName: "Anyway Possible x402 Merchant Snapshot",
           description: "Diagnose why an x402 API is not selling using Bazaar visibility, buyer signals, payment reliability, and observed Base USDC activity.",
           tags: ["x402 merchant analytics", "x402 seller intelligence", "Bazaar visibility", "agent revenue"],
@@ -139,7 +140,7 @@ async function getToolSet() {
           toolName: "treasury_preflight",
           price: "$0.02",
           amountUsd: 0.02,
-          endpoint: "/mcp#treasury_preflight",
+          endpoint: "/api/mcp#treasury_preflight",
           serviceName: "Anyway Possible Base Payment Preflight",
           description: "Check Base ETH and USDC funding, gas, chain intent, destination type, and common payment hazards before an agent signs.",
           tags: ["Base USDC", "payment preflight", "agent treasury", "wallet readiness"],
@@ -151,7 +152,7 @@ async function getToolSet() {
           toolName: "verify_web_evidence",
           price: "$0.01",
           amountUsd: 0.01,
-          endpoint: "/mcp#verify_web_evidence",
+          endpoint: "/api/mcp#verify_web_evidence",
           serviceName: "Anyway Possible Web Evidence",
           description: "Verify one public URL and return timestamped status, redirects, metadata, content hash, and a receipt for agent decisions and citations.",
           tags: ["web evidence", "citation verification", "content hash", "source validation"],
@@ -163,7 +164,7 @@ async function getToolSet() {
           toolName: "batch_check_urls",
           price: "$0.01",
           amountUsd: 0.01,
-          endpoint: "/mcp#batch_check_urls",
+          endpoint: "/api/mcp#batch_check_urls",
           serviceName: "Anyway Possible Batch URL Validator",
           description: "Check up to ten public URLs in one paid call; partial failures remain isolated and each result includes status, latency, redirects, and content type.",
           tags: ["batch URL check", "citation validation", "link checker", "API monitoring"],
@@ -183,7 +184,19 @@ function paidTool<TArgs extends Record<string, unknown>>(
 ): MCPToolCallback<TArgs> {
   return async (args, extra) => {
     const paid = await getToolSet();
-    return paid[tool](handler)(args, extra);
+    const result = await paid[tool](handler)(args, extra);
+    const structured = result.structuredContent as { x402Version?: number; error?: string } | undefined;
+    if (result.isError && structured?.x402Version === 2 && structured.error === "Payment required to access this tool") {
+      const requestHeaders = (extra as { requestInfo?: { headers?: Record<string, string | string[] | undefined> } })?.requestInfo?.headers ?? {};
+      const toolNames: Record<keyof ToolSet, string> = {
+        merchantSnapshot: "merchant_snapshot",
+        treasuryPreflight: "treasury_preflight",
+        verifyEvidence: "verify_web_evidence",
+        batchCheck: "batch_check_urls",
+      };
+      await recordMcpEvent("mcp_payment_challenge", `/api/mcp#${toolNames[tool]}`, requestHeaders, 402);
+    }
+    return result;
   };
 }
 

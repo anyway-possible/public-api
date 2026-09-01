@@ -18,6 +18,13 @@ export type DashboardSnapshot = {
   callsByEndpoint: Record<string, number>;
   revenueByEndpoint: Record<string, number>;
   challengesByEndpoint: Record<string, number>;
+  mcpInitializations: number;
+  mcpToolLists: number;
+  mcpPaymentChallenges: number;
+  mcpPaidCalls: number;
+  mcpUniqueAgents: number;
+  mcpConversionRate: number;
+  mcpChallengesByTool: Record<string, number>;
   repeatAgents: number;
   multiDayAgents: number;
   repeatRate: number;
@@ -29,7 +36,7 @@ export type DashboardSnapshot = {
 };
 
 export async function getDashboardSnapshot(): Promise<DashboardSnapshot> {
-  const empty: DashboardSnapshot = { paidCalls: 0, uniqueAgents: 0, grossRevenue: 0, testCalls: 0, testVolumeUsd: 0, paymentChallenges: 0, conversionRate: 0, callsByEndpoint: {}, revenueByEndpoint: {}, challengesByEndpoint: {}, repeatAgents: 0, multiDayAgents: 0, repeatRate: 0, lastPaidAt: null, operatingCost: 0, openDecisions: 0, openIncidents: 0, recentSettlements: [] };
+  const empty: DashboardSnapshot = { paidCalls: 0, uniqueAgents: 0, grossRevenue: 0, testCalls: 0, testVolumeUsd: 0, paymentChallenges: 0, conversionRate: 0, callsByEndpoint: {}, revenueByEndpoint: {}, challengesByEndpoint: {}, mcpInitializations: 0, mcpToolLists: 0, mcpPaymentChallenges: 0, mcpPaidCalls: 0, mcpUniqueAgents: 0, mcpConversionRate: 0, mcpChallengesByTool: {}, repeatAgents: 0, multiDayAgents: 0, repeatRate: 0, lastPaidAt: null, operatingCost: 0, openDecisions: 0, openIncidents: 0, recentSettlements: [] };
   try {
     const db = getDb();
     const [eventRows, expenseRows, decisionRows, incidentRows, recentSettlements] = await Promise.all([
@@ -46,6 +53,18 @@ export async function getDashboardSnapshot(): Promise<DashboardSnapshot> {
     const challengeEvents = eventRows.filter(
       (row) => row.kind === "payment_challenge" && row.occurredAt >= CHALLENGE_MEASUREMENT_START,
     );
+    const mcpInitializations = eventRows.filter((row) => row.kind === "mcp_initialize");
+    const mcpToolLists = eventRows.filter((row) => row.kind === "mcp_tools_list");
+    const mcpChallengeEvents = eventRows.filter((row) => row.kind === "mcp_payment_challenge");
+    const mcpPaidEvents = customerEvents.filter((row) => row.endpoint?.startsWith("/api/mcp#") || row.endpoint?.startsWith("/mcp#"));
+    const mcpAgentIds = new Set(
+      [...mcpInitializations, ...mcpToolLists, ...mcpChallengeEvents].map((row) => row.agentId).filter((id): id is string => Boolean(id)),
+    );
+    const mcpChallengesByTool = mcpChallengeEvents.reduce<Record<string, number>>((counts, row) => {
+      const tool = row.endpoint?.split("#")[1] ?? "unknown";
+      counts[tool] = (counts[tool] ?? 0) + 1;
+      return counts;
+    }, {});
     const paymentChallenges = challengeEvents.length;
     const callsByEndpoint = customerEvents.reduce<Record<string, number>>((counts, row) => {
       const endpoint = row.endpoint ?? "unknown";
@@ -84,6 +103,13 @@ export async function getDashboardSnapshot(): Promise<DashboardSnapshot> {
       callsByEndpoint,
       revenueByEndpoint,
       challengesByEndpoint,
+      mcpInitializations: mcpInitializations.length,
+      mcpToolLists: mcpToolLists.length,
+      mcpPaymentChallenges: mcpChallengeEvents.length,
+      mcpPaidCalls: mcpPaidEvents.length,
+      mcpUniqueAgents: mcpAgentIds.size,
+      mcpConversionRate: mcpChallengeEvents.length ? Math.min(100, (mcpPaidEvents.length / mcpChallengeEvents.length) * 100) : 0,
+      mcpChallengesByTool,
       repeatAgents,
       multiDayAgents,
       repeatRate: uniqueAgents ? (repeatAgents / uniqueAgents) * 100 : 0,

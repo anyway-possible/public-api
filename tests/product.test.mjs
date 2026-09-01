@@ -18,6 +18,9 @@ test("public stats expose retention and product concentration without payer iden
   assert.match(dashboard, /repeatRate/);
   assert.match(dashboard, /revenueByEndpoint/);
   assert.match(dashboard, /lastPaidAt/);
+  assert.match(dashboard, /mcpInitializations/);
+  assert.match(dashboard, /mcpPaymentChallenges/);
+  assert.match(dashboard, /mcpConversionRate/);
   assert.doesNotMatch(dashboard, /payerAddresses/);
 });
 
@@ -119,9 +122,16 @@ test("remote MCP surface exposes the strongest products with x402 payment metada
   ]);
   assert.match(route, /WebStandardStreamableHTTPServerTransport/);
   assert.match(route, /originAllowed/);
+  assert.match(route, /mcp_initialize/);
+  assert.match(route, /mcp_tools_list/);
   assert.match(mcp, /createPaymentWrapper/);
   assert.match(mcp, /createCdpFacilitatorClient/);
   assert.match(mcp, /bazaarResourceServerExtension/);
+  assert.match(mcp, /mcp_payment_challenge/);
+  const analytics = await readFile(new URL("lib/mcp-analytics.ts", root), "utf8");
+  assert.match(analytics, /SHA-256/);
+  assert.match(analytics, /x-awp-self-test/);
+  assert.doesNotMatch(analytics, /request\.json/);
   for (const tool of ["merchant_snapshot", "treasury_preflight", "verify_web_evidence", "batch_check_urls"]) {
     assert.match(mcp, new RegExp(tool));
     assert.match(instructions, new RegExp(tool));
