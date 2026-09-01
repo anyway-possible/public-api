@@ -354,9 +354,11 @@ footer a { color: var(--ink); }
 .product-meta strong { font-size: 25px; letter-spacing: -.04em; }
 .product-meta strong small { color: inherit; opacity: .6; font-size: 9px; letter-spacing: .04em; }
 .product-card h3, .product-grid .product-card h3 { margin: 66px 0 15px; font-size: clamp(32px, 4vw, 52px); line-height: 1; letter-spacing: -.055em; text-transform: none; }
-.product-card > p, .product-grid .product-card > p:not(.eyebrow) { max-width: 520px; margin: 0 0 32px; color: #5c6862; font-size: 14px; line-height: 1.6; }
+.product-card > p, .product-grid .product-card > p:not(.eyebrow) { max-width: 520px; margin: 0 0 32px; color: #4f5d57; font-size: 15px; line-height: 1.7; }
 .product-card code, .product-grid .product-card code { width: fit-content; margin-top: auto; padding: 8px 10px; border-radius: 6px; background: rgba(21,35,31,.07); color: var(--public-ink); font-size: 10px; }
-.product-card.ink .product-meta > span, .product-card.ink > p, .product-card.blue .product-meta > span, .product-card.blue > p { color: rgba(255,255,255,.68); }
+.product-grid .product-card.ink > p:not(.eyebrow), .product-grid .product-card.blue > p:not(.eyebrow) { color: rgba(255,255,255,.88); }
+.product-card.ink .product-meta > span, .product-card.blue .product-meta > span { color: rgba(255,255,255,.82); }
+.product-card.ink .product-meta strong small, .product-card.blue .product-meta strong small { opacity: .86; }
 .product-card.ink code, .product-card.blue code { background: rgba(255,255,255,.11); color: white; }
 .product-card.mint .product-meta > span { color: #355f48; }
 .discovery-section { padding: clamp(84px, 10vw, 150px) clamp(24px, 7vw, 108px); background: var(--public-cream); }
