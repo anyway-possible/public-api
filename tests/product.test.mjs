@@ -6,9 +6,19 @@ const root = new URL("../", import.meta.url);
 
 test("public surface explains the paid agent product", async () => {
   const page = await readFile(new URL("app/page.tsx", root), "utf8");
-  for (const section of ["X402 API REVENUE DIAGNOSIS", "Why isn’t your", "POST /api/payment-guard", "POST /api/merchant-snapshot", "POST /api/merchant-audit", "POST /api/treasury", "POST /api/base-balance", "POST /api/check", "POST /api/batch", "POST /api/verify", "Prioritized action"]) {
+  for (const section of ["PAID APIs FOR AUTONOMOUS AGENTS", "Know before your agent", "POST /api/payment-guard", "POST /api/merchant-snapshot", "POST /api/merchant-audit", "POST /api/treasury", "POST /api/base-balance", "POST /api/check", "POST /api/batch", "POST /api/verify", "CHOOSE BY JOB"]) {
     assert.match(page, new RegExp(section));
   }
+});
+
+test("public stats expose retention and product concentration without payer identities", async () => {
+  const dashboard = await readFile(new URL("db/dashboard.ts", root), "utf8");
+  assert.match(dashboard, /repeatAgents/);
+  assert.match(dashboard, /multiDayAgents/);
+  assert.match(dashboard, /repeatRate/);
+  assert.match(dashboard, /revenueByEndpoint/);
+  assert.match(dashboard, /lastPaidAt/);
+  assert.doesNotMatch(dashboard, /payerAddresses/);
 });
 
 test("payment guard validates a purchase before an agent signs", async () => {

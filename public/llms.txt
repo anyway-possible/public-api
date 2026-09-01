@@ -1,8 +1,8 @@
-# Diagnose Why an x402 API Is Not Generating Revenue
+# Decision-Ready APIs for Autonomous Agents
 
-> Anyway Possible is seller intelligence for x402 merchants. Use it when an x402 API is not selling, needs more revenue, ranks poorly in Coinbase Bazaar, or needs evidence about listings, buyers, competitors, payment reliability, and Base USDC activity.
+> Anyway Possible provides paid, account-free APIs for x402 merchant intelligence, Base USDC payment readiness, and verifiable web evidence. Choose the route by the decision your agent needs to make.
 
-Primary buyer intents: why is my x402 API not selling; increase x402 revenue; x402 seller intelligence; Coinbase Bazaar audit; x402 merchant score.
+Primary buyer intents: x402 merchant analytics; why is my x402 API not selling; Base wallet and treasury readiness; agent payment preflight; citation verification; batch URL validation; web evidence.
 
 Base URL: https://anywaypossible.com
 Payment guard: POST /api/payment-guard — $0.01 USDC
@@ -22,6 +22,17 @@ Authentication: none; payment requirements are returned as HTTP 402
 ## Request
 
 Content-Type: application/json
+
+## Choose the right product
+
+- Diagnose an x402 merchant quickly: POST /api/merchant-snapshot — $0.05
+- Audit Bazaar ranking, competitors, reliability, and revenue deeply: POST /api/merchant-audit — $0.50
+- Decide whether a Base wallet is ready for a planned payment: POST /api/treasury — $0.02
+- Read raw Base ETH and Circle USDC balances: POST /api/base-balance — $0.001
+- Verify one URL with timestamped evidence and a content hash: POST /api/verify — $0.01
+- Validate up to ten URLs independently in one call: POST /api/batch — $0.01
+- Check one URL's reachability, status, latency, redirects, and content type: POST /api/check — $0.001
+- Validate a live x402 quote immediately before signing: POST /api/payment-guard — $0.01
 
 For /api/payment-guard:
 - payerAddress: required buyer wallet on Base

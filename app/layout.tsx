@@ -11,13 +11,13 @@ export async function generateMetadata(): Promise<Metadata> {
   const host = requestHeaders.get("x-forwarded-host") ?? requestHeaders.get("host") ?? "anywaypossible.com";
   const protocol = requestHeaders.get("x-forwarded-proto") ?? (host.includes("localhost") ? "http" : "https");
   const image = `${protocol}://${host}/og.png`;
-  const description = "Diagnose why your x402 API is not generating revenue. Start with a $0.05 seller-intelligence snapshot, then upgrade to a full Coinbase Bazaar revenue audit.";
+  const description = "Paid APIs for autonomous agents: x402 merchant intelligence, Base USDC treasury checks, citation evidence, and batch URL validation from $0.001 USDC.";
   return {
-    title: "Why Is My x402 API Not Selling? — Anyway Possible",
+    title: "Agent-Ready Base and Web APIs — Anyway Possible",
     description,
     icons: { icon: "/favicon.svg" },
-    openGraph: { title: "Anyway Possible", description, images: [{ url: image, width: 1200, height: 630 }] },
-    twitter: { card: "summary_large_image", title: "Anyway Possible", description, images: [image] },
+    openGraph: { title: "Anyway Possible — Decision-Ready APIs for Agents", description, images: [{ url: image, width: 1200, height: 630 }] },
+    twitter: { card: "summary_large_image", title: "Anyway Possible — Decision-Ready APIs for Agents", description, images: [image] },
   };
 }
 

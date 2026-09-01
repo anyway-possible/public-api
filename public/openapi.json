@@ -1,9 +1,9 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Anyway Possible x402 Revenue Intelligence API",
+    "title": "Anyway Possible Agent Decision APIs",
     "version": "8.0.0",
-    "description": "Diagnose why an x402 API is not generating revenue. Start with a $0.05 seller-intelligence Snapshot, then upgrade to a $0.50 audit of Coinbase Bazaar ranking, competitors, payment reliability, buyer signals, and Base USDC activity."
+    "description": "Paid, account-free APIs for x402 merchant intelligence, Base USDC payment readiness, citation evidence, and batch URL validation. Existing routes and prices remain stable."
   },
   "servers": [{ "url": "https://anywaypossible.com" }],
   "paths": {

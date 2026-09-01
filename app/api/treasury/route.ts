@@ -34,9 +34,9 @@ function getServer() {
         "POST /api/treasury": {
           accepts: { scheme: "exact", price: "$0.02", network: "eip155:8453", payTo: PAY_TO, maxTimeoutSeconds: 60 },
           serviceName: "Anyway Possible Base Payment Preflight",
-          tags: ["payment preflight", "safe to pay", "agent treasury", "wallet readiness", "Base USDC", "destination check", "transaction safety", "Base gas reserve", "spend readiness", "autonomous payments"],
+          tags: ["payment preflight", "safe to pay", "agent treasury", "wallet readiness", "Base USDC balance", "USDC spend readiness", "destination check", "transaction safety", "Base gas reserve", "autonomous payments"],
           iconUrl: "https://anywaypossible.com/favicon.svg",
-          description: "Preflight a Base USDC payment before an AI agent signs it. Check live funding and gas, confirm Base chain intent, classify the destination as an EOA or contract, catch zero-address, token-contract, and self-payment hazards, and receive a machine-readable proceed, fund, review, or reject decision. No account or API key.",
+          description: "Preflight a Base USDC payment before an AI agent signs it. Check live ETH and USDC balance, spending capacity, gas, Base chain intent, and recipient type; catch zero-address, token-contract, and self-payment hazards; then receive a machine-readable proceed, fund, review, or reject decision plus the next Payment Guard request. No account or API key.",
           extensions: {
             ...declareDiscoveryExtension({
               method: "POST",
