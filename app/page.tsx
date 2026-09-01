@@ -85,7 +85,7 @@ export default function PublicHome() {
         </dl>
       </section>
       <section className="api-panel" id="api">
-        <div><p className="eyebrow">CHOOSE BY JOB</p><h2>Start with the outcome.</h2><p>Use Snapshot for merchant diagnosis, Treasury before a Base payment, Verify for one evidence-bearing URL, or Batch for up to ten. Every response is machine-readable and every existing route remains stable.</p><p><b>Remote MCP:</b> <code>https://anywaypossible.com/mcp</code></p><p><a href="/openapi.json">OpenAPI specification ↗</a> · <a href="/llms.txt">Agent instructions ↗</a> · <a href="/guarded-purchase.json">Guarded purchase workflow ↗</a></p></div>
+        <div><p className="eyebrow">CHOOSE BY JOB</p><h2>Start with the outcome.</h2><p>Use Snapshot for merchant diagnosis, Treasury before a Base payment, Verify for one evidence-bearing URL, or Batch for up to ten. Every response is machine-readable and every existing route remains stable.</p><p><b>Remote MCP:</b> <code>https://anywaypossible.com/api/mcp</code></p><p><a href="/openapi.json">OpenAPI specification ↗</a> · <a href="/llms.txt">Agent instructions ↗</a> · <a href="/guarded-purchase.json">Guarded purchase workflow ↗</a></p></div>
         <pre><code>{`npx awal@latest x402 pay \\
   https://anywaypossible.com/api/merchant-snapshot \\
   -X POST \\

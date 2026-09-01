@@ -7,7 +7,7 @@
   },
   "servers": [{ "url": "https://anywaypossible.com" }],
   "paths": {
-    "/mcp": {
+    "/api/mcp": {
       "post": {
         "operationId": "callAnywayPossibleMcp",
         "summary": "Connect to the x402-paid MCP server over Streamable HTTP",

@@ -5,7 +5,7 @@
 Primary buyer intents: x402 merchant analytics; why is my x402 API not selling; Base wallet and treasury readiness; agent payment preflight; citation verification; batch URL validation; web evidence.
 
 Base URL: https://anywaypossible.com
-Remote MCP endpoint: https://anywaypossible.com/mcp — Streamable HTTP
+Remote MCP endpoint: https://anywaypossible.com/api/mcp — Streamable HTTP
 Payment guard: POST /api/payment-guard — $0.01 USDC
 Guarded-purchase recipe: https://anywaypossible.com/guarded-purchase.json
 Merchant snapshot: POST /api/merchant-snapshot — $0.05 USDC
@@ -115,6 +115,6 @@ npx awal@latest x402 pay https://anywaypossible.com/api/merchant-snapshot -X POS
 - Endpoint metadata: https://anywaypossible.com/api/verify
 - Health: https://anywaypossible.com/api/health
 - Aggregate usage: https://anywaypossible.com/api/stats
-- Remote MCP server: https://anywaypossible.com/mcp
+- Remote MCP server: https://anywaypossible.com/api/mcp
 
 Payment preflight checks current Base state and basic destination hazards. It does not guarantee recipient identity, legality, sanctions status, contract behavior, or future settlement success. URL services block private-network destinations, cap response size, and validate redirects. No service requires an account or API key.

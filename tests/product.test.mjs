@@ -112,7 +112,7 @@ test("Base payment preflight is the higher-value product", async () => {
 
 test("remote MCP surface exposes the strongest products with x402 payment metadata", async () => {
   const [route, mcp, manifest, instructions] = await Promise.all([
-    readFile(new URL("app/mcp/route.ts", root), "utf8"),
+    readFile(new URL("app/api/mcp/route.ts", root), "utf8"),
     readFile(new URL("lib/mcp.ts", root), "utf8"),
     readFile(new URL("server.json", root), "utf8"),
     readFile(new URL("public/llms.txt", root), "utf8"),
@@ -127,7 +127,7 @@ test("remote MCP surface exposes the strongest products with x402 payment metada
     assert.match(instructions, new RegExp(tool));
   }
   const parsed = JSON.parse(manifest);
-  assert.equal(parsed.remotes[0].url, "https://anywaypossible.com/mcp");
+  assert.equal(parsed.remotes[0].url, "https://anywaypossible.com/api/mcp");
   assert.equal(parsed.remotes[0].type, "streamable-http");
 });
 
