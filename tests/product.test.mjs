@@ -4,24 +4,11 @@ import test from "node:test";
 
 const root = new URL("../", import.meta.url);
 
-test("public surface validates demand for real custom-part sourcing", async () => {
+test("public surface explains the paid agent product", async () => {
   const page = await readFile(new URL("app/page.tsx", root), "utf8");
-  for (const section of ["CUSTOM PART SOURCING", "Hard to find", "real supplier capabilities", "No charge to submit", "SourceRequestForm", "Agent payment infrastructure"]) {
+  for (const section of ["X402 API REVENUE DIAGNOSIS", "Why isn’t your", "POST /api/payment-guard", "POST /api/merchant-snapshot", "POST /api/merchant-audit", "POST /api/treasury", "POST /api/base-balance", "POST /api/check", "POST /api/batch", "POST /api/verify", "Prioritized action"]) {
     assert.match(page, new RegExp(section));
   }
-});
-
-test("sourcing requests are validated and stored durably", async () => {
-  const [route, storage] = await Promise.all([
-    readFile(new URL("app/api/source-request/route.ts", root), "utf8"),
-    readFile(new URL("db/sourcing.ts", root), "utf8"),
-  ]);
-  assert.match(route, /description\.length < 30/);
-  assert.match(route, /body\.consent !== "yes"/);
-  assert.match(route, /drawing or reference link/);
-  assert.match(storage, /CREATE TABLE IF NOT EXISTS sourcing_requests/);
-  assert.match(storage, /idx_sourcing_requests_status_created_at/);
-  assert.match(storage, /AWP-/);
 });
 
 test("payment guard validates a purchase before an agent signs", async () => {
