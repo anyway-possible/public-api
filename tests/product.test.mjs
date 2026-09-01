@@ -11,6 +11,20 @@ test("public surface explains the paid agent product", async () => {
   }
 });
 
+test("public discovery metadata identifies the canonical service", async () => {
+  const layout = await readFile(new URL("app/layout.tsx", root), "utf8");
+  const status = await readFile(new URL("app/status/page.tsx", root), "utf8");
+  const sitemap = await readFile(new URL("public/sitemap.xml", root), "utf8");
+  assert.match(layout, /metadataBase: new URL\(siteUrl\)/);
+  assert.match(layout, /alternates: \{ canonical: "\/" \}/);
+  assert.match(layout, /application\/ld\+json/);
+  assert.match(layout, /"@type": "Organization"/);
+  assert.match(layout, /"@type": "Service"/);
+  assert.match(status, /Service is responding/);
+  assert.match(status, /Raw health JSON/);
+  assert.match(sitemap, /https:\/\/anywaypossible\.com\/status/);
+});
+
 test("public stats expose retention and product concentration without payer identities", async () => {
   const dashboard = await readFile(new URL("db/dashboard.ts", root), "utf8");
   assert.match(dashboard, /repeatAgents/);

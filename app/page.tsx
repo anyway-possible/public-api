@@ -26,7 +26,7 @@ export default function PublicHome() {
         <aside className="hero-signal" aria-label="Live service summary"><div className="signal-top"><span><i />Systems live</span><b>BASE</b></div><div className="signal-decision"><small>PRE-PURCHASE CHECK</small><strong>PROCEED</strong><p>7 checks passed · evidence attached</p></div><dl><div><dt>Network</dt><dd>Base</dd></div><div><dt>Payment</dt><dd>x402 USDC</dd></div><div><dt>Access</dt><dd>No account</dd></div></dl></aside>
       </section>
 
-      <section className="trust-strip" aria-label="Service attributes"><span><i />Live on Base</span><span>x402 USDC payments</span><span>No accounts or API keys</span><span>MCP Registry listed</span><a href="/api/health">View status ↗</a></section>
+      <section className="trust-strip" aria-label="Service attributes"><span><i />Live on Base</span><span>x402 USDC payments</span><span>No accounts or API keys</span><span>MCP Registry listed</span><a href="/status">View status ↗</a></section>
 
       <section className="how-section" id="how-it-works">
         <div className="section-heading"><p className="eyebrow">HOW IT WORKS</p><h2>A small check before a big action.</h2><p>Agents move quickly. We add the moment of evidence they need to move responsibly.</p></div>
@@ -61,7 +61,7 @@ export default function PublicHome() {
       </section>
 
       <section className="closing-cta"><div><span className="brand-mark" aria-hidden="true"><i>A</i><i>P</i></span><p>One careful check can change what happens next.</p></div><a href="#api">Connect via MCP <span>→</span></a></section>
-      <footer className="public-footer"><Link className="footer-brand" href="/">Anyway Possible</Link><span>Decision infrastructure for autonomous agents.</span><div><a href="/api/health">Status</a><a href="/openapi.json">Docs</a><a href="/llms.txt">llms.txt</a></div><small>© 2026 Anyway Possible</small></footer>
+      <footer className="public-footer"><Link className="footer-brand" href="/">Anyway Possible</Link><span>Decision infrastructure for autonomous agents.</span><div><a href="/status">Status</a><a href="/openapi.json">Docs</a><a href="/llms.txt">llms.txt</a></div><small>© 2026 Anyway Possible</small></footer>
     </main>
   );
 }
