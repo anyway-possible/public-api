@@ -6,7 +6,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "../../../db";
 import { events } from "../../../db/schema";
 import { identifyAgent } from "../../../lib/analytics";
-import { auditMerchant } from "../../../lib/merchant-audit";
+import { createMerchantSnapshot } from "../../../lib/merchant-snapshot";
 
 export const runtime = "edge";
 export const dynamic = "force-dynamic";
@@ -56,15 +56,7 @@ async function paidHandler(request: NextRequest) {
   if (!Array.isArray(input.queries) || input.queries.length < 1 || input.queries.length > 3 || input.queries.some((query) => typeof query !== "string" || query.length < 2 || query.length > 100)) return NextResponse.json({ error: "queries must contain 1 to 3 strings, each 2 to 100 characters." }, { status: 400 });
   if (input.excludePayers !== undefined && (!Array.isArray(input.excludePayers) || input.excludePayers.length > 10 || input.excludePayers.some((address) => typeof address !== "string" || !/^0x[a-fA-F0-9]{40}$/.test(address)))) return NextResponse.json({ error: "excludePayers must contain at most 10 valid EVM addresses." }, { status: 400 });
   try {
-    const audit = await auditMerchant({ payTo: input.payTo, queries: input.queries as string[], excludePayers: input.excludePayers as string[] | undefined });
-    const result = {
-      snapshotId: audit.auditId, merchant: audit.merchant, network: audit.network, observedAt: audit.observedAt, score: audit.score, grade: audit.grade,
-      signals: { listingCount: audit.summary.listingCount, analyzedListingCount: audit.summary.analyzedListingCount, indexedCalls30d: audit.summary.indexedCalls30d, maxResourceUniquePayers30d: audit.summary.maxResourceUniquePayers30d, externalInboundUsdc: audit.summary.externalInboundUsdc, uniqueExternalPayers: audit.summary.uniqueExternalPayers, latestActivity: audit.summary.latestActivity, reliableListings: audit.listings.filter((listing) => listing.reliability.x402Ready).length },
-      visibility: audit.rankings.map(({ query, rank, matchedResource }) => ({ query, rank, matchedResource })),
-      biggestIssue: audit.actions[0] ?? "No critical listing issue was detected in the sampled public signals.",
-      upgrade: { endpoint: "https://anywaypossible.com/api/merchant-audit", priceUsd: 0.5, includes: ["competitor pricing", "listing-by-listing defects", "onchain transfer evidence", "three prioritized actions"] },
-      limitations: audit.limitations,
-    };
+    const result = await createMerchantSnapshot({ payTo: input.payTo, queries: input.queries as string[], excludePayers: input.excludePayers as string[] | undefined });
     try { const identity = await identifyAgent(request); await getDb().insert(events).values({ eventId: crypto.randomUUID(), kind: identity.isSelfTest ? "test_call" : "paid_call", endpoint: "/api/merchant-snapshot", agentId: identity.agentId, amountUsd: 0.05, costUsd: 0, latencyMs: Date.now() - started, statusCode: 200, network: "eip155:8453", occurredAt: result.observedAt }).run(); } catch {}
     return NextResponse.json(result, { headers: { "cache-control": "no-store" } });
   } catch (error) { console.error("Merchant snapshot failed", error); return NextResponse.json({ error: error instanceof Error ? error.message : "Merchant snapshot failed." }, { status: 502 }); }

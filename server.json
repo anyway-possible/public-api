@@ -1,0 +1,18 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.anyway-possible/agent-utilities",
+  "title": "Anyway Possible Paid Agent Utilities",
+  "description": "Account-free x402 tools for merchant intelligence, Base USDC payment readiness, citation verification, and batch URL checks.",
+  "version": "1.0.0",
+  "websiteUrl": "https://anywaypossible.com",
+  "repository": {
+    "url": "https://github.com/anyway-possible/public-api",
+    "source": "github"
+  },
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://anywaypossible.com/mcp"
+    }
+  ]
+}

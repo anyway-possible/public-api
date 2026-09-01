@@ -18,15 +18,18 @@
   },
   "dependencies": {
     "@coinbase/cdp-sdk": "^1.55.0",
+    "@modelcontextprotocol/sdk": "^1.26.0",
     "@x402/core": "^2.21.0",
     "@x402/evm": "^2.21.0",
     "@x402/extensions": "^2.21.0",
+    "@x402/mcp": "^2.21.0",
     "@x402/next": "^2.21.0",
     "@x402/svm": "^2.21.0",
     "drizzle-orm": "0.45.2",
     "next": "16.3.4",
     "react": "19.2.6",
-    "react-dom": "19.2.6"
+    "react-dom": "19.2.6",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@cloudflare/vite-plugin": "1.37.1",

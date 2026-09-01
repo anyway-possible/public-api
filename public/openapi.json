@@ -2,11 +2,20 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Anyway Possible Agent Decision APIs",
-    "version": "8.0.0",
-    "description": "Paid, account-free APIs for x402 merchant intelligence, Base USDC payment readiness, citation evidence, and batch URL validation. Existing routes and prices remain stable."
+    "version": "10.0.0",
+    "description": "Paid, account-free APIs and MCP tools for x402 merchant intelligence, Base USDC payment readiness, citation evidence, and batch URL validation. Existing routes and prices remain stable."
   },
   "servers": [{ "url": "https://anywaypossible.com" }],
   "paths": {
+    "/mcp": {
+      "post": {
+        "operationId": "callAnywayPossibleMcp",
+        "summary": "Connect to the x402-paid MCP server over Streamable HTTP",
+        "description": "Supports MCP initialize, tools/list, and tools/call for merchant_snapshot, treasury_preflight, verify_web_evidence, and batch_check_urls. Paid tool challenges and settlement receipts are carried in MCP x402 metadata.",
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object" } } } },
+        "responses": { "200": { "description": "MCP JSON-RPC response" }, "403": { "description": "Invalid browser Origin" } }
+      }
+    },
     "/api/merchant-snapshot": {
       "get": { "summary": "Read $0.05 x402 Merchant Snapshot metadata", "responses": { "200": { "description": "Service metadata" } } },
       "post": {

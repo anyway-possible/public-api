@@ -32,10 +32,12 @@ test("payment guard validates a purchase before an agent signs", async () => {
 });
 
 test("guarded purchase workflow routes readiness into the final signing guard", async () => {
-  const [treasury, recipe] = await Promise.all([
+  const [treasuryRoute, treasuryProduct, recipe] = await Promise.all([
     readFile(new URL("app/api/treasury/route.ts", root), "utf8"),
+    readFile(new URL("lib/treasury.ts", root), "utf8"),
     readFile(new URL("public/guarded-purchase.json", root), "utf8"),
   ]);
+  const treasury = treasuryRoute + treasuryProduct;
   assert.match(treasury, /recommendedNext/);
   assert.match(treasury, /\/api\/payment-guard/);
   const workflow = JSON.parse(recipe);
@@ -44,15 +46,19 @@ test("guarded purchase workflow routes readiness into the final signing guard", 
 });
 
 test("merchant snapshot is the low-friction audit funnel", async () => {
-  const route = await readFile(new URL("app/api/merchant-snapshot/route.ts", root), "utf8");
+  const [route, product] = await Promise.all([
+    readFile(new URL("app/api/merchant-snapshot/route.ts", root), "utf8"),
+    readFile(new URL("lib/merchant-snapshot.ts", root), "utf8"),
+  ]);
+  const source = route + product;
   assert.match(route, /Why Is My x402 API Not Selling/);
   assert.match(route, /\$0\.05/);
   assert.match(route, /amountUsd: 0\.05/);
   assert.match(route, /increase x402 revenue/);
   assert.match(route, /x402 seller intelligence/);
-  assert.match(route, /biggestIssue/);
-  assert.match(route, /\/api\/merchant-audit/);
-  assert.match(route, /priceUsd: 0\.5/);
+  assert.match(source, /biggestIssue/);
+  assert.match(source, /\/api\/merchant-audit/);
+  assert.match(source, /priceUsd: 0\.5/);
 });
 
 test("merchant audit is the flagship revenue product", async () => {
@@ -77,27 +83,52 @@ test("merchant audit is the flagship revenue product", async () => {
 });
 
 test("Base payment preflight is the higher-value product", async () => {
-  const route = await readFile(new URL("app/api/treasury/route.ts", root), "utf8");
+  const [route, product] = await Promise.all([
+    readFile(new URL("app/api/treasury/route.ts", root), "utf8"),
+    readFile(new URL("lib/treasury.ts", root), "utf8"),
+  ]);
+  const source = route + product;
   assert.match(route, /Anyway Possible Base Payment Preflight/);
   assert.match(route, /\$0\.02/);
-  assert.match(route, /plannedSpendUsdc/);
-  assert.match(route, /minGasReserveEth/);
-  assert.match(route, /usdcShortfall/);
-  assert.match(route, /gasShortfallEth/);
-  assert.match(route, /paymentCapacity/);
-  assert.match(route, /destinationAddress/);
-  assert.match(route, /safeToProceed/);
-  assert.match(route, /safe_to_pay/);
-  assert.match(route, /review_destination/);
-  assert.match(route, /destinationIsZero/);
-  assert.match(route, /destinationIsTokenContract/);
-  assert.match(route, /eth_getCode/);
-  assert.match(route, /expectedChainId/);
-  assert.match(route, /limitations/);
+  assert.match(source, /plannedSpendUsdc/);
+  assert.match(source, /minGasReserveEth/);
+  assert.match(source, /usdcShortfall/);
+  assert.match(source, /gasShortfallEth/);
+  assert.match(source, /paymentCapacity/);
+  assert.match(source, /destinationAddress/);
+  assert.match(source, /safeToProceed/);
+  assert.match(source, /safe_to_pay/);
+  assert.match(source, /review_destination/);
+  assert.match(source, /destinationIsZero/);
+  assert.match(source, /destinationIsTokenContract/);
+  assert.match(source, /eth_getCode/);
+  assert.match(source, /expectedChainId/);
+  assert.match(source, /limitations/);
   assert.match(route, /agent treasury/);
   assert.match(route, /wallet readiness/);
   assert.match(route, /Base gas reserve/);
   assert.match(route, /amountUsd: 0\.02/);
+});
+
+test("remote MCP surface exposes the strongest products with x402 payment metadata", async () => {
+  const [route, mcp, manifest, instructions] = await Promise.all([
+    readFile(new URL("app/mcp/route.ts", root), "utf8"),
+    readFile(new URL("lib/mcp.ts", root), "utf8"),
+    readFile(new URL("server.json", root), "utf8"),
+    readFile(new URL("public/llms.txt", root), "utf8"),
+  ]);
+  assert.match(route, /WebStandardStreamableHTTPServerTransport/);
+  assert.match(route, /originAllowed/);
+  assert.match(mcp, /createPaymentWrapper/);
+  assert.match(mcp, /createCdpFacilitatorClient/);
+  assert.match(mcp, /bazaarResourceServerExtension/);
+  for (const tool of ["merchant_snapshot", "treasury_preflight", "verify_web_evidence", "batch_check_urls"]) {
+    assert.match(mcp, new RegExp(tool));
+    assert.match(instructions, new RegExp(tool));
+  }
+  const parsed = JSON.parse(manifest);
+  assert.equal(parsed.remotes[0].url, "https://anywaypossible.com/mcp");
+  assert.equal(parsed.remotes[0].type, "streamable-http");
 });
 
 test("Base wallet balance follows demonstrated agent demand", async () => {

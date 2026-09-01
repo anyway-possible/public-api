@@ -5,11 +5,11 @@ export const dynamic = "force-dynamic";
 export default function PublicHome() {
   return (
     <main className="public-shell">
-      <nav className="public-nav"><Link href="/">ANYWAY POSSIBLE</Link><div><a href="/api/health">STATUS</a><a href="/openapi.json">OPENAPI</a><a href="#api">API</a></div></nav>
+      <nav className="public-nav"><Link href="/">ANYWAY POSSIBLE</Link><div><a href="/api/health">STATUS</a><a href="/openapi.json">OPENAPI</a><a href="#api">API + MCP</a></div></nav>
       <section className="public-hero">
         <p className="eyebrow">PAID APIs FOR AUTONOMOUS AGENTS · BASE USDC</p>
         <h1>Know before your agent<br />pays, cites, or trusts.</h1>
-        <p className="lede">Live merchant intelligence, Base treasury checks, citation evidence, and batch URL validation—discoverable through x402, callable without an account, and priced from $0.001 USDC.</p>
+        <p className="lede">Live merchant intelligence, Base treasury checks, citation evidence, and batch URL validation—discoverable through x402 and MCP, callable without an account, and priced from $0.001 USDC.</p>
         <div className="public-actions"><a href="#api">Call the API →</a><a className="ghost" href="/api/health">Check status</a></div>
       </section>
       <section className="public-proof">
@@ -85,7 +85,7 @@ export default function PublicHome() {
         </dl>
       </section>
       <section className="api-panel" id="api">
-        <div><p className="eyebrow">CHOOSE BY JOB</p><h2>Start with the outcome.</h2><p>Use Snapshot for merchant diagnosis, Treasury before a Base payment, Verify for one evidence-bearing URL, or Batch for up to ten. Every response is machine-readable and every route remains stable.</p><p><a href="/openapi.json">OpenAPI specification ↗</a> · <a href="/llms.txt">Agent instructions ↗</a> · <a href="/guarded-purchase.json">Guarded purchase workflow ↗</a></p></div>
+        <div><p className="eyebrow">CHOOSE BY JOB</p><h2>Start with the outcome.</h2><p>Use Snapshot for merchant diagnosis, Treasury before a Base payment, Verify for one evidence-bearing URL, or Batch for up to ten. Every response is machine-readable and every existing route remains stable.</p><p><b>Remote MCP:</b> <code>https://anywaypossible.com/mcp</code></p><p><a href="/openapi.json">OpenAPI specification ↗</a> · <a href="/llms.txt">Agent instructions ↗</a> · <a href="/guarded-purchase.json">Guarded purchase workflow ↗</a></p></div>
         <pre><code>{`npx awal@latest x402 pay \\
   https://anywaypossible.com/api/merchant-snapshot \\
   -X POST \\
