@@ -11,13 +11,13 @@ export async function generateMetadata(): Promise<Metadata> {
   const host = requestHeaders.get("x-forwarded-host") ?? requestHeaders.get("host") ?? "anywaypossible.com";
   const protocol = requestHeaders.get("x-forwarded-proto") ?? (host.includes("localhost") ? "http" : "https");
   const image = `${protocol}://${host}/og.png`;
-  const description = "Paid APIs for autonomous agents: x402 merchant intelligence, Base USDC treasury checks, citation evidence, and batch URL validation from $0.001 USDC.";
+  const description = "Decision-ready checks for autonomous agents before they pay, cite, or act—available over MCP and HTTP with x402 USDC payments.";
   return {
-    title: "Agent-Ready Base and Web APIs — Anyway Possible",
+    title: "Anyway Possible — Decision Infrastructure for Agents",
     description,
     icons: { icon: "/favicon.svg" },
-    openGraph: { title: "Anyway Possible — Decision-Ready APIs for Agents", description, images: [{ url: image, width: 1200, height: 630 }] },
-    twitter: { card: "summary_large_image", title: "Anyway Possible — Decision-Ready APIs for Agents", description, images: [image] },
+    openGraph: { title: "Anyway Possible — Check Before Your Agent Acts", description, images: [{ url: image, width: 1200, height: 630 }] },
+    twitter: { card: "summary_large_image", title: "Anyway Possible — Check Before Your Agent Acts", description, images: [image] },
   };
 }
 

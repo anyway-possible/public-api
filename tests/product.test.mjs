@@ -6,7 +6,7 @@ const root = new URL("../", import.meta.url);
 
 test("public surface explains the paid agent product", async () => {
   const page = await readFile(new URL("app/page.tsx", root), "utf8");
-  for (const section of ["PAID APIs FOR AUTONOMOUS AGENTS", "Know before your agent", "POST /api/payment-guard", "POST /api/merchant-snapshot", "POST /api/merchant-audit", "POST /api/treasury", "POST /api/base-balance", "POST /api/check", "POST /api/batch", "POST /api/verify", "CHOOSE BY JOB"]) {
+  for (const section of ["PAID APIs FOR AUTONOMOUS AGENTS", "Decision-ready checks", "Connect via MCP", "POST /api/payment-guard", "POST /api/merchant-snapshot", "POST /api/merchant-audit", "POST /api/treasury", "POST /api/base-balance", "POST /api/check", "POST /api/batch", "POST /api/verify", "CHOOSE BY JOB"]) {
     assert.match(page, new RegExp(section));
   }
 });

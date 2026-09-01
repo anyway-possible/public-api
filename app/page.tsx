@@ -2,97 +2,61 @@ import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
+const products = [
+  { name: "Merchant Snapshot", price: "$0.05", tag: "SELLER INTELLIGENCE", copy: "Find the biggest reason an x402 listing is not earning, with visibility, pricing, buyer, and reliability signals.", path: "POST /api/merchant-snapshot", tone: "mint" },
+  { name: "Treasury", price: "$0.02", tag: "PAYMENT PREFLIGHT", copy: "Check funding, gas, chain intent, recipient type, and destination hazards before an agent commits funds.", path: "POST /api/treasury", tone: "ink" },
+  { name: "Payment Guard", price: "$0.01", tag: "SIGNING SAFETY", copy: "Validate a live x402 challenge, price ceiling, asset, network, buyer funding, and recipient immediately before signing.", path: "POST /api/payment-guard", tone: "blue" },
+  { name: "Verify", price: "$0.01", tag: "WEB EVIDENCE", copy: "Test a URL and return status, expected content, a timestamped hash, receipt ID, metadata, and source trail.", path: "POST /api/verify", tone: "plain" },
+  { name: "Batch", price: "$0.01", tag: "UP TO 10 URLS", copy: "Validate citation lists, migrations, or dependencies together without one failed URL hiding the other results.", path: "POST /api/batch", tone: "plain" },
+  { name: "Base Balance", price: "$0.001", tag: "ONCHAIN DATA", copy: "Read native ETH and Circle USDC balances, atomic values, and current Base block height.", path: "POST /api/base-balance", tone: "plain" },
+  { name: "Check", price: "$0.001", tag: "FAST URL PREFLIGHT", copy: "Confirm reachability, status, latency, redirects, and content type before a larger action.", path: "POST /api/check", tone: "plain" },
+  { name: "Merchant Audit", price: "$0.50", tag: "DEEP REVENUE REPORT", copy: "Get ranking evidence, competitor prices, payment reliability, buyer reach, and three prioritized actions.", path: "POST /api/merchant-audit", tone: "plain" },
+];
+
 export default function PublicHome() {
   return (
     <main className="public-shell">
-      <nav className="public-nav"><Link href="/">ANYWAY POSSIBLE</Link><div><a href="/api/health">STATUS</a><a href="/openapi.json">OPENAPI</a><a href="#api">API + MCP</a></div></nav>
+      <nav className="public-nav">
+        <Link className="public-brand" href="/" aria-label="Anyway Possible home"><span className="brand-mark" aria-hidden="true"><i>A</i><i>P</i></span><span>Anyway Possible<small>Agent decision infrastructure</small></span></Link>
+        <div><a href="#products">Tools</a><a href="#how-it-works">How it works</a><a href="/openapi.json">Docs</a><a className="nav-cta" href="#api">Connect via MCP</a></div>
+      </nav>
+
       <section className="public-hero">
-        <p className="eyebrow">PAID APIs FOR AUTONOMOUS AGENTS · BASE USDC</p>
-        <h1>Know before your agent<br />pays, cites, or trusts.</h1>
-        <p className="lede">Live merchant intelligence, Base treasury checks, citation evidence, and batch URL validation—discoverable through x402 and MCP, callable without an account, and priced from $0.001 USDC.</p>
-        <div className="public-actions"><a href="#api">Call the API →</a><a className="ghost" href="/api/health">Check status</a></div>
+        <div className="hero-copy"><p className="eyebrow"><span />PAID APIs FOR AUTONOMOUS AGENTS</p><h1>Decision-ready checks for agents that <em>pay, cite, and act.</em></h1><p className="lede">Anyway Possible gives autonomous agents fast, machine-readable checks before they spend money, trust a source, or make a recommendation.</p><div className="public-actions"><a href="#api">Connect via MCP <span>→</span></a><a className="ghost" href="#products">Explore tools</a></div></div>
+        <aside className="hero-signal" aria-label="Live service summary"><div className="signal-top"><span><i />Systems live</span><b>BASE</b></div><div className="signal-decision"><small>PRE-PURCHASE CHECK</small><strong>PROCEED</strong><p>7 checks passed · evidence attached</p></div><dl><div><dt>Network</dt><dd>Base</dd></div><div><dt>Payment</dt><dd>x402 USDC</dd></div><div><dt>Access</dt><dd>No account</dd></div></dl></aside>
       </section>
-      <section className="public-proof">
-        <article><span>01</span><strong>Inspect an x402 merchant</strong><p>Score visibility, reliability, buyers, competitor pricing, and observed Base USDC before changing a listing.</p></article>
-        <article><span>02</span><strong>Preflight a payment</strong><p>Check wallet funding, gas, chain, recipient type, and common destination hazards before committing funds.</p></article>
-        <article><span>03</span><strong>Verify web evidence</strong><p>Validate one URL or ten and return status, redirects, content evidence, hashes, and receipts an agent can act on.</p></article>
+
+      <section className="trust-strip" aria-label="Service attributes"><span><i />Live on Base</span><span>x402 USDC payments</span><span>No accounts or API keys</span><span>MCP Registry listed</span><a href="/api/health">View status ↗</a></section>
+
+      <section className="how-section" id="how-it-works">
+        <div className="section-heading"><p className="eyebrow">HOW IT WORKS</p><h2>A small check before a big action.</h2><p>Agents move quickly. We add the moment of evidence they need to move responsibly.</p></div>
+        <div className="how-grid"><article><span>01</span><div className="step-icon">?</div><h3>Ask</h3><p>The agent sends the decision it needs help with: pay, trust, verify, or diagnose.</p></article><article><span>02</span><div className="step-icon">✓</div><h3>Check</h3><p>Anyway Possible gathers live web or Base signals and turns them into a clear result.</p></article><article><span>03</span><div className="step-icon">→</div><h3>Act</h3><p>The agent gets structured evidence, a receipt, and a decision it can use immediately.</p></article></div>
       </section>
-      <section className="product-grid" aria-label="API products">
-        <article className="featured-product">
-          <p className="eyebrow">X402 MERCHANT INTELLIGENCE</p>
-          <h2>Merchant Snapshot</h2>
-          <strong>$0.05 <span>USDC / score</span></strong>
-          <p>Diagnose why an x402 API is not generating revenue. Get the merchant grade, Bazaar visibility, buyer signals, observed external USDC, live payment count, and the single biggest issue.</p>
-          <code>POST /api/merchant-snapshot</code>
-        </article>
-        <article>
-          <p className="eyebrow">BASE USDC PAYMENT PREFLIGHT</p>
-          <h2>Treasury</h2>
-          <strong>$0.02 <span>USDC / call</span></strong>
-          <p>Check funding and gas, confirm Base chain intent, classify the recipient, catch common destination hazards, and receive a proceed, fund, review, or reject decision plus a ready-to-use final guard request.</p>
-          <code>POST /api/treasury</code>
-        </article>
-        <article>
-          <p className="eyebrow">FULL WEB EVIDENCE</p>
-          <h2>Verify</h2>
-          <strong>$0.01 <span>USDC / call</span></strong>
-          <p>Test expected status or text and receive a timestamped content hash, receipt ID, metadata, headers, and source trail.</p>
-          <code>POST /api/verify</code>
-        </article>
-        <article>
-          <p className="eyebrow">UP TO 10 URLS</p>
-          <h2>Batch</h2>
-          <strong>$0.01 <span>USDC / call</span></strong>
-          <p>Validate citation lists, migrations, or API dependencies together. One failed URL never hides the other results.</p>
-          <code>POST /api/batch</code>
-        </article>
-        <article>
-          <p className="eyebrow">LIVE ONCHAIN DATA</p>
-          <h2>Balance</h2>
-          <strong>$0.001 <span>USDC / call</span></strong>
-          <p>Read native ETH and Circle USDC balances, atomic values, and current Base block height before an agent pays or transacts.</p>
-          <code>POST /api/base-balance</code>
-        </article>
-        <article>
-          <p className="eyebrow">FAST URL PREFLIGHT</p>
-          <h2>Check</h2>
-          <strong>$0.001 <span>USDC / call</span></strong>
-          <p>Confirm reachability, status, latency, redirects, and content type before an agent commits to a larger action.</p>
-          <code>POST /api/check</code>
-        </article>
-        <article className="guard-product">
-          <p className="eyebrow">FINAL SIGNING SAFETY</p><h2>Payment Guard</h2><strong>$0.01 <span>USDC / decision</span></strong>
-          <p>Validate a live x402 challenge, Base network, USDC asset, price ceiling, recipient, buyer funding, gas reserve, and destination hazards immediately before signing.</p><code>POST /api/payment-guard</code>
-        </article>
-        <article className="audit-product">
-          <p className="eyebrow">DEEP SELLER INTELLIGENCE</p>
-          <h2>Merchant Audit</h2>
-          <strong>$0.50 <span>USDC / report</span></strong>
-          <p>Upgrade a snapshot into a full x402 revenue audit with ranking evidence, competitor prices, payment reliability, buyer reach, and three prioritized actions.</p>
-          <code>POST /api/merchant-audit</code>
-        </article>
+
+      <section className="products-section" id="products">
+        <div className="section-heading products-heading"><div><p className="eyebrow">CHOOSE BY JOB</p><h2>Useful answers.<br />Tiny prices.</h2></div><p>Eight focused tools for commerce, treasury, and web evidence. Every response is machine-readable; every route works over HTTP, and the core toolkit is available through MCP.</p></div>
+        <div className="product-grid">{products.map((product) => <article className={`product-card ${product.tone}`} key={product.name}><div className="product-meta"><span>{product.tag}</span><strong>{product.price}<small> USDC</small></strong></div><h3>{product.name}</h3><p>{product.copy}</p><code>{product.path}</code></article>)}</div>
       </section>
+
       <section className="sample-report" aria-labelledby="sample-title">
-        <div className="sample-intro"><p className="eyebrow">REAL REPORT · ANYWAY POSSIBLE</p><h2 id="sample-title">Start with evidence,<br />then act.</h2><p>This public example was generated from our own merchant wallet. Internal validation payments are excluded from customer revenue.</p><a href="#api">Run your snapshot →</a></div>
-        <div className="sample-score"><span>Merchant score</span><strong>88<small>/100</small></strong><b>B</b><p>Technically healthy. Discovery for x402 revenue searches remains the main gap.</p></div>
-        <dl className="sample-facts">
-          <div><dt>Catalog</dt><dd>7 listings</dd></div>
-          <div><dt>Reliability sample</dt><dd>5 / 5 ready</dd></div>
-          <div><dt>“Base wallet balance”</dt><dd>#1</dd></div>
-          <div><dt>“Agent treasury”</dt><dd>#2</dd></div>
-          <div><dt>External inbound</dt><dd>$0.004 USDC</dd></div>
-          <div><dt>Independent payers</dt><dd>2</dd></div>
-        </dl>
+        <div className="sample-intro"><p className="eyebrow">PROOF, NOT PROMISES</p><h2 id="sample-title">We use it on ourselves.</h2><p>This public merchant snapshot was generated from Anyway Possible&apos;s own wallet. Internal validation payments are excluded from customer revenue.</p><a href="#api">Run your own snapshot <span>→</span></a></div>
+        <div className="sample-score"><span>Merchant score</span><strong>88<small>/100</small></strong><b>B</b><p>Technically healthy. Discovery remains the main revenue gap.</p></div>
+        <dl className="sample-facts"><div><dt>Catalog</dt><dd>7 listings</dd></div><div><dt>Reliability sample</dt><dd>5 / 5 ready</dd></div><div><dt>“Base wallet balance”</dt><dd>#1</dd></div><div><dt>“Agent treasury”</dt><dd>#2</dd></div><div><dt>External inbound</dt><dd>$0.004 USDC</dd></div><div><dt>Independent payers</dt><dd>2</dd></div></dl>
       </section>
+
       <section className="api-panel" id="api">
-        <div><p className="eyebrow">CHOOSE BY JOB</p><h2>Start with the outcome.</h2><p>Use Snapshot for merchant diagnosis, Treasury before a Base payment, Verify for one evidence-bearing URL, or Batch for up to ten. Every response is machine-readable and every existing route remains stable.</p><p><b>Remote MCP:</b> <code>https://anywaypossible.com/api/mcp</code></p><p><a href="/openapi.json">OpenAPI specification ↗</a> · <a href="/llms.txt">Agent instructions ↗</a> · <a href="/guarded-purchase.json">Guarded purchase workflow ↗</a></p></div>
-        <pre><code>{`npx awal@latest x402 pay \\
-  https://anywaypossible.com/api/merchant-snapshot \\
-  -X POST \\
-  -d '{"payTo":"0xe5690D37805107C56f6195E65A262b234E0E5e75","queries":["x402 merchant analytics","Base wallet balance"],"excludePayers":["0x44D2DC46f987D1F2fa55e281934aDDd193a1A377"]}' \\
-  --max-amount 50000 --json`}</code></pre>
+        <div className="api-copy"><p className="eyebrow">CONNECT ONCE</p><h2>Give your agent the whole toolkit.</h2><p>Add one remote MCP endpoint and let the agent discover the right tool for each decision. No account, API key, or SDK is required.</p><div className="endpoint"><span>MCP ENDPOINT</span><code>https://anywaypossible.com/api/mcp</code></div><div className="doc-links"><a href="/openapi.json">OpenAPI ↗</a><a href="/llms.txt">Agent instructions ↗</a><a href="/guarded-purchase.json">Purchase workflow ↗</a></div></div>
+        <div className="code-window"><div><i /><i /><i /><span>agent-config.json</span></div><pre><code>{`{
+  "mcpServers": {
+    "anyway-possible": {
+      "url": "https://anywaypossible.com/api/mcp"
+    }
+  }
+}`}</code></pre><p><span>✓</span> Ready for tool discovery</p></div>
       </section>
-      <footer className="public-footer"><b>ANYWAY POSSIBLE</b><span>Decision-ready data for autonomous agents.</span><a href="/api/health">Operational status ↗</a></footer>
+
+      <section className="closing-cta"><div><span className="brand-mark" aria-hidden="true"><i>A</i><i>P</i></span><p>One careful check can change what happens next.</p></div><a href="#api">Connect via MCP <span>→</span></a></section>
+      <footer className="public-footer"><Link className="footer-brand" href="/">Anyway Possible</Link><span>Decision infrastructure for autonomous agents.</span><div><a href="/api/health">Status</a><a href="/openapi.json">Docs</a><a href="/llms.txt">llms.txt</a></div><small>© 2026 Anyway Possible</small></footer>
     </main>
   );
 }
