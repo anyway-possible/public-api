@@ -54,3 +54,33 @@ export const decisions = sqliteTable("decisions", {
   createdAt: text("created_at").notNull(),
   resolvedAt: text("resolved_at"),
 });
+
+export const funnelMonitorSummary = sqliteTable("funnel_monitor_summary", {
+  id: integer("id").primaryKey(),
+  paidCalls: integer("paid_calls").notNull().default(0),
+  uniqueAgents: integer("unique_agents").notNull().default(0),
+  repeatAgents: integer("repeat_agents").notNull().default(0),
+  lastPaidAt: text("last_paid_at"),
+  httpPaymentChallenges: integer("http_payment_challenges").notNull().default(0),
+  mcpInitializations: integer("mcp_initializations").notNull().default(0),
+  mcpToolLists: integer("mcp_tool_lists").notNull().default(0),
+  mcpPaymentChallenges: integer("mcp_payment_challenges").notNull().default(0),
+  mcpPaidCalls: integer("mcp_paid_calls").notNull().default(0),
+  updatedAt: text("updated_at").notNull(),
+});
+
+export const funnelMonitorClients = sqliteTable("funnel_monitor_clients", {
+  clientType: text("client_type").primaryKey(),
+  httpChallenges: integer("http_challenges").notNull().default(0),
+  mcpChallenges: integer("mcp_challenges").notNull().default(0),
+  paidCalls: integer("paid_calls").notNull().default(0),
+  updatedAt: text("updated_at").notNull(),
+});
+
+export const funnelMonitorEndpoints = sqliteTable("funnel_monitor_endpoints", {
+  endpoint: text("endpoint").primaryKey(),
+  paymentChallenges: integer("payment_challenges").notNull().default(0),
+  paidCalls: integer("paid_calls").notNull().default(0),
+  revenueUsd: real("revenue_usd").notNull().default(0),
+  updatedAt: text("updated_at").notNull(),
+});

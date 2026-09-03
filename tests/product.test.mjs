@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
+import { DatabaseSync } from "node:sqlite";
 import test from "node:test";
 
 const root = new URL("../", import.meta.url);
@@ -262,6 +263,37 @@ test("every HTTP payment challenge uses centralized privacy-safe attribution", a
     assert.match(route, /recordPaymentChallenge/);
     assert.doesNotMatch(route, /kind: identity\.isSelfTest \? "test_challenge"/);
   }
+});
+
+test("secure monitor rollups avoid secrets and raw event scans", async () => {
+  const schema = await readFile(new URL("db/schema.ts", root), "utf8");
+  const migration = await readFile(new URL("drizzle/0002_wakeful_adam_destine.sql", root), "utf8");
+  for (const table of ["funnel_monitor_summary", "funnel_monitor_clients", "funnel_monitor_endpoints"]) {
+    assert.match(schema, new RegExp(table));
+    assert.match(migration, new RegExp(table));
+  }
+  assert.match(migration, /CREATE TRIGGER/);
+  assert.match(migration, /AFTER INSERT ON `events`/);
+  assert.match(migration, /COUNT\(DISTINCT `agent_id`\)/);
+  assert.doesNotMatch(migration, /user_agent/);
+  assert.doesNotMatch(migration, /METRICS_TOKEN/);
+
+  const db = new DatabaseSync(":memory:");
+  db.exec("CREATE TABLE events (id INTEGER PRIMARY KEY, event_id TEXT, kind TEXT NOT NULL, endpoint TEXT, agent_id TEXT, client_type TEXT, amount_usd REAL NOT NULL DEFAULT 0, cost_usd REAL NOT NULL DEFAULT 0, latency_ms INTEGER, status_code INTEGER, transaction_hash TEXT, network TEXT, occurred_at TEXT NOT NULL)");
+  const insert = db.prepare("INSERT INTO events (event_id, kind, endpoint, agent_id, client_type, amount_usd, occurred_at) VALUES (?, ?, ?, ?, ?, ?, ?)");
+  insert.run("a", "paid_call", "/api/check", "agent-1", "agent_sdk", 0.001, "2026-09-03T01:00:00Z");
+  insert.run("b", "paid_call", "/api/check", "agent-1", "agent_sdk", 0.001, "2026-09-03T02:00:00Z");
+  insert.run("c", "payment_challenge", "/api/check", "crawler", "crawler_monitor", 0, "2026-09-03T03:00:00Z");
+  insert.run("d", "mcp_initialize", "/api/mcp", "mcp", "agent_sdk", 0, "2026-09-03T04:00:00Z");
+  db.exec(migration);
+  insert.run("e", "payment_challenge", "/api/verify", "agent-2", "programmatic", 0, "2026-09-03T05:00:00Z");
+  const summary = db.prepare("SELECT paid_calls, unique_agents, repeat_agents, http_payment_challenges, mcp_initializations FROM funnel_monitor_summary").get();
+  assert.deepEqual({ ...summary }, { paid_calls: 2, unique_agents: 1, repeat_agents: 1, http_payment_challenges: 2, mcp_initializations: 1 });
+  const programmatic = db.prepare("SELECT http_challenges, paid_calls FROM funnel_monitor_clients WHERE client_type = 'programmatic'").get();
+  assert.deepEqual({ ...programmatic }, { http_challenges: 1, paid_calls: 0 });
+  const verify = db.prepare("SELECT payment_challenges, paid_calls FROM funnel_monitor_endpoints WHERE endpoint = '/api/verify'").get();
+  assert.deepEqual({ ...verify }, { payment_challenges: 1, paid_calls: 0 });
+  db.close();
 });
 
 test("agent documentation describes the transaction-level decision", async () => {
