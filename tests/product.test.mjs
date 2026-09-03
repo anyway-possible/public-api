@@ -231,6 +231,8 @@ test("batch endpoint checks up to ten URLs for one cent", async () => {
 
 test("analytics separates internal validation from customer revenue", async () => {
   const analytics = await readFile(new URL("lib/analytics.ts", root), "utf8");
+  const classification = await readFile(new URL("lib/client-classification.ts", root), "utf8");
+  const schema = await readFile(new URL("db/schema.ts", root), "utf8");
   const dashboard = await readFile(new URL("db/dashboard.ts", root), "utf8");
   assert.match(analytics, /SELF_TEST_PAYER/);
   assert.match(analytics, /payload\?\.authorization\?\.from/);
@@ -238,6 +240,28 @@ test("analytics separates internal validation from customer revenue", async () =
   assert.match(dashboard, /testVolumeUsd/);
   assert.match(dashboard, /customerEvents/);
   assert.match(dashboard, /challengesByEndpoint/);
+  assert.match(analytics, /recordPaymentChallenge/);
+  assert.match(analytics, /clientType: identity\.clientType/);
+  assert.match(schema, /clientType: text\("client_type"\)/);
+  for (const type of ["internal_probe", "marketplace_probe", "crawler_monitor", "agent_sdk", "command_line", "browser", "programmatic", "unknown"]) {
+    assert.match(classification, new RegExp(type));
+  }
+  assert.doesNotMatch(schema, /user_agent/);
+  assert.match(dashboard, /attributedPaymentChallenges/);
+  assert.match(dashboard, /legacyUnattributedChallenges/);
+  assert.match(dashboard, /challengesByClientType/);
+  assert.match(dashboard, /paidCallsByClientType/);
+  assert.match(dashboard, /buyerLikeChallenges/);
+  assert.match(dashboard, /noiseChallenges/);
+});
+
+test("every HTTP payment challenge uses centralized privacy-safe attribution", async () => {
+  const routes = ["payment-guard", "merchant-snapshot", "merchant-audit", "treasury", "base-balance", "check", "batch", "verify"];
+  for (const routeName of routes) {
+    const route = await readFile(new URL(`app/api/${routeName}/route.ts`, root), "utf8");
+    assert.match(route, /recordPaymentChallenge/);
+    assert.doesNotMatch(route, /kind: identity\.isSelfTest \? "test_challenge"/);
+  }
 });
 
 test("agent documentation describes the transaction-level decision", async () => {

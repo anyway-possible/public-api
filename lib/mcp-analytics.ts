@@ -1,5 +1,6 @@
 import { getDb } from "../db";
 import { events } from "../db/schema";
+import { classifyUserAgent } from "./client-classification";
 
 type HeaderBag = Headers | Record<string, string | string[] | undefined>;
 
@@ -28,6 +29,9 @@ export async function recordMcpEvent(
       kind: isSelfTest ? `test_${kind}` : kind,
       endpoint,
       agentId: await shortClientId(headers),
+      clientType: classifyUserAgent(headerValue(headers, "user-agent"), {
+        selfTest: headerValue(headers, "x-awp-self-test") === "1",
+      }),
       amountUsd: 0,
       costUsd: 0,
       statusCode,

@@ -62,6 +62,7 @@ async function recordSettlement(endpoint: string, amountUsd: number, paymentPayl
       kind: payer === SELF_TEST_PAYER ? "test_call" : "paid_call",
       endpoint,
       agentId: await shortAgentId(payer),
+      clientType: "agent_sdk",
       amountUsd,
       costUsd: 0,
       statusCode: 200,

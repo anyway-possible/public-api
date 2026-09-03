@@ -15,6 +15,13 @@ export type DashboardSnapshot = {
   testVolumeUsd: number;
   paymentChallenges: number;
   conversionRate: number;
+  attributedPaymentChallenges: number;
+  legacyUnattributedChallenges: number;
+  challengeAttributionStartedAt: string | null;
+  challengesByClientType: Record<string, number>;
+  paidCallsByClientType: Record<string, number>;
+  buyerLikeChallenges: number;
+  noiseChallenges: number;
   callsByEndpoint: Record<string, number>;
   revenueByEndpoint: Record<string, number>;
   challengesByEndpoint: Record<string, number>;
@@ -50,7 +57,7 @@ function lastUtcDays(count: number) {
 }
 
 export async function getDashboardSnapshot(): Promise<DashboardSnapshot> {
-  const empty: DashboardSnapshot = { paidCalls: 0, uniqueAgents: 0, grossRevenue: 0, testCalls: 0, testVolumeUsd: 0, paymentChallenges: 0, conversionRate: 0, callsByEndpoint: {}, revenueByEndpoint: {}, challengesByEndpoint: {}, mcpInitializations: 0, mcpToolLists: 0, mcpToolCalls: 0, mcpPaymentAttempts: 0, mcpPaymentChallenges: 0, mcpPaymentFailures: 0, mcpPaidCalls: 0, mcpUniqueAgents: 0, mcpConversionRate: 0, mcpChallengesByTool: {}, mcpToolCallsByTool: {}, repeatAgents: 0, multiDayAgents: 0, repeatRate: 0, multiProductAgents: 0, productPairs: [], lastPaidAt: null, reliability: { successfulPaidCalls: 0, serviceErrors: 0, errorRate: 0, averageLatencyMs: null, p95LatencyMs: null, generatedAt: new Date().toISOString() }, operatingCost: 0, openDecisions: 0, openIncidents: 0, recentSettlements: [], dailyActivity: [] };
+  const empty: DashboardSnapshot = { paidCalls: 0, uniqueAgents: 0, grossRevenue: 0, testCalls: 0, testVolumeUsd: 0, paymentChallenges: 0, conversionRate: 0, attributedPaymentChallenges: 0, legacyUnattributedChallenges: 0, challengeAttributionStartedAt: null, challengesByClientType: {}, paidCallsByClientType: {}, buyerLikeChallenges: 0, noiseChallenges: 0, callsByEndpoint: {}, revenueByEndpoint: {}, challengesByEndpoint: {}, mcpInitializations: 0, mcpToolLists: 0, mcpToolCalls: 0, mcpPaymentAttempts: 0, mcpPaymentChallenges: 0, mcpPaymentFailures: 0, mcpPaidCalls: 0, mcpUniqueAgents: 0, mcpConversionRate: 0, mcpChallengesByTool: {}, mcpToolCallsByTool: {}, repeatAgents: 0, multiDayAgents: 0, repeatRate: 0, multiProductAgents: 0, productPairs: [], lastPaidAt: null, reliability: { successfulPaidCalls: 0, serviceErrors: 0, errorRate: 0, averageLatencyMs: null, p95LatencyMs: null, generatedAt: new Date().toISOString() }, operatingCost: 0, openDecisions: 0, openIncidents: 0, recentSettlements: [], dailyActivity: [] };
   try {
     const db = getDb();
     const [eventRows, expenseRows, decisionRows, incidentRows, recentSettlements] = await Promise.all([
@@ -89,6 +96,20 @@ export async function getDashboardSnapshot(): Promise<DashboardSnapshot> {
       return counts;
     }, {});
     const paymentChallenges = challengeEvents.length;
+    const attributedChallengeEvents = challengeEvents.filter((row) => Boolean(row.clientType));
+    const challengesByClientType = attributedChallengeEvents.reduce<Record<string, number>>((counts, row) => {
+      const clientType = row.clientType ?? "unknown";
+      counts[clientType] = (counts[clientType] ?? 0) + 1;
+      return counts;
+    }, {});
+    const paidCallsByClientType = customerEvents.filter((row) => Boolean(row.clientType)).reduce<Record<string, number>>((counts, row) => {
+      const clientType = row.clientType ?? "unknown";
+      counts[clientType] = (counts[clientType] ?? 0) + 1;
+      return counts;
+    }, {});
+    const buyerLikeChallenges = ["agent_sdk", "command_line", "programmatic"].reduce((sum, type) => sum + (challengesByClientType[type] ?? 0), 0);
+    const noiseChallenges = ["crawler_monitor", "marketplace_probe", "internal_probe"].reduce((sum, type) => sum + (challengesByClientType[type] ?? 0), 0);
+    const challengeAttributionStartedAt = attributedChallengeEvents.reduce<string | null>((earliest, row) => !earliest || row.occurredAt < earliest ? row.occurredAt : earliest, null);
     const callsByEndpoint = customerEvents.reduce<Record<string, number>>((counts, row) => {
       const endpoint = row.endpoint ?? "unknown";
       counts[endpoint] = (counts[endpoint] ?? 0) + 1;
@@ -151,6 +172,13 @@ export async function getDashboardSnapshot(): Promise<DashboardSnapshot> {
       testVolumeUsd: testEvents.reduce((sum, row) => sum + row.amountUsd, 0),
       paymentChallenges,
       conversionRate: paymentChallenges ? Math.min(100, (customerEvents.length / paymentChallenges) * 100) : 0,
+      attributedPaymentChallenges: attributedChallengeEvents.length,
+      legacyUnattributedChallenges: paymentChallenges - attributedChallengeEvents.length,
+      challengeAttributionStartedAt,
+      challengesByClientType,
+      paidCallsByClientType,
+      buyerLikeChallenges,
+      noiseChallenges,
       callsByEndpoint,
       revenueByEndpoint,
       challengesByEndpoint,

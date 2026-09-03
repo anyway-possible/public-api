@@ -5,7 +5,7 @@ import { env } from "cloudflare:workers";
 import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "../../../db";
 import { events } from "../../../db/schema";
-import { identifyAgent, recordServiceError } from "../../../lib/analytics";
+import { identifyAgent, recordPaymentChallenge, recordServiceError } from "../../../lib/analytics";
 import { checkUrl } from "../../../lib/verification";
 
 export const runtime = "edge";
@@ -96,6 +96,7 @@ async function paidHandler(request: NextRequest) {
         kind: identity.isSelfTest ? "test_call" : "paid_call",
         endpoint: "/api/check",
         agentId: identity.agentId,
+        clientType: identity.clientType,
         amountUsd: 0.001,
         costUsd: 0,
         latencyMs: result.responseTimeMs,
@@ -119,10 +120,7 @@ export async function POST(request: NextRequest) {
   try {
     const response = await withX402FromHTTPServer(paidHandler, await getServer())(request);
     if (response.status === 402) {
-      try {
-        const identity = await identifyAgent(request);
-        await getDb().insert(events).values({ eventId: crypto.randomUUID(), kind: identity.isSelfTest ? "test_challenge" : "payment_challenge", endpoint: "/api/check", agentId: identity.agentId, amountUsd: 0, costUsd: 0, statusCode: 402, network: "eip155:8453", occurredAt: new Date().toISOString() }).run();
-      } catch {}
+      await recordPaymentChallenge(request, "/api/check");
     }
     return response;
   } catch (error) {

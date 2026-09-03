@@ -5,7 +5,7 @@ import { env } from "cloudflare:workers";
 import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "../../../db";
 import { events } from "../../../db/schema";
-import { identifyAgent, recordServiceError } from "../../../lib/analytics";
+import { identifyAgent, recordPaymentChallenge, recordServiceError } from "../../../lib/analytics";
 import { auditMerchant } from "../../../lib/merchant-audit";
 
 export const runtime = "edge";
@@ -39,13 +39,13 @@ async function paidHandler(request: NextRequest) {
   if (input.excludePayers !== undefined && (!Array.isArray(input.excludePayers) || input.excludePayers.length > 10 || input.excludePayers.some((address) => typeof address !== "string" || !/^0x[a-fA-F0-9]{40}$/.test(address)))) return NextResponse.json({ error: "excludePayers must contain at most 10 valid EVM addresses." }, { status: 400 });
   try {
     const result = await auditMerchant({ payTo: input.payTo, queries: input.queries as string[], excludePayers: input.excludePayers as string[] | undefined });
-    try { const identity = await identifyAgent(request); await getDb().insert(events).values({ eventId: crypto.randomUUID(), kind: identity.isSelfTest ? "test_call" : "paid_call", endpoint: "/api/merchant-audit", agentId: identity.agentId, amountUsd: 0.25, costUsd: 0, latencyMs: Date.now() - started, statusCode: 200, network: "eip155:8453", occurredAt: result.observedAt }).run(); } catch {}
+    try { const identity = await identifyAgent(request); await getDb().insert(events).values({ eventId: crypto.randomUUID(), kind: identity.isSelfTest ? "test_call" : "paid_call", endpoint: "/api/merchant-audit", agentId: identity.agentId, clientType: identity.clientType, amountUsd: 0.25, costUsd: 0, latencyMs: Date.now() - started, statusCode: 200, network: "eip155:8453", occurredAt: result.observedAt }).run(); } catch {}
     return NextResponse.json(result, { headers: { "cache-control": "no-store" } });
   } catch (error) { console.error("Merchant audit failed", error); await recordServiceError(request, "/api/merchant-audit", 502, started); return NextResponse.json({ error: error instanceof Error ? error.message : "Merchant audit failed." }, { status: 502 }); }
 }
 
 export async function POST(request: NextRequest) {
-  try { const response = await withX402FromHTTPServer(paidHandler, await getServer())(request); if (response.status === 402) { try { const identity = await identifyAgent(request); await getDb().insert(events).values({ eventId: crypto.randomUUID(), kind: identity.isSelfTest ? "test_challenge" : "payment_challenge", endpoint: "/api/merchant-audit", agentId: identity.agentId, amountUsd: 0, costUsd: 0, statusCode: 402, network: "eip155:8453", occurredAt: new Date().toISOString() }).run(); } catch {} } return response; }
+  try { const response = await withX402FromHTTPServer(paidHandler, await getServer())(request); if (response.status === 402) await recordPaymentChallenge(request, "/api/merchant-audit"); return response; }
   catch (error) { console.error("x402 initialization failed", error); await recordServiceError(request, "/api/merchant-audit", 503); return NextResponse.json({ error: "Payment service is temporarily unavailable." }, { status: 503 }); }
 }
 

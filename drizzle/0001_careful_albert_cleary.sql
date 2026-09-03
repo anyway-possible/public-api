@@ -1,0 +1,1 @@
+ALTER TABLE `events` ADD `client_type` text;

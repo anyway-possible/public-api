@@ -6,6 +6,7 @@ export const events = sqliteTable("events", {
   kind: text("kind").notNull(),
   endpoint: text("endpoint"),
   agentId: text("agent_id"),
+  clientType: text("client_type"),
   amountUsd: real("amount_usd").notNull().default(0),
   costUsd: real("cost_usd").notNull().default(0),
   latencyMs: integer("latency_ms"),

@@ -5,7 +5,7 @@ import { env } from "cloudflare:workers";
 import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "../../../db";
 import { events } from "../../../db/schema";
-import { identifyAgent, recordServiceError } from "../../../lib/analytics";
+import { identifyAgent, recordPaymentChallenge, recordServiceError } from "../../../lib/analytics";
 import { createTreasuryPreflight, type TreasuryInput } from "../../../lib/treasury";
 
 export const runtime = "edge";
@@ -87,7 +87,7 @@ async function paidHandler(request: NextRequest) {
     const result = await createTreasuryPreflight(input);
     try {
       const identity = await identifyAgent(request);
-      await getDb().insert(events).values({ eventId: crypto.randomUUID(), kind: identity.isSelfTest ? "test_call" : "paid_call", endpoint: "/api/treasury", agentId: identity.agentId, amountUsd: 0.02, costUsd: 0, latencyMs: Date.now() - started, statusCode: 200, network: "eip155:8453", occurredAt: result.observedAt }).run();
+      await getDb().insert(events).values({ eventId: crypto.randomUUID(), kind: identity.isSelfTest ? "test_call" : "paid_call", endpoint: "/api/treasury", agentId: identity.agentId, clientType: identity.clientType, amountUsd: 0.02, costUsd: 0, latencyMs: Date.now() - started, statusCode: 200, network: "eip155:8453", occurredAt: result.observedAt }).run();
     } catch {}
     return NextResponse.json(result, { headers: { "cache-control": "no-store" } });
   } catch (error) {
@@ -101,10 +101,7 @@ export async function POST(request: NextRequest) {
   try {
     const response = await withX402FromHTTPServer(paidHandler, await getServer())(request);
     if (response.status === 402) {
-      try {
-        const identity = await identifyAgent(request);
-        await getDb().insert(events).values({ eventId: crypto.randomUUID(), kind: identity.isSelfTest ? "test_challenge" : "payment_challenge", endpoint: "/api/treasury", agentId: identity.agentId, amountUsd: 0, costUsd: 0, statusCode: 402, network: "eip155:8453", occurredAt: new Date().toISOString() }).run();
-      } catch {}
+      await recordPaymentChallenge(request, "/api/treasury");
     }
     return response;
   } catch (error) {
