@@ -6,12 +6,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "../../../db";
 import { events } from "../../../db/schema";
 import { identifyAgent, recordServiceError } from "../../../lib/analytics";
+import { BASE_USDC as USDC } from "../../../lib/base-balance";
+import { evaluatePaymentGuard, type PaymentGuardInput } from "../../../lib/payment-guard";
 import { parsePublicUrl } from "../../../lib/verification";
 
 export const runtime = "edge";
 export const dynamic = "force-dynamic";
 const PAY_TO = "0xe5690D37805107C56f6195E65A262b234E0E5e75" as const;
-const USDC = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
 let serverPromise: Promise<X402Server> | undefined;
 
 function getServer() {
@@ -31,39 +32,16 @@ function getServer() {
   return serverPromise;
 }
 
-const units = (value: string, decimals: number) => { const [w, f = ""] = value.split("."); return BigInt(w) * 10n ** BigInt(decimals) + BigInt(f.padEnd(decimals, "0")); };
-const format = (value: bigint, decimals: number) => { const raw = value.toString().padStart(decimals + 1, "0"); const fraction = raw.slice(-decimals).replace(/0+$/, ""); return fraction ? `${raw.slice(0, -decimals)}.${fraction}` : raw.slice(0, -decimals); };
-async function rpc(method: string, params: unknown[]) { const r = await fetch("https://base-rpc.publicnode.com", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params }), signal: AbortSignal.timeout(8_000) }); const j = await r.json() as { result?: string }; if (!j.result) throw new Error("Base RPC failed"); return j.result; }
-
 async function paidHandler(request: NextRequest) {
   const started = Date.now();
   let input: { payerAddress?: string; serviceUrl?: string; maxAmountUsdc?: string; expectedPayTo?: string; minGasReserveEth?: string };
   try { input = await request.json() as typeof input; } catch { return NextResponse.json({ error: "Request body must be valid JSON." }, { status: 400 }); }
   if (!input.payerAddress || !/^0x[a-fA-F0-9]{40}$/.test(input.payerAddress) || !input.serviceUrl || !input.maxAmountUsdc) return NextResponse.json({ error: "payerAddress, serviceUrl, and maxAmountUsdc are required." }, { status: 400 });
   if (input.expectedPayTo && !/^0x[a-fA-F0-9]{40}$/.test(input.expectedPayTo)) return NextResponse.json({ error: "expectedPayTo must be a valid EVM address." }, { status: 400 });
-  let maxAtomic: bigint; let gasAtomic: bigint;
-  try { parsePublicUrl(input.serviceUrl); maxAtomic = units(input.maxAmountUsdc, 6); gasAtomic = units(input.minGasReserveEth ?? "0", 18); } catch (error) { return NextResponse.json({ error: error instanceof Error ? error.message : "Invalid input." }, { status: 400 }); }
+  if (!/^[0-9]+(\.[0-9]{1,6})?$/.test(input.maxAmountUsdc) || (input.minGasReserveEth && !/^[0-9]+(\.[0-9]{1,18})?$/.test(input.minGasReserveEth))) return NextResponse.json({ error: "Payment limits must be non-negative decimal strings within asset precision." }, { status: 400 });
+  try { parsePublicUrl(input.serviceUrl); } catch (error) { return NextResponse.json({ error: error instanceof Error ? error.message : "Invalid serviceUrl." }, { status: 400 }); }
   try {
-    const payer = input.payerAddress.toLowerCase();
-    const validationResponse = await fetch("https://api.cdp.coinbase.com/platform/v2/x402/validate", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ resource: input.serviceUrl, method: "POST" }), signal: AbortSignal.timeout(10_000) });
-    const validation = await validationResponse.json() as { valid?: boolean; statusCode?: number; simulation?: { outcome?: string }; paymentRequirements?: { accepts?: Array<{ amount?: string; network?: string; asset?: string; payTo?: string }> } };
-    const quote = validation.paymentRequirements?.accepts?.[0];
-    const quotedAtomic = quote?.amount && /^\d+$/.test(quote.amount) ? BigInt(quote.amount) : 0n;
-    const quotedPayTo = quote?.payTo?.toLowerCase() ?? "";
-    const balanceData = `0x70a08231${payer.slice(2).padStart(64, "0")}`;
-    const [usdcHex, ethHex, code] = await Promise.all([rpc("eth_call", [{ to: USDC, data: balanceData }, "latest"]), rpc("eth_getBalance", [payer, "latest"]), quotedPayTo ? rpc("eth_getCode", [quotedPayTo, "latest"]) : Promise.resolve("0x")]);
-    const usdcBalance = BigInt(usdcHex); const ethBalance = BigInt(ethHex);
-    const contractValid = validation.valid === true && validation.statusCode === 402 && validation.simulation?.outcome === "accepted";
-    const base = quote?.network === "eip155:8453"; const asset = quote?.asset?.toLowerCase() === USDC.toLowerCase(); const withinLimit = quotedAtomic > 0n && quotedAtomic <= maxAtomic;
-    const recipientMatches = !input.expectedPayTo || quotedPayTo === input.expectedPayTo.toLowerCase(); const notSelf = quotedPayTo !== payer; const funded = usdcBalance >= quotedAtomic; const gasReady = ethBalance >= gasAtomic;
-    const checks = [
-      { id: "x402_contract", status: contractValid ? "pass" : "fail" }, { id: "base_network", status: base ? "pass" : "fail" }, { id: "usdc_asset", status: asset ? "pass" : "fail" },
-      { id: "price_ceiling", status: withinLimit ? "pass" : "fail" }, { id: "recipient", status: recipientMatches && notSelf && quotedPayTo ? (code === "0x" || code === "0x0" ? "pass" : "warn") : "fail" },
-      { id: "buyer_funding", status: funded ? "pass" : "fail" }, { id: "gas_reserve", status: gasReady ? "pass" : "fail" },
-    ];
-    const failed = checks.some((c) => c.status === "fail"); const warned = checks.some((c) => c.status === "warn");
-    const decision = failed ? (!funded || !gasReady ? "needs_funding" : "reject") : warned ? "review_recipient" : "safe_to_sign";
-    const result = { decision, safeToSign: decision === "safe_to_sign", riskLevel: failed ? "high" : warned ? "medium" : "low", serviceUrl: input.serviceUrl, quotedAmountUsdc: format(quotedAtomic, 6), maxAmountUsdc: format(maxAtomic, 6), quotedPayTo, network: quote?.network ?? null, asset: quote?.asset ?? null, payerUsdc: format(usdcBalance, 6), payerEth: format(ethBalance, 18), destinationKind: code === "0x" || code === "0x0" ? "eoa" : "contract", checks, alerts: checks.filter((c) => c.status !== "pass").map((c) => `${c.id}: ${c.status}`), recommendedAction: decision === "safe_to_sign" ? "Sign only the validated payment requirements and do not exceed the quoted amount." : decision === "review_recipient" ? "Confirm the recipient contract before signing." : decision === "needs_funding" ? "Fund the buyer wallet before signing." : "Do not sign; the live x402 contract conflicts with the stated constraints.", observedAt: new Date().toISOString(), limitations: ["This validates public x402 metadata and current Base state; it cannot guarantee future service quality, recipient identity, legality, or contract behavior."] };
+    const result = await evaluatePaymentGuard(input as PaymentGuardInput);
     try { const identity = await identifyAgent(request); await getDb().insert(events).values({ eventId: crypto.randomUUID(), kind: identity.isSelfTest ? "test_call" : "paid_call", endpoint: "/api/payment-guard", agentId: identity.agentId, amountUsd: 0.01, costUsd: 0, latencyMs: Date.now() - started, statusCode: 200, network: "eip155:8453", occurredAt: result.observedAt }).run(); } catch {}
     return NextResponse.json(result, { headers: { "cache-control": "no-store" } });
   } catch (error) { await recordServiceError(request, "/api/payment-guard", 502, started); return NextResponse.json({ error: error instanceof Error ? error.message : "Payment guard failed." }, { status: 502 }); }

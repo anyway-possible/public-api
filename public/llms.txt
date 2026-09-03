@@ -22,10 +22,14 @@ Authentication: none; payment requirements are returned as HTTP 402
 
 ## MCP tools
 
-The remote MCP server exposes four x402-paid, read-only tools. Compatible MCP clients receive the payment requirement in MCP metadata, authorize Base USDC, and repeat the tool call automatically.
+The remote MCP server exposes all eight x402-paid, read-only tools. Compatible MCP clients receive the payment requirement in MCP metadata, authorize Base USDC, and repeat the tool call automatically.
 
 - merchant_snapshot — $0.05 USDC
+- merchant_audit — $0.25 USDC
 - treasury_preflight — $0.02 USDC
+- payment_guard — $0.01 USDC
+- base_balance — $0.001 USDC
+- check_url — $0.001 USDC
 - verify_web_evidence — $0.01 USDC
 - batch_check_urls — $0.01 USDC
 
@@ -115,7 +119,12 @@ npx awal@latest x402 pay https://anywaypossible.com/api/merchant-snapshot -X POS
 - Batch check metadata: https://anywaypossible.com/api/batch
 - Endpoint metadata: https://anywaypossible.com/api/verify
 - Health: https://anywaypossible.com/api/health
-- Aggregate usage: https://anywaypossible.com/api/stats
 - Remote MCP server: https://anywaypossible.com/api/mcp
+
+## Human-readable guides
+
+- What is x402?: https://anywaypossible.com/guides/what-is-x402
+- How should an AI agent verify an x402 payment?: https://anywaypossible.com/guides/x402-payment-safety
+- Why is my x402 API not selling?: https://anywaypossible.com/guides/x402-api-not-selling
 
 Payment preflight checks current Base state and basic destination hazards. It does not guarantee recipient identity, legality, sanctions status, contract behavior, or future settlement success. URL services block private-network destinations, cap response size, and validate redirects. No service requires an account or API key.

@@ -2,8 +2,8 @@
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.anyway-possible/agent-utilities",
   "title": "Anyway Possible Paid Agent Utilities",
-  "description": "Paid x402 tools for merchant intelligence, Base payment readiness, and verifiable web evidence.",
-  "version": "1.0.0",
+  "description": "Eight paid x402 tools for merchant intelligence, Base payment readiness, payment safety, URL checks, and verifiable web evidence.",
+  "version": "1.1.0",
   "websiteUrl": "https://anywaypossible.com",
   "repository": {
     "url": "https://github.com/anyway-possible/public-api",

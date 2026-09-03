@@ -42,6 +42,7 @@ export default function PublicHome() {
       </section>
 
       <section className="quiet-trust" aria-label="Service attributes"><span><i />Systems operational</span><span>Base mainnet · USDC</span><span>No accounts or API keys</span><span>MCP + HTTP + x402</span><a href="/status">View status ↗</a></section>
+      <aside className="quiet-gloss"><strong>New to x402?</strong><p>It is a web payment standard that lets software pay for one API answer at a time—without opening an account or managing an API key.</p><a href="/guides/what-is-x402">Plain-English guide ↗</a></aside>
 
       <section className="quiet-how" id="how-it-works">
         <header><p className="quiet-label">HOW IT WORKS</p><h2>A small check before<br />a consequential action.</h2><p>Agents move quickly. We add the moment of current, structured evidence they need to move responsibly.</p></header>
@@ -60,7 +61,7 @@ export default function PublicHome() {
 
       <section className="quiet-discovery" aria-labelledby="discovery-title">
         <header><p className="quiet-label">WHERE AGENTS FIND US</p><h2 id="discovery-title">One service.<br />Three entrances.</h2><p>Agents do not need to belong to one marketplace or platform. Discovery works through Coinbase Bazaar, the MCP Registry, and stable Direct HTTP contracts.</p></header>
-        <div><article><span>01</span><h3>Coinbase Bazaar</h3><p>x402-native buyers discover endpoints and pay per call with USDC on Base.</p><small>MARKETPLACE DISCOVERY</small></article><article><span>02</span><h3>MCP Registry</h3><p>Connect one remote server and discover the four core decision tools automatically.</p><code>io.github.anyway-possible/agent-utilities</code></article><article><span>03</span><h3>Direct HTTP</h3><p>Inspect sample requests and results before paying, then call any of eight stable routes.</p><footer><a href="/catalog.json">Catalog ↗</a><a href="/openapi.json">OpenAPI ↗</a><a href="/llms.txt">llms.txt ↗</a></footer></article></div>
+        <div><article><span>01</span><h3>Coinbase Bazaar</h3><p>x402-native buyers discover endpoints and pay per call with USDC on Base.</p><small>MARKETPLACE DISCOVERY</small></article><article><span>02</span><h3>MCP Registry</h3><p>Connect one remote server and discover all eight decision tools automatically.</p><code>io.github.anyway-possible/agent-utilities</code></article><article><span>03</span><h3>Direct HTTP</h3><p>Inspect sample requests and results before paying, then call any of eight stable routes.</p><footer><a href="/catalog.json">Catalog ↗</a><a href="/openapi.json">OpenAPI ↗</a><a href="/llms.txt">llms.txt ↗</a></footer></article></div>
       </section>
 
       <section className="quiet-api" id="api">
@@ -75,7 +76,7 @@ export default function PublicHome() {
       </section>
 
       <section className="quiet-closing"><BrandMark /><p>One careful check can change what happens next.</p><a href="#api">Connect via MCP <span>→</span></a></section>
-      <footer className="quiet-footer"><Link href="/"><Wordmark detail="Decision infrastructure for agents" /></Link><span>Base mainnet · x402 USDC</span><nav><a href="/status">Status</a><a href="/catalog.json">Catalog</a><a href="/openapi.json">Docs</a><a href="/llms.txt">llms.txt</a></nav><small>© 2026 Anyway Possible</small></footer>
+      <footer className="quiet-footer"><Link href="/"><Wordmark detail="Decision infrastructure for agents" /></Link><span>Base mainnet · x402 USDC</span><nav><a href="/guides">Guides</a><a href="/status">Status</a><a href="/catalog.json">Catalog</a><a href="/openapi.json">Docs</a><a href="/llms.txt">llms.txt</a></nav><small>© 2026 Anyway Possible</small></footer>
     </main>
   );
 }

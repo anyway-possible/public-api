@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 };
 
 const paidEndpoints = ["/api/payment-guard", "/api/merchant-snapshot", "/api/merchant-audit", "/api/treasury", "/api/base-balance", "/api/check", "/api/batch", "/api/verify"];
-const mcpTools = ["merchant_snapshot", "treasury_preflight", "verify_web_evidence", "batch_check_urls"];
+const mcpTools = ["merchant_snapshot", "merchant_audit", "treasury_preflight", "payment_guard", "base_balance", "check_url", "verify_web_evidence", "batch_check_urls"];
 
 export default function StatusPage() {
   const health = { service: "Anyway Possible Agent Utilities", release: "Stable", network: "Base", paidEndpoints, mcp: { endpoint: "/api/mcp", tools: mcpTools }, checkedAt: new Date().toISOString() };

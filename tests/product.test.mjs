@@ -62,13 +62,17 @@ test("commercial metrics require a private bearer token and exclude payer identi
 });
 
 test("payment guard validates a purchase before an agent signs", async () => {
-  const route = await readFile(new URL("app/api/payment-guard/route.ts", root), "utf8");
+  const [route, product] = await Promise.all([
+    readFile(new URL("app/api/payment-guard/route.ts", root), "utf8"),
+    readFile(new URL("lib/payment-guard.ts", root), "utf8"),
+  ]);
+  const source = route + product;
   assert.match(route, /x402 Payment Guard/);
   assert.match(route, /\$0\.01/);
-  assert.match(route, /platform\/v2\/x402\/validate/);
-  assert.match(route, /price_ceiling/);
-  assert.match(route, /safe_to_sign/);
-  assert.match(route, /expectedPayTo/);
+  assert.match(source, /platform\/v2\/x402\/validate/);
+  assert.match(source, /price_ceiling/);
+  assert.match(source, /safe_to_sign/);
+  assert.match(source, /expectedPayTo/);
 });
 
 test("guarded purchase workflow routes readiness into the final signing guard", async () => {
@@ -174,26 +178,32 @@ test("remote MCP surface exposes the strongest products with x402 payment metada
   assert.match(analytics, /SHA-256/);
   assert.match(analytics, /x-awp-self-test/);
   assert.doesNotMatch(analytics, /request\.json/);
-  for (const tool of ["merchant_snapshot", "treasury_preflight", "verify_web_evidence", "batch_check_urls"]) {
+  const tools = ["merchant_snapshot", "merchant_audit", "treasury_preflight", "payment_guard", "base_balance", "check_url", "verify_web_evidence", "batch_check_urls"];
+  for (const tool of tools) {
     assert.match(mcp, new RegExp(tool));
     assert.match(instructions, new RegExp(tool));
   }
   const parsed = JSON.parse(manifest);
+  assert.equal(parsed.version, "1.1.0");
   assert.equal(parsed.remotes[0].url, "https://anywaypossible.com/api/mcp");
   assert.equal(parsed.remotes[0].type, "streamable-http");
 });
 
 test("Base wallet balance follows demonstrated agent demand", async () => {
-  const route = await readFile(new URL("app/api/base-balance/route.ts", root), "utf8");
+  const [route, product] = await Promise.all([
+    readFile(new URL("app/api/base-balance/route.ts", root), "utf8"),
+    readFile(new URL("lib/base-balance.ts", root), "utf8"),
+  ]);
+  const source = route + product;
   assert.match(route, /Anyway Possible Base Wallet Balance/);
-  assert.match(route, /eth_getBalance/);
-  assert.match(route, /base-rpc\.publicnode\.com/);
-  assert.match(route, /base-mainnet\.public\.blastapi\.io/);
-  assert.match(route, /70a08231/);
-  assert.match(route, /0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913/);
+  assert.match(source, /eth_getBalance/);
+  assert.match(source, /base-rpc\.publicnode\.com/);
+  assert.match(source, /base-mainnet\.public\.blastapi\.io/);
+  assert.match(source, /70a08231/);
+  assert.match(source, /0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913/);
   assert.match(route, /\$0\.001/);
   assert.match(route, /agent treasury/);
-  assert.match(route, /ethAtomic: "0", usdcAtomic: "0"/);
+  assert.match(source, /ethAtomic: "0", usdcAtomic: "0"/);
   assert.match(route, /recommendedNext/);
   assert.match(route, /https:\/\/anywaypossible\.com\/api\/treasury/);
 });
@@ -240,6 +250,52 @@ test("agent documentation describes the transaction-level decision", async () =>
   assert.match(openapi, /destinationAddress/);
   assert.match(openapi, /safeToProceed/);
   assert.match(instructions, /proceed\/fund\/review\/reject/);
+  assert.doesNotMatch(instructions, /\/api\/stats/);
+});
+
+test("typography is self-hosted and compatible with the browser security policy", async () => {
+  const [layout, config] = await Promise.all([
+    readFile(new URL("app/layout.tsx", root), "utf8"),
+    readFile(new URL("next.config.ts", root), "utf8"),
+  ]);
+  assert.match(layout, /geist\/font\/sans/);
+  assert.match(layout, /geist\/font\/mono/);
+  assert.doesNotMatch(layout, /next\/font\/google/);
+  assert.doesNotMatch(layout + config, /fonts\.(googleapis|gstatic)\.com/);
+  assert.match(config, /font-src 'self' data:/);
+});
+
+test("focused guides are indexable and explain x402 in plain English", async () => {
+  const [home, index, guidePage, content, sitemap, instructions] = await Promise.all([
+    readFile(new URL("app/page.tsx", root), "utf8"),
+    readFile(new URL("app/guides/page.tsx", root), "utf8"),
+    readFile(new URL("app/guides/[slug]/page.tsx", root), "utf8"),
+    readFile(new URL("app/guides/content.ts", root), "utf8"),
+    readFile(new URL("public/sitemap.xml", root), "utf8"),
+    readFile(new URL("public/llms.txt", root), "utf8"),
+  ]);
+  assert.match(home, /web payment standard that lets software pay for one API answer at a time/);
+  assert.match(index, /Understand the system/);
+  assert.match(guidePage, /FAQPage/);
+  for (const slug of ["what-is-x402", "x402-payment-safety", "x402-api-not-selling"]) {
+    assert.match(content, new RegExp(slug));
+    assert.match(sitemap, new RegExp(`https://anywaypossible\\.com/guides/${slug}`));
+    assert.match(instructions, new RegExp(`https://anywaypossible\\.com/guides/${slug}`));
+  }
+});
+
+test("public capability descriptions expose all eight MCP tools", async () => {
+  const [health, status, openapi] = await Promise.all([
+    readFile(new URL("app/api/health/route.ts", root), "utf8"),
+    readFile(new URL("app/status/page.tsx", root), "utf8"),
+    readFile(new URL("public/openapi.json", root), "utf8"),
+  ]);
+  const tools = ["merchant_snapshot", "merchant_audit", "treasury_preflight", "payment_guard", "base_balance", "check_url", "verify_web_evidence", "batch_check_urls"];
+  for (const tool of tools) {
+    assert.match(health, new RegExp(tool));
+    assert.match(status, new RegExp(tool));
+    assert.match(openapi, new RegExp(tool));
+  }
 });
 
 test("free machine-readable catalog previews every paid result before purchase", async () => {

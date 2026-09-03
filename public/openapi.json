@@ -11,7 +11,7 @@
       "post": {
         "operationId": "callAnywayPossibleMcp",
         "summary": "Connect to the x402-paid MCP server over Streamable HTTP",
-        "description": "Supports MCP initialize, tools/list, and tools/call for merchant_snapshot, treasury_preflight, verify_web_evidence, and batch_check_urls. Paid tool challenges and settlement receipts are carried in MCP x402 metadata.",
+        "description": "Supports MCP initialize, tools/list, and tools/call for all eight Anyway Possible tools: merchant_snapshot, merchant_audit, treasury_preflight, payment_guard, base_balance, check_url, verify_web_evidence, and batch_check_urls. Paid tool challenges and settlement receipts are carried in MCP x402 metadata.",
         "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object" } } } },
         "responses": { "200": { "description": "MCP JSON-RPC response" }, "403": { "description": "Invalid browser Origin" } }
       }
