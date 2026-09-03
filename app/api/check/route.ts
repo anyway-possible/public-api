@@ -5,7 +5,7 @@ import { env } from "cloudflare:workers";
 import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "../../../db";
 import { events } from "../../../db/schema";
-import { identifyAgent } from "../../../lib/analytics";
+import { identifyAgent, recordServiceError } from "../../../lib/analytics";
 import { checkUrl } from "../../../lib/verification";
 
 export const runtime = "edge";
@@ -110,6 +110,7 @@ async function paidHandler(request: NextRequest) {
   } catch (error) {
     const message = error instanceof Error ? error.message : "URL check failed.";
     const status = /must be|not supported|valid HTTP/.test(message) ? 400 : 502;
+    if (status >= 500) await recordServiceError(request, "/api/check", status);
     return NextResponse.json({ error: message }, { status });
   }
 }
@@ -126,6 +127,7 @@ export async function POST(request: NextRequest) {
     return response;
   } catch (error) {
     console.error("x402 initialization failed", error);
+    await recordServiceError(request, "/api/check", 503);
     return NextResponse.json({ error: "Payment service is temporarily unavailable." }, { status: 503 });
   }
 }

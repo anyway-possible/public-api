@@ -1,4 +1,6 @@
 import { NextRequest } from "next/server";
+import { getDb } from "../db";
+import { events } from "../db/schema";
 
 const SELF_TEST_PAYER = "0x44d2dc46f987d1f2fa55e281934addd193a1a377";
 
@@ -34,4 +36,24 @@ export async function identifyAgent(request: NextRequest) {
       request.headers.get("x-awp-self-test") === "1" ||
       isInfrastructureProbe,
   };
+}
+
+export async function recordServiceError(request: NextRequest, endpoint: string, statusCode: number, startedAt?: number) {
+  try {
+    const identity = await identifyAgent(request);
+    await getDb().insert(events).values({
+      eventId: crypto.randomUUID(),
+      kind: identity.isSelfTest ? "test_service_error" : "service_error",
+      endpoint,
+      agentId: identity.agentId,
+      amountUsd: 0,
+      costUsd: 0,
+      latencyMs: startedAt === undefined ? null : Date.now() - startedAt,
+      statusCode,
+      network: "eip155:8453",
+      occurredAt: new Date().toISOString(),
+    }).run();
+  } catch {
+    // Product responses remain available if reliability telemetry is unavailable.
+  }
 }

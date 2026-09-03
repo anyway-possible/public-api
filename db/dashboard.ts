@@ -20,20 +20,27 @@ export type DashboardSnapshot = {
   challengesByEndpoint: Record<string, number>;
   mcpInitializations: number;
   mcpToolLists: number;
+  mcpToolCalls: number;
+  mcpPaymentAttempts: number;
   mcpPaymentChallenges: number;
+  mcpPaymentFailures: number;
   mcpPaidCalls: number;
   mcpUniqueAgents: number;
   mcpConversionRate: number;
   mcpChallengesByTool: Record<string, number>;
+  mcpToolCallsByTool: Record<string, number>;
   repeatAgents: number;
   multiDayAgents: number;
   repeatRate: number;
+  multiProductAgents: number;
+  productPairs: Array<{ products: [string, string]; buyers: number }>;
   lastPaidAt: string | null;
+  reliability: { successfulPaidCalls: number; serviceErrors: number; errorRate: number; averageLatencyMs: number | null; p95LatencyMs: number | null; generatedAt: string };
   operatingCost: number;
   openDecisions: number;
   openIncidents: number;
   recentSettlements: Array<{ amountUsd: number; endpoint: string | null; occurredAt: string; transactionHash: string | null }>;
-  dailyActivity: Array<{ date: string; paidCalls: number; paymentChallenges: number; revenueUsd: number }>;
+  dailyActivity: Array<{ date: string; paidCalls: number; paymentChallenges: number; serviceErrors: number; revenueUsd: number }>;
 };
 
 function lastUtcDays(count: number) {
@@ -43,7 +50,7 @@ function lastUtcDays(count: number) {
 }
 
 export async function getDashboardSnapshot(): Promise<DashboardSnapshot> {
-  const empty: DashboardSnapshot = { paidCalls: 0, uniqueAgents: 0, grossRevenue: 0, testCalls: 0, testVolumeUsd: 0, paymentChallenges: 0, conversionRate: 0, callsByEndpoint: {}, revenueByEndpoint: {}, challengesByEndpoint: {}, mcpInitializations: 0, mcpToolLists: 0, mcpPaymentChallenges: 0, mcpPaidCalls: 0, mcpUniqueAgents: 0, mcpConversionRate: 0, mcpChallengesByTool: {}, repeatAgents: 0, multiDayAgents: 0, repeatRate: 0, lastPaidAt: null, operatingCost: 0, openDecisions: 0, openIncidents: 0, recentSettlements: [], dailyActivity: [] };
+  const empty: DashboardSnapshot = { paidCalls: 0, uniqueAgents: 0, grossRevenue: 0, testCalls: 0, testVolumeUsd: 0, paymentChallenges: 0, conversionRate: 0, callsByEndpoint: {}, revenueByEndpoint: {}, challengesByEndpoint: {}, mcpInitializations: 0, mcpToolLists: 0, mcpToolCalls: 0, mcpPaymentAttempts: 0, mcpPaymentChallenges: 0, mcpPaymentFailures: 0, mcpPaidCalls: 0, mcpUniqueAgents: 0, mcpConversionRate: 0, mcpChallengesByTool: {}, mcpToolCallsByTool: {}, repeatAgents: 0, multiDayAgents: 0, repeatRate: 0, multiProductAgents: 0, productPairs: [], lastPaidAt: null, reliability: { successfulPaidCalls: 0, serviceErrors: 0, errorRate: 0, averageLatencyMs: null, p95LatencyMs: null, generatedAt: new Date().toISOString() }, operatingCost: 0, openDecisions: 0, openIncidents: 0, recentSettlements: [], dailyActivity: [] };
   try {
     const db = getDb();
     const [eventRows, expenseRows, decisionRows, incidentRows, recentSettlements] = await Promise.all([
@@ -62,12 +69,21 @@ export async function getDashboardSnapshot(): Promise<DashboardSnapshot> {
     );
     const mcpInitializations = eventRows.filter((row) => row.kind === "mcp_initialize");
     const mcpToolLists = eventRows.filter((row) => row.kind === "mcp_tools_list");
+    const mcpToolCalls = eventRows.filter((row) => row.kind === "mcp_tool_call");
+    const mcpPaymentAttempts = eventRows.filter((row) => row.kind === "mcp_payment_attempt");
     const mcpChallengeEvents = eventRows.filter((row) => row.kind === "mcp_payment_challenge");
+    const mcpPaymentFailures = eventRows.filter((row) => row.kind === "mcp_payment_failure");
+    const serviceErrors = eventRows.filter((row) => row.kind === "service_error");
     const mcpPaidEvents = customerEvents.filter((row) => row.endpoint?.startsWith("/api/mcp#") || row.endpoint?.startsWith("/mcp#"));
     const mcpAgentIds = new Set(
-      [...mcpInitializations, ...mcpToolLists, ...mcpChallengeEvents].map((row) => row.agentId).filter((id): id is string => Boolean(id)),
+      [...mcpInitializations, ...mcpToolLists, ...mcpToolCalls, ...mcpChallengeEvents].map((row) => row.agentId).filter((id): id is string => Boolean(id)),
     );
     const mcpChallengesByTool = mcpChallengeEvents.reduce<Record<string, number>>((counts, row) => {
+      const tool = row.endpoint?.split("#")[1] ?? "unknown";
+      counts[tool] = (counts[tool] ?? 0) + 1;
+      return counts;
+    }, {});
+    const mcpToolCallsByTool = mcpToolCalls.reduce<Record<string, number>>((counts, row) => {
       const tool = row.endpoint?.split("#")[1] ?? "unknown";
       counts[tool] = (counts[tool] ?? 0) + 1;
       return counts;
@@ -94,6 +110,24 @@ export async function getDashboardSnapshot(): Promise<DashboardSnapshot> {
     const uniqueAgents = Object.keys(agentActivity).length;
     const repeatAgents = Object.values(agentActivity).filter((agent) => agent.calls > 1).length;
     const multiDayAgents = Object.values(agentActivity).filter((agent) => agent.days.size > 1).length;
+    const productsByAgent = customerEvents.reduce<Record<string, Set<string>>>((products, row) => {
+      if (!row.agentId) return products;
+      const product = (row.endpoint ?? "unknown").replace(/^\/api\/mcp#/, "/api/").replace(/^\/mcp#/, "/api/");
+      (products[row.agentId] ??= new Set<string>()).add(product);
+      return products;
+    }, {});
+    const pairCounts = Object.values(productsByAgent).reduce<Record<string, number>>((counts, products) => {
+      const sorted = [...products].sort();
+      for (let left = 0; left < sorted.length; left += 1) for (let right = left + 1; right < sorted.length; right += 1) {
+        const key = `${sorted[left]}|${sorted[right]}`;
+        counts[key] = (counts[key] ?? 0) + 1;
+      }
+      return counts;
+    }, {});
+    const productPairs = Object.entries(pairCounts).map(([key, buyers]) => ({ products: key.split("|") as [string, string], buyers })).sort((a, b) => b.buyers - a.buyers || a.products.join().localeCompare(b.products.join()));
+    const paidLatencies = customerEvents.map((row) => row.latencyMs).filter((value): value is number => value !== null);
+    const sortedLatencies = [...paidLatencies].sort((a, b) => a - b);
+    const p95Index = sortedLatencies.length ? Math.min(sortedLatencies.length - 1, Math.ceil(sortedLatencies.length * 0.95) - 1) : -1;
     const challengesByEndpoint = challengeEvents.reduce<Record<string, number>>((counts, row) => {
       const endpoint = row.endpoint ?? "unknown";
       counts[endpoint] = (counts[endpoint] ?? 0) + 1;
@@ -105,6 +139,7 @@ export async function getDashboardSnapshot(): Promise<DashboardSnapshot> {
         date,
         paidCalls: paid.length,
         paymentChallenges: challengeEvents.filter((row) => row.occurredAt.startsWith(date)).length,
+        serviceErrors: serviceErrors.filter((row) => row.occurredAt.startsWith(date)).length,
         revenueUsd: paid.reduce((sum, row) => sum + row.amountUsd, 0),
       };
     });
@@ -121,15 +156,29 @@ export async function getDashboardSnapshot(): Promise<DashboardSnapshot> {
       challengesByEndpoint,
       mcpInitializations: mcpInitializations.length,
       mcpToolLists: mcpToolLists.length,
+      mcpToolCalls: mcpToolCalls.length,
+      mcpPaymentAttempts: mcpPaymentAttempts.length,
       mcpPaymentChallenges: mcpChallengeEvents.length,
+      mcpPaymentFailures: mcpPaymentFailures.length,
       mcpPaidCalls: mcpPaidEvents.length,
       mcpUniqueAgents: mcpAgentIds.size,
       mcpConversionRate: mcpChallengeEvents.length ? Math.min(100, (mcpPaidEvents.length / mcpChallengeEvents.length) * 100) : 0,
       mcpChallengesByTool,
+      mcpToolCallsByTool,
       repeatAgents,
       multiDayAgents,
       repeatRate: uniqueAgents ? (repeatAgents / uniqueAgents) * 100 : 0,
+      multiProductAgents: Object.values(productsByAgent).filter((products) => products.size > 1).length,
+      productPairs,
       lastPaidAt: customerEvents.reduce<string | null>((latest, row) => !latest || row.occurredAt > latest ? row.occurredAt : latest, null),
+      reliability: {
+        successfulPaidCalls: customerEvents.length,
+        serviceErrors: serviceErrors.length,
+        errorRate: customerEvents.length + serviceErrors.length ? (serviceErrors.length / (customerEvents.length + serviceErrors.length)) * 100 : 0,
+        averageLatencyMs: paidLatencies.length ? paidLatencies.reduce((sum, value) => sum + value, 0) / paidLatencies.length : null,
+        p95LatencyMs: p95Index >= 0 ? sortedLatencies[p95Index] : null,
+        generatedAt: new Date().toISOString(),
+      },
       operatingCost: expenseRows.reduce((sum, row) => sum + row.amountUsd, 0) + eventRows.reduce((sum, row) => sum + row.costUsd, 0),
       openDecisions: decisionRows.length,
       openIncidents: incidentRows.length,

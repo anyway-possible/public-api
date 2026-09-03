@@ -9,7 +9,7 @@ Remote MCP endpoint: https://anywaypossible.com/api/mcp — Streamable HTTP
 Payment guard: POST /api/payment-guard — $0.01 USDC
 Guarded-purchase recipe: https://anywaypossible.com/guarded-purchase.json
 Merchant snapshot: POST /api/merchant-snapshot — $0.05 USDC
-Merchant audit: POST /api/merchant-audit — $0.50 USDC
+Merchant audit: POST /api/merchant-audit — $0.25 USDC during the 2026-09-02 through 2026-09-16 price test
 Treasury endpoint: POST /api/treasury — $0.02 USDC
 Base wallet endpoint: POST /api/base-balance — $0.001 USDC
 Entry endpoint: POST /api/check — $0.001 USDC
@@ -38,7 +38,7 @@ Content-Type: application/json
 ## Choose the right product
 
 - Diagnose an x402 merchant quickly: POST /api/merchant-snapshot — $0.05
-- Audit Bazaar ranking, competitors, reliability, and revenue deeply: POST /api/merchant-audit — $0.50
+- Audit Bazaar ranking, competitors, reliability, and revenue deeply: POST /api/merchant-audit — $0.25
 - Decide whether a Base wallet is ready for a planned payment: POST /api/treasury — $0.02
 - Read raw Base ETH and Circle USDC balances: POST /api/base-balance — $0.001
 - Verify one URL with timestamped evidence and a content hash: POST /api/verify — $0.01
@@ -106,6 +106,7 @@ npx awal@latest x402 pay https://anywaypossible.com/api/merchant-snapshot -X POS
 
 ## Machine-readable resources
 
+- Free tool catalog with sample requests and results: https://anywaypossible.com/catalog.json
 - OpenAPI: https://anywaypossible.com/openapi.json
 - Merchant snapshot metadata: https://anywaypossible.com/api/merchant-snapshot
 - Merchant audit metadata: https://anywaypossible.com/api/merchant-audit

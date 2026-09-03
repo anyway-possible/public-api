@@ -23,7 +23,7 @@ export async function createMerchantSnapshot(input: MerchantAuditInput) {
     biggestIssue: audit.actions[0] ?? "No critical listing issue was detected in the sampled public signals.",
     upgrade: {
       endpoint: "https://anywaypossible.com/api/merchant-audit",
-      priceUsd: 0.5,
+      priceUsd: 0.25,
       includes: ["competitor pricing", "listing-by-listing defects", "onchain transfer evidence", "three prioritized actions"],
     },
     limitations: audit.limitations,

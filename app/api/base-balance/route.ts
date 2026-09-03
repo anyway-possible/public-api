@@ -5,7 +5,7 @@ import { env } from "cloudflare:workers";
 import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "../../../db";
 import { events } from "../../../db/schema";
-import { identifyAgent } from "../../../lib/analytics";
+import { identifyAgent, recordServiceError } from "../../../lib/analytics";
 
 export const runtime = "edge";
 export const dynamic = "force-dynamic";
@@ -133,6 +133,7 @@ async function paidHandler(request: NextRequest) {
     return NextResponse.json(result, { headers: { "cache-control": "no-store" } });
   } catch (error) {
     console.error("Base balance lookup failed", error);
+    await recordServiceError(request, "/api/base-balance", 502, started);
     return NextResponse.json({ error: error instanceof Error ? error.message : "Base balance lookup failed." }, { status: 502 });
   }
 }
@@ -149,6 +150,7 @@ export async function POST(request: NextRequest) {
     return response;
   } catch (error) {
     console.error("x402 initialization failed", error);
+    await recordServiceError(request, "/api/base-balance", 503);
     return NextResponse.json({ error: "Payment service is temporarily unavailable." }, { status: 503 });
   }
 }

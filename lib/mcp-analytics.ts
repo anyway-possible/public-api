@@ -16,7 +16,7 @@ async function shortClientId(headers: HeaderBag) {
 }
 
 export async function recordMcpEvent(
-  kind: "mcp_initialize" | "mcp_tools_list" | "mcp_payment_challenge",
+  kind: "mcp_initialize" | "mcp_tools_list" | "mcp_tool_call" | "mcp_payment_attempt" | "mcp_payment_challenge" | "mcp_payment_failure",
   endpoint: string,
   headers: HeaderBag,
   statusCode: number,
@@ -37,4 +37,8 @@ export async function recordMcpEvent(
   } catch {
     // MCP responses remain available if analytics storage is temporarily unavailable.
   }
+}
+
+export function hasPaymentHeader(headers: HeaderBag) {
+  return Boolean(headerValue(headers, "payment-signature") ?? headerValue(headers, "x-payment"));
 }

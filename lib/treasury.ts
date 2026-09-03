@@ -125,8 +125,11 @@ export async function createTreasuryPreflight(input: TreasuryInput) {
     ...(!destinationAddress ? ["Destination was not checked."] : []),
   ];
   const observedAt = new Date().toISOString();
+  const receiptSource = JSON.stringify({ address, destinationAddress, chainId, decision, blockNumber: Number(BigInt(blockHex)), observedAt });
+  const receiptDigest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(receiptSource));
+  const receiptId = Array.from(new Uint8Array(receiptDigest)).map((byte) => byte.toString(16).padStart(2, "0")).join("");
   return {
-    address, destinationAddress, destinationKind, network: "Base", chainId, status, ready, safeToProceed, decision, riskLevel, recommendedAction,
+    receiptId, address, destinationAddress, destinationKind, network: "Base", chainId, status, ready, safeToProceed, decision, riskLevel, recommendedAction,
     eth: formatUnits(ethAtomic, 18), usdc: formatUnits(usdcAtomic, 6),
     plannedSpendUsdc: formatUnits(plannedAtomic, 6), minGasReserveEth: formatUnits(gasReserveAtomic, 18),
     usdcShortfall: formatUnits(shortfall(usdcAtomic, plannedAtomic), 6),

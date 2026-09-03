@@ -5,7 +5,7 @@ import { env } from "cloudflare:workers";
 import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "../../../db";
 import { events } from "../../../db/schema";
-import { identifyAgent } from "../../../lib/analytics";
+import { identifyAgent, recordServiceError } from "../../../lib/analytics";
 import { auditMerchant } from "../../../lib/merchant-audit";
 
 export const runtime = "edge";
@@ -18,7 +18,7 @@ function getServer() {
     const runtimeEnv = env as unknown as Record<string, string | undefined>;
     serverPromise = createX402Server({ apiKeyId: runtimeEnv.CDP_API_KEY_ID, apiKeySecret: runtimeEnv.CDP_API_KEY_SECRET, environment: "production", payToConfig: { type: "address", evm: PAY_TO }, builderCode: "anyway_possible", routes: {
       "POST /api/merchant-audit": {
-        accepts: { scheme: "exact", price: "$0.50", network: "eip155:8453", payTo: PAY_TO, maxTimeoutSeconds: 60 },
+        accepts: { scheme: "exact", price: "$0.25", network: "eip155:8453", payTo: PAY_TO, maxTimeoutSeconds: 60 },
         serviceName: "x402 API Revenue Audit — Anyway Possible",
         tags: ["x402 revenue audit", "x402 API not selling", "increase x402 revenue", "Coinbase Bazaar ranking", "x402 competitor pricing"],
         iconUrl: "https://anywaypossible.com/favicon.svg",
@@ -39,14 +39,14 @@ async function paidHandler(request: NextRequest) {
   if (input.excludePayers !== undefined && (!Array.isArray(input.excludePayers) || input.excludePayers.length > 10 || input.excludePayers.some((address) => typeof address !== "string" || !/^0x[a-fA-F0-9]{40}$/.test(address)))) return NextResponse.json({ error: "excludePayers must contain at most 10 valid EVM addresses." }, { status: 400 });
   try {
     const result = await auditMerchant({ payTo: input.payTo, queries: input.queries as string[], excludePayers: input.excludePayers as string[] | undefined });
-    try { const identity = await identifyAgent(request); await getDb().insert(events).values({ eventId: crypto.randomUUID(), kind: identity.isSelfTest ? "test_call" : "paid_call", endpoint: "/api/merchant-audit", agentId: identity.agentId, amountUsd: 0.5, costUsd: 0, latencyMs: Date.now() - started, statusCode: 200, network: "eip155:8453", occurredAt: result.observedAt }).run(); } catch {}
+    try { const identity = await identifyAgent(request); await getDb().insert(events).values({ eventId: crypto.randomUUID(), kind: identity.isSelfTest ? "test_call" : "paid_call", endpoint: "/api/merchant-audit", agentId: identity.agentId, amountUsd: 0.25, costUsd: 0, latencyMs: Date.now() - started, statusCode: 200, network: "eip155:8453", occurredAt: result.observedAt }).run(); } catch {}
     return NextResponse.json(result, { headers: { "cache-control": "no-store" } });
-  } catch (error) { console.error("Merchant audit failed", error); return NextResponse.json({ error: error instanceof Error ? error.message : "Merchant audit failed." }, { status: 502 }); }
+  } catch (error) { console.error("Merchant audit failed", error); await recordServiceError(request, "/api/merchant-audit", 502, started); return NextResponse.json({ error: error instanceof Error ? error.message : "Merchant audit failed." }, { status: 502 }); }
 }
 
 export async function POST(request: NextRequest) {
   try { const response = await withX402FromHTTPServer(paidHandler, await getServer())(request); if (response.status === 402) { try { const identity = await identifyAgent(request); await getDb().insert(events).values({ eventId: crypto.randomUUID(), kind: identity.isSelfTest ? "test_challenge" : "payment_challenge", endpoint: "/api/merchant-audit", agentId: identity.agentId, amountUsd: 0, costUsd: 0, statusCode: 402, network: "eip155:8453", occurredAt: new Date().toISOString() }).run(); } catch {} } return response; }
-  catch (error) { console.error("x402 initialization failed", error); return NextResponse.json({ error: "Payment service is temporarily unavailable." }, { status: 503 }); }
+  catch (error) { console.error("x402 initialization failed", error); await recordServiceError(request, "/api/merchant-audit", 503); return NextResponse.json({ error: "Payment service is temporarily unavailable." }, { status: 503 }); }
 }
 
-export async function GET() { return NextResponse.json({ service: "x402 API Revenue Audit — Anyway Possible", useWhen: "An x402 seller needs a complete diagnosis of weak discovery, conversion, payer demand, or revenue.", price: "$0.50 USDC", network: "Base (eip155:8453)", method: "POST", request: { payTo: PAY_TO, queries: ["why is my x402 API not selling", "increase x402 revenue", "x402 seller intelligence"], excludePayers: ["0x44D2DC46f987D1F2fa55e281934aDDd193a1A377"] }, returns: ["merchant score and grade", "Bazaar listing quality", "semantic search rankings", "competitor prices", "x402 reliability", "Base USDC activity", "prioritized fixes"] }); }
+export async function GET() { return NextResponse.json({ service: "x402 API Revenue Audit — Anyway Possible", useWhen: "An x402 seller needs a complete diagnosis of weak discovery, conversion, payer demand, or revenue.", price: "$0.25 USDC", network: "Base (eip155:8453)", method: "POST", request: { payTo: PAY_TO, queries: ["why is my x402 API not selling", "increase x402 revenue", "x402 seller intelligence"], excludePayers: ["0x44D2DC46f987D1f2fa55e281934aDDd193a1A377"] }, returns: ["merchant score and grade", "Bazaar listing quality", "semantic search rankings", "competitor prices", "x402 reliability", "Base USDC activity", "prioritized fixes"], experiment: { id: "merchant-audit-price-2026-09", previousPriceUsd: 0.5, priceUsd: 0.25, startsAt: "2026-09-02T00:00:00.000Z", endsAt: "2026-09-16T23:59:59.999Z" } }); }

@@ -5,7 +5,7 @@ import { env } from "cloudflare:workers";
 import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "../../../db";
 import { events } from "../../../db/schema";
-import { identifyAgent } from "../../../lib/analytics";
+import { identifyAgent, recordServiceError } from "../../../lib/analytics";
 import { createMerchantSnapshot } from "../../../lib/merchant-snapshot";
 
 export const runtime = "edge";
@@ -21,7 +21,7 @@ const EXAMPLE = {
   signals: { listingCount: 6, analyzedListingCount: 5, indexedCalls30d: 19, maxResourceUniquePayers30d: 2, externalInboundUsdc: 0.004, uniqueExternalPayers: 2, latestActivity: "2026-08-16T17:10:09.675Z", reliableListings: 5 },
   visibility: [{ query: "Base wallet balance", rank: 1, matchedResource: "https://anywaypossible.com/api/base-balance" }],
   biggestIssue: "Target the missing search queries in service names, descriptions, and tags.",
-  upgrade: { endpoint: "https://anywaypossible.com/api/merchant-audit", priceUsd: 0.5, includes: ["competitor pricing", "listing-by-listing defects", "onchain transfer evidence", "three prioritized actions"] },
+  upgrade: { endpoint: "https://anywaypossible.com/api/merchant-audit", priceUsd: 0.25, includes: ["competitor pricing", "listing-by-listing defects", "onchain transfer evidence", "three prioritized actions"] },
   limitations: ["Public discovery and onchain transfers cannot prove that every inbound payment is customer revenue."],
 };
 let serverPromise: Promise<X402Server> | undefined;
@@ -59,12 +59,12 @@ async function paidHandler(request: NextRequest) {
     const result = await createMerchantSnapshot({ payTo: input.payTo, queries: input.queries as string[], excludePayers: input.excludePayers as string[] | undefined });
     try { const identity = await identifyAgent(request); await getDb().insert(events).values({ eventId: crypto.randomUUID(), kind: identity.isSelfTest ? "test_call" : "paid_call", endpoint: "/api/merchant-snapshot", agentId: identity.agentId, amountUsd: 0.05, costUsd: 0, latencyMs: Date.now() - started, statusCode: 200, network: "eip155:8453", occurredAt: result.observedAt }).run(); } catch {}
     return NextResponse.json(result, { headers: { "cache-control": "no-store" } });
-  } catch (error) { console.error("Merchant snapshot failed", error); return NextResponse.json({ error: error instanceof Error ? error.message : "Merchant snapshot failed." }, { status: 502 }); }
+  } catch (error) { console.error("Merchant snapshot failed", error); await recordServiceError(request, "/api/merchant-snapshot", 502, started); return NextResponse.json({ error: error instanceof Error ? error.message : "Merchant snapshot failed." }, { status: 502 }); }
 }
 
 export async function POST(request: NextRequest) {
   try { const response = await withX402FromHTTPServer(paidHandler, await getServer())(request); if (response.status === 402) { try { const identity = await identifyAgent(request); await getDb().insert(events).values({ eventId: crypto.randomUUID(), kind: identity.isSelfTest ? "test_challenge" : "payment_challenge", endpoint: "/api/merchant-snapshot", agentId: identity.agentId, amountUsd: 0, costUsd: 0, statusCode: 402, network: "eip155:8453", occurredAt: new Date().toISOString() }).run(); } catch {} } return response; }
-  catch (error) { console.error("x402 initialization failed", error); return NextResponse.json({ error: "Payment service is temporarily unavailable." }, { status: 503 }); }
+  catch (error) { console.error("x402 initialization failed", error); await recordServiceError(request, "/api/merchant-snapshot", 503); return NextResponse.json({ error: "Payment service is temporarily unavailable." }, { status: 503 }); }
 }
 
-export async function GET() { return NextResponse.json({ service: "Why Is My x402 API Not Selling? — Revenue Snapshot", useWhen: "An x402 seller needs to diagnose weak discovery, demand, or revenue before purchasing a full audit.", price: "$0.05 USDC", network: "Base (eip155:8453)", method: "POST", request: { payTo: PAY_TO, queries: ["why is my x402 API not selling", "increase x402 revenue", "x402 seller intelligence"], excludePayers: ["0x44D2DC46f987D1F2fa55e281934aDDd193a1A377"] }, returns: ["merchant score and grade", "Bazaar inventory", "semantic visibility", "buyer and USDC signals", "biggest revenue issue", "$0.50 full-audit upgrade"] }); }
+export async function GET() { return NextResponse.json({ service: "Why Is My x402 API Not Selling? — Revenue Snapshot", useWhen: "An x402 seller needs to diagnose weak discovery, demand, or revenue before purchasing a full audit.", price: "$0.05 USDC", network: "Base (eip155:8453)", method: "POST", request: { payTo: PAY_TO, queries: ["why is my x402 API not selling", "increase x402 revenue", "x402 seller intelligence"], excludePayers: ["0x44D2DC46f987D1f2fa55e281934aDDd193a1A377"] }, returns: ["merchant score and grade", "Bazaar inventory", "semantic visibility", "buyer and USDC signals", "biggest revenue issue", "$0.25 full-audit upgrade"] }); }

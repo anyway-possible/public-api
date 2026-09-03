@@ -42,7 +42,13 @@ test("commercial metrics require a private bearer token and exclude payer identi
   assert.match(dashboard, /paymentChallenges: challengeEvents\.filter/);
   assert.match(dashboard, /mcpInitializations/);
   assert.match(dashboard, /mcpPaymentChallenges/);
+  assert.match(dashboard, /mcpToolCalls/);
+  assert.match(dashboard, /mcpPaymentAttempts/);
+  assert.match(dashboard, /mcpPaymentFailures/);
   assert.match(dashboard, /mcpConversionRate/);
+  assert.match(dashboard, /multiProductAgents/);
+  assert.match(dashboard, /productPairs/);
+  assert.match(dashboard, /reliability/);
   assert.doesNotMatch(dashboard, /payerAddresses/);
 });
 
@@ -83,7 +89,7 @@ test("merchant snapshot is the low-friction audit funnel", async () => {
   assert.match(route, /x402 seller intelligence/);
   assert.match(source, /biggestIssue/);
   assert.match(source, /\/api\/merchant-audit/);
-  assert.match(source, /priceUsd: 0\.5/);
+  assert.match(source, /priceUsd: 0\.25/);
 });
 
 test("merchant audit is the flagship revenue product", async () => {
@@ -92,8 +98,9 @@ test("merchant audit is the flagship revenue product", async () => {
     readFile(new URL("lib/merchant-audit.ts", root), "utf8"),
   ]);
   assert.match(route, /x402 API Revenue Audit/);
-  assert.match(route, /\$0\.50/);
-  assert.match(route, /amountUsd: 0\.5/);
+  assert.match(route, /\$0\.25/);
+  assert.match(route, /amountUsd: 0\.25/);
+  assert.match(route, /merchant-audit-price-2026-09/);
   assert.match(route, /increase x402 revenue/);
   assert.match(audit, /api\.cdp\.coinbase\.com/);
   assert.match(audit, /base\.blockscout\.com/);
@@ -129,6 +136,7 @@ test("Base payment preflight is the higher-value product", async () => {
   assert.match(source, /eth_getCode/);
   assert.match(source, /expectedChainId/);
   assert.match(source, /limitations/);
+  assert.match(source, /receiptId/);
   assert.match(route, /agent treasury/);
   assert.match(route, /wallet readiness/);
   assert.match(route, /Base gas reserve/);
@@ -150,6 +158,9 @@ test("remote MCP surface exposes the strongest products with x402 payment metada
   assert.match(mcp, /createCdpFacilitatorClient/);
   assert.match(mcp, /bazaarResourceServerExtension/);
   assert.match(mcp, /mcp_payment_challenge/);
+  assert.match(mcp, /mcp_tool_call/);
+  assert.match(mcp, /mcp_payment_attempt/);
+  assert.match(mcp, /mcp_payment_failure/);
   const analytics = await readFile(new URL("lib/mcp-analytics.ts", root), "utf8");
   assert.match(analytics, /SHA-256/);
   assert.match(analytics, /x-awp-self-test/);
@@ -220,6 +231,21 @@ test("agent documentation describes the transaction-level decision", async () =>
   assert.match(openapi, /destinationAddress/);
   assert.match(openapi, /safeToProceed/);
   assert.match(instructions, /proceed\/fund\/review\/reject/);
+});
+
+test("free machine-readable catalog previews every paid result before purchase", async () => {
+  const [catalogSource, page, instructions] = await Promise.all([
+    readFile(new URL("public/catalog.json", root), "utf8"),
+    readFile(new URL("app/page.tsx", root), "utf8"),
+    readFile(new URL("public/llms.txt", root), "utf8"),
+  ]);
+  const catalog = JSON.parse(catalogSource);
+  assert.deepEqual(catalog.featured, ["merchant-snapshot", "treasury"]);
+  assert.equal(catalog.tools.length, 8);
+  assert.equal(catalog.tools.find((tool) => tool.id === "merchant-audit").priceUsd, 0.25);
+  assert.ok(catalog.tools.every((tool) => tool.sampleRequest && tool.sampleResponse));
+  assert.match(page, /\/catalog\.json/);
+  assert.match(instructions, /catalog\.json/);
 });
 
 test("paid verifier is bound to the authorized wallet and Base mainnet", async () => {

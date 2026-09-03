@@ -21,7 +21,7 @@
       "post": {
         "operationId": "snapshotX402Merchant",
         "summary": "Diagnose why an x402 API is not selling for $0.05 USDC",
-        "description": "Returns an x402 merchant score, Coinbase Bazaar inventory, buyer-search visibility, public payer and Base USDC signals, live payment reliability, biggest revenue issue, and machine-readable upgrade to the $0.50 full revenue audit.",
+        "description": "Returns an x402 merchant score, Coinbase Bazaar inventory, buyer-search visibility, public payer and Base USDC signals, live payment reliability, biggest revenue issue, and machine-readable upgrade to the $0.25 full revenue audit.",
         "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MerchantSnapshotRequest" } } } },
         "responses": {
           "200": { "description": "Paid merchant snapshot", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MerchantSnapshotResult" } } } },
@@ -32,10 +32,10 @@
       }
     },
     "/api/merchant-audit": {
-      "get": { "summary": "Read $0.50 x402 Merchant Audit metadata", "responses": { "200": { "description": "Service metadata" } } },
+      "get": { "summary": "Read $0.25 x402 Merchant Audit metadata", "responses": { "200": { "description": "Service metadata" } } },
       "post": {
         "operationId": "auditX402Merchant",
-        "summary": "Run a full x402 API revenue audit for $0.50 USDC",
+        "summary": "Run a full x402 API revenue audit for $0.25 USDC",
         "description": "Audits why an x402 API is not generating revenue across Coinbase Bazaar rankings, exact buyer searches, listing defects, competitor prices, payment reliability, public payer signals, and inbound Base USDC, then returns three prioritized revenue actions.",
         "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MerchantAuditRequest" } } } },
         "responses": {

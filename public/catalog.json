@@ -1,0 +1,90 @@
+{
+  "schemaVersion": "1.0",
+  "updatedAt": "2026-09-02T00:00:00.000Z",
+  "currency": "USDC",
+  "network": "Base (eip155:8453)",
+  "paymentProtocol": "x402",
+  "featured": ["merchant-snapshot", "treasury"],
+  "tools": [
+    {
+      "id": "merchant-snapshot",
+      "question": "Why is my x402 API not selling?",
+      "useWhen": "A merchant needs a fast, evidence-backed diagnosis before buying a full audit.",
+      "priceUsd": 0.05,
+      "endpoint": "https://anywaypossible.com/api/merchant-snapshot",
+      "method": "POST",
+      "mcpTool": "merchant_snapshot",
+      "sampleRequest": { "payTo": "0xe5690D37805107C56f6195E65A262b234E0E5e75", "queries": ["x402 merchant analytics", "increase x402 revenue"] },
+      "sampleResponse": { "score": 86, "grade": "B", "biggestIssue": "Improve buyer-search visibility.", "upgrade": { "priceUsd": 0.25 } }
+    },
+    {
+      "id": "treasury",
+      "question": "Is this Base payment safe and funded?",
+      "useWhen": "An agent needs a go, fund, review, or reject decision before signing.",
+      "priceUsd": 0.02,
+      "endpoint": "https://anywaypossible.com/api/treasury",
+      "method": "POST",
+      "mcpTool": "treasury_preflight",
+      "sampleRequest": { "address": "0x1111111111111111111111111111111111111111", "destinationAddress": "0x2222222222222222222222222222222222222222", "plannedSpendUsdc": "1.00", "expectedChainId": 8453 },
+      "sampleResponse": { "decision": "needs_funding", "safeToProceed": false, "riskLevel": "medium", "recommendedAction": "Fund the wallet before paying." }
+    },
+    {
+      "id": "payment-guard",
+      "question": "Does this x402 payment request match my intent?",
+      "priceUsd": 0.01,
+      "endpoint": "https://anywaypossible.com/api/payment-guard",
+      "method": "POST",
+      "sampleRequest": { "url": "https://example.com/paid", "maxPriceUsd": "0.05", "expectedNetwork": "eip155:8453" },
+      "sampleResponse": { "decision": "approve", "safeToSign": true, "riskLevel": "low" }
+    },
+    {
+      "id": "verify",
+      "question": "Can I cite this page as current evidence?",
+      "priceUsd": 0.01,
+      "endpoint": "https://anywaypossible.com/api/verify",
+      "method": "POST",
+      "mcpTool": "verify_web_evidence",
+      "sampleRequest": { "url": "https://example.com", "expectedStatus": 200, "expectedText": "Example Domain" },
+      "sampleResponse": { "verified": true, "status": 200, "contentSha256": "6f5635...", "receiptId": "f06d5e..." }
+    },
+    {
+      "id": "batch",
+      "question": "Are these links usable right now?",
+      "priceUsd": 0.01,
+      "endpoint": "https://anywaypossible.com/api/batch",
+      "method": "POST",
+      "mcpTool": "batch_check_urls",
+      "sampleRequest": { "urls": ["https://example.com", "https://www.iana.org/help/example-domains"], "expectedStatus": 200 },
+      "sampleResponse": { "verified": true, "count": 2, "results": [{ "status": 200, "verified": true }] }
+    },
+    {
+      "id": "base-balance",
+      "question": "What does this Base wallet hold?",
+      "priceUsd": 0.001,
+      "endpoint": "https://anywaypossible.com/api/base-balance",
+      "method": "POST",
+      "sampleRequest": { "address": "0x1111111111111111111111111111111111111111" },
+      "sampleResponse": { "network": "Base", "eth": "0", "usdc": "0", "blockNumber": 12345678 }
+    },
+    {
+      "id": "check",
+      "question": "Is this URL reachable before I use it?",
+      "priceUsd": 0.001,
+      "endpoint": "https://anywaypossible.com/api/check",
+      "method": "POST",
+      "sampleRequest": { "url": "https://example.com", "expectedStatus": 200 },
+      "sampleResponse": { "verified": true, "status": 200, "responseTimeMs": 180, "contentType": "text/html" }
+    },
+    {
+      "id": "merchant-audit",
+      "question": "What exactly should I change to improve x402 revenue?",
+      "useWhen": "A merchant needs listing-level evidence, competitor prices, reliability, buyer signals, and prioritized fixes.",
+      "priceUsd": 0.25,
+      "priceExperiment": { "id": "merchant-audit-price-2026-09", "previousPriceUsd": 0.5, "startsAt": "2026-09-02T00:00:00.000Z", "endsAt": "2026-09-16T23:59:59.999Z" },
+      "endpoint": "https://anywaypossible.com/api/merchant-audit",
+      "method": "POST",
+      "sampleRequest": { "payTo": "0xe5690D37805107C56f6195E65A262b234E0E5e75", "queries": ["x402 merchant analytics", "agent treasury"] },
+      "sampleResponse": { "score": 72, "grade": "C", "actions": ["Improve exact buyer-search language in listing metadata.", "Fix unreliable listings.", "Validate price against close substitutes."] }
+    }
+  ]
+}

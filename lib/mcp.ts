@@ -12,7 +12,7 @@ import { events } from "../db/schema";
 import { createMerchantSnapshot } from "./merchant-snapshot";
 import { createTreasuryPreflight } from "./treasury";
 import { checkUrl, verifyUrl } from "./verification";
-import { recordMcpEvent } from "./mcp-analytics";
+import { hasPaymentHeader, recordMcpEvent } from "./mcp-analytics";
 
 const PAY_TO = "0xe5690D37805107C56f6195E65A262b234E0E5e75" as const;
 const NETWORK = "eip155:8453" as const;
@@ -183,18 +183,24 @@ function paidTool<TArgs extends Record<string, unknown>>(
   handler: PaymentWrappedHandler<TArgs>,
 ): MCPToolCallback<TArgs> {
   return async (args, extra) => {
+    const requestHeaders = (extra as { requestInfo?: { headers?: Record<string, string | string[] | undefined> } })?.requestInfo?.headers ?? {};
+    const toolNames: Record<keyof ToolSet, string> = {
+      merchantSnapshot: "merchant_snapshot",
+      treasuryPreflight: "treasury_preflight",
+      verifyEvidence: "verify_web_evidence",
+      batchCheck: "batch_check_urls",
+    };
+    const endpoint = `/api/mcp#${toolNames[tool]}`;
+    const paymentAttempted = hasPaymentHeader(requestHeaders);
+    await recordMcpEvent("mcp_tool_call", endpoint, requestHeaders, 200);
+    if (paymentAttempted) await recordMcpEvent("mcp_payment_attempt", endpoint, requestHeaders, 0);
     const paid = await getToolSet();
     const result = await paid[tool](handler)(args, extra);
     const structured = result.structuredContent as { x402Version?: number; error?: string } | undefined;
     if (result.isError && structured?.x402Version === 2 && structured.error === "Payment required to access this tool") {
-      const requestHeaders = (extra as { requestInfo?: { headers?: Record<string, string | string[] | undefined> } })?.requestInfo?.headers ?? {};
-      const toolNames: Record<keyof ToolSet, string> = {
-        merchantSnapshot: "merchant_snapshot",
-        treasuryPreflight: "treasury_preflight",
-        verifyEvidence: "verify_web_evidence",
-        batchCheck: "batch_check_urls",
-      };
-      await recordMcpEvent("mcp_payment_challenge", `/api/mcp#${toolNames[tool]}`, requestHeaders, 402);
+      await recordMcpEvent("mcp_payment_challenge", endpoint, requestHeaders, 402);
+    } else if (result.isError && paymentAttempted) {
+      await recordMcpEvent("mcp_payment_failure", endpoint, requestHeaders, 400);
     }
     return result;
   };

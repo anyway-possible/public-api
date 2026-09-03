@@ -10,7 +10,7 @@ const products = [
   { name: "Batch", price: "$0.01", tag: "UP TO 10 URLS", copy: "Validate citation lists, migrations, or dependencies together without one failed URL hiding the other results.", path: "POST /api/batch", tone: "plain" },
   { name: "Base Balance", price: "$0.001", tag: "ONCHAIN DATA", copy: "Read native ETH and Circle USDC balances, atomic values, and current Base block height.", path: "POST /api/base-balance", tone: "plain" },
   { name: "Check", price: "$0.001", tag: "FAST URL PREFLIGHT", copy: "Confirm reachability, status, latency, redirects, and content type before a larger action.", path: "POST /api/check", tone: "plain" },
-  { name: "Merchant Audit", price: "$0.50", tag: "DEEP REVENUE REPORT", copy: "Get ranking evidence, competitor prices, payment reliability, buyer reach, and three prioritized actions.", path: "POST /api/merchant-audit", tone: "plain" },
+  { name: "Merchant Audit", price: "$0.25", tag: "14-DAY PRICE TEST", copy: "Get ranking evidence, competitor prices, payment reliability, buyer reach, and three prioritized actions.", path: "POST /api/merchant-audit", tone: "plain" },
 ];
 
 export default function PublicHome() {
@@ -34,13 +34,13 @@ export default function PublicHome() {
       </section>
 
       <section className="products-section" id="products">
-        <div className="section-heading products-heading"><div><p className="eyebrow">CHOOSE BY JOB</p><h2>Useful answers.<br />Tiny prices.</h2></div><p>Eight focused tools for commerce, treasury, and web evidence. Every response is machine-readable; every route works over HTTP, and the core toolkit is available through MCP.</p></div>
+        <div className="section-heading products-heading"><div><p className="eyebrow">CHOOSE BY JOB</p><h2>Useful answers.<br />Tiny prices.</h2></div><p>Start with Merchant Snapshot for selling decisions or Treasury for payment decisions. Six lower-priced utilities handle focused checks. Every response is machine-readable over HTTP, with the core toolkit also available through MCP.</p></div>
         <div className="product-grid">{products.map((product) => <article className={`product-card ${product.tone}`} key={product.name}><div className="product-meta"><span>{product.tag}</span><strong>{product.price}<small> USDC</small></strong></div><h3>{product.name}</h3><p>{product.copy}</p><code>{product.path}</code></article>)}</div>
       </section>
 
       <section className="discovery-section" aria-labelledby="discovery-title">
         <div className="section-heading"><p className="eyebrow">WHERE AGENTS FIND US</p><h2 id="discovery-title">Bazaar is one door, not the whole building.</h2><p>Anyway Possible is available through three complementary paths, so an agent does not need to belong to a single marketplace or platform.</p></div>
-        <div className="discovery-grid"><article><span>01</span><h3>Coinbase Bazaar</h3><p>x402-native buyers can discover supported endpoints and pay per call with USDC on Base.</p><small>MARKETPLACE DISCOVERY</small></article><article><span>02</span><h3>MCP Registry</h3><p>Agents can connect to one remote MCP server and discover the core decision tools automatically.</p><code>io.github.anyway-possible/agent-utilities</code></article><article><span>03</span><h3>Direct HTTP</h3><p>Any compatible agent or application can call stable public routes using the OpenAPI specification and agent instructions.</p><div><a href="/openapi.json">OpenAPI ↗</a><a href="/llms.txt">llms.txt ↗</a></div></article></div>
+        <div className="discovery-grid"><article><span>01</span><h3>Coinbase Bazaar</h3><p>x402-native buyers can discover supported endpoints and pay per call with USDC on Base.</p><small>MARKETPLACE DISCOVERY</small></article><article><span>02</span><h3>MCP Registry</h3><p>Agents can connect to one remote MCP server and discover the core decision tools automatically.</p><code>io.github.anyway-possible/agent-utilities</code></article><article><span>03</span><h3>Direct HTTP</h3><p>Any compatible agent or application can inspect sample inputs and outputs before paying, then call stable routes directly.</p><div><a href="/catalog.json">Tool catalog ↗</a><a href="/openapi.json">OpenAPI ↗</a><a href="/llms.txt">llms.txt ↗</a></div></article></div>
       </section>
 
       <section className="sample-report" aria-labelledby="sample-title">
@@ -50,7 +50,7 @@ export default function PublicHome() {
       </section>
 
       <section className="api-panel" id="api">
-        <div className="api-copy"><p className="eyebrow">CONNECT ONCE</p><h2>Give your agent the whole toolkit.</h2><p>Add one remote MCP endpoint and let the agent discover the right tool for each decision. No account, API key, or SDK is required.</p><div className="endpoint"><span>MCP ENDPOINT</span><code>https://anywaypossible.com/api/mcp</code></div><div className="doc-links"><a href="/openapi.json">OpenAPI ↗</a><a href="/llms.txt">Agent instructions ↗</a><a href="/guarded-purchase.json">Purchase workflow ↗</a></div></div>
+        <div className="api-copy"><p className="eyebrow">CONNECT ONCE</p><h2>Give your agent the whole toolkit.</h2><p>Add one remote MCP endpoint and let the agent discover the right tool for each decision. No account, API key, or SDK is required.</p><div className="endpoint"><span>MCP ENDPOINT</span><code>https://anywaypossible.com/api/mcp</code></div><div className="doc-links"><a href="/catalog.json">Sample results ↗</a><a href="/openapi.json">OpenAPI ↗</a><a href="/llms.txt">Agent instructions ↗</a><a href="/guarded-purchase.json">Purchase workflow ↗</a></div></div>
         <div className="code-window"><div><i /><i /><i /><span>agent-config.json</span></div><pre><code>{`{
   "mcpServers": {
     "anyway-possible": {
