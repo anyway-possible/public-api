@@ -269,6 +269,7 @@ test("paid verifier is bound to the authorized wallet and Base mainnet", async (
 
 test("verification blocks local targets and bounds response size", async () => {
   const verifier = await readFile(new URL("lib/verification.ts", root), "utf8");
+  const workerConfig = await readFile(new URL("vite.config.ts", root), "utf8");
   assert.match(verifier, /localhost/);
   assert.match(verifier, /private and local network targets/);
   assert.match(verifier, /MAX_BYTES = 128 \* 1024/);
@@ -279,6 +280,7 @@ test("verification blocks local targets and bounds response size", async () => {
   assert.match(verifier, /a === 203 && b === 0/);
   assert.match(verifier, /contentSha256/);
   assert.match(verifier, /receiptId/);
+  assert.match(workerConfig, /global_fetch_strictly_public/);
 });
 
 test("public responses define defense-in-depth browser headers and a security contact", async () => {

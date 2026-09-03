@@ -13,7 +13,11 @@ const isCodexSeatbeltSandbox = process.env.CODEX_SANDBOX === "seatbelt";
 
 const localBindingConfig = {
   main: "./worker/index.ts",
-  compatibility_flags: ["nodejs_compat"],
+  // Force every global fetch through Cloudflare's public Internet path. This
+  // keeps a DNS rebinding response from turning URL verification into access
+  // to a private origin while the application-level DNS checks provide an
+  // earlier, clearer rejection.
+  compatibility_flags: ["nodejs_compat", "global_fetch_strictly_public"],
   d1_databases: d1
     ? [
         {
