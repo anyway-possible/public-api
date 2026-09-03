@@ -188,6 +188,7 @@ test("remote MCP surface exposes the strongest products with x402 payment metada
   }
   const parsed = JSON.parse(manifest);
   assert.equal(parsed.version, "1.2.0");
+  assert.equal(parsed.name, "com.anywaypossible/agent-utilities");
   assert.equal(parsed.remotes[0].url, "https://anywaypossible.com/api/mcp");
   assert.equal(parsed.remotes[0].type, "streamable-http");
 });
@@ -432,4 +433,10 @@ test("public responses define defense-in-depth browser headers and a security co
   }
   assert.match(security, /Contact:/);
   assert.match(security, /Canonical: https:\/\/anywaypossible\.com\/\.well-known\/security\.txt/);
+});
+
+test("MCP Registry ownership uses a public domain proof without a private key", async () => {
+  const proof = await readFile(new URL("public/.well-known/mcp-registry-auth", root), "utf8");
+  assert.match(proof, /^v=MCPv1; k=ed25519; p=[A-Za-z0-9+/]+=*\s*$/);
+  assert.doesNotMatch(proof, /PRIVATE KEY/);
 });
