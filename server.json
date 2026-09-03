@@ -12,7 +12,7 @@
   "remotes": [
     {
       "type": "streamable-http",
-      "url": "https://anywaypossible.com/api/mcp"
+      "url": "https://anywaypossible.com/api/registry-mcp"
     }
   ]
 }

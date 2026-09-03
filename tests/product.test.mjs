@@ -189,7 +189,9 @@ test("remote MCP surface exposes the strongest products with x402 payment metada
   const parsed = JSON.parse(manifest);
   assert.equal(parsed.version, "1.2.0");
   assert.equal(parsed.name, "com.anywaypossible/agent-utilities");
-  assert.equal(parsed.remotes[0].url, "https://anywaypossible.com/api/mcp");
+  assert.equal(parsed.remotes[0].url, "https://anywaypossible.com/api/registry-mcp");
+  const registryRoute = await readFile(new URL("app/api/registry-mcp/route.ts", root), "utf8");
+  assert.match(registryRoute, /from "\.\.\/mcp\/route"/);
   assert.equal(parsed.remotes[0].type, "streamable-http");
 });
 
