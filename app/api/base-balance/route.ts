@@ -34,7 +34,7 @@ function getServer() {
           accepts: { scheme: "exact", price: "$0.001", network: "eip155:8453", payTo: PAY_TO, maxTimeoutSeconds: 60 },
           serviceName: "Anyway Possible Base Wallet Balance",
           tags: ["base", "wallet balance", "usdc balance", "eth balance", "onchain data", "agent treasury"],
-          iconUrl: "https://anywaypossible.com/favicon.svg",
+          iconUrl: "https://anywaypossible.com/favicon.png",
           description: "Live Base wallet balance for AI agents. Returns native ETH and Circle USDC balances, atomic values, block height, contract address, and observation time for any EVM address. Includes a machine-readable upgrade path to treasury readiness for spend, gas-reserve, and wallet-health decisions. No API key.",
           extensions: {
             ...declareDiscoveryExtension({

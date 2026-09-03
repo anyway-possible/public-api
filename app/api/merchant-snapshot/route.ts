@@ -34,7 +34,7 @@ function getServer() {
         accepts: { scheme: "exact", price: "$0.05", network: "eip155:8453", payTo: PAY_TO, maxTimeoutSeconds: 60 },
         serviceName: "Why Is My x402 API Not Selling? — Revenue Snapshot",
         tags: ["x402 merchant analytics", "x402 API not selling", "increase x402 revenue", "x402 seller intelligence", "Coinbase Bazaar audit", "x402 merchant score"],
-        iconUrl: "https://anywaypossible.com/favicon.svg",
+        iconUrl: "https://anywaypossible.com/favicon.png",
         description: "Get x402 merchant analytics and diagnose why an x402 API is not generating revenue. This $0.05 seller-intelligence snapshot scores Coinbase Bazaar discovery, buyer-search visibility, live payment reliability, 30-day demand signals, and observed Base USDC activity, then returns the biggest revenue issue and a full-audit upgrade. No account or API key.",
         extensions: { ...declareDiscoveryExtension({
           method: "POST", bodyType: "json",

@@ -107,7 +107,7 @@ async function getToolSet() {
             mimeType: "application/json",
             serviceName: config.serviceName,
             tags: config.tags,
-            iconUrl: "https://anywaypossible.com/favicon.svg",
+            iconUrl: "https://anywaypossible.com/favicon.png",
           },
           extensions: declareDiscoveryExtension({
             toolName: config.toolName,

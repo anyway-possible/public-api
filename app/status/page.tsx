@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { BrandMark } from "../brand-mark";
 
 export const dynamic = "force-dynamic";
 
@@ -17,7 +18,7 @@ export default function StatusPage() {
   return (
     <main className="public-shell status-page">
       <nav className="public-nav">
-        <Link className="public-brand" href="/" aria-label="Anyway Possible home"><span className="brand-mark" aria-hidden="true"><i>A</i><i>P</i></span><span>Anyway Possible<small>Service status</small></span></Link>
+        <Link className="public-brand" href="/" aria-label="Anyway Possible home"><BrandMark /><span>Anyway Possible<small>Service status</small></span></Link>
         <div><Link href="/">Home</Link><a href="/openapi.json">Docs</a><a className="nav-cta" href="/api/health">Raw health JSON</a></div>
       </nav>
       <section className="status-hero">

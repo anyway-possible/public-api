@@ -34,7 +34,7 @@ function getServer() {
           },
           serviceName: "Anyway Possible Batch URL Validator",
           tags: ["batch url check", "citation validation", "link checker", "api monitoring", "website health"],
-          iconUrl: "https://anywaypossible.com/favicon.svg",
+          iconUrl: "https://anywaypossible.com/favicon.png",
           description: "Batch URL validation for AI agents. Check up to 10 citations, links, websites, or API endpoints in one payment. Returns reachability, exact status, latency, content type, final URL, and safe redirects; partial failures stay isolated.",
           extensions: {
             ...declareDiscoveryExtension({

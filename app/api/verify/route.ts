@@ -34,7 +34,7 @@ function getServer() {
           },
           serviceName: "Anyway Possible Web Evidence",
           tags: ["web evidence", "citation verification", "content hash", "source validation", "proof of content"],
-          iconUrl: "https://anywaypossible.com/favicon.svg",
+          iconUrl: "https://anywaypossible.com/favicon.png",
           description: "Web evidence and citation verification for AI agents. Prove a source is live and contains expected text or status before citing or acting. Returns redirects, metadata, headers, latency, SHA-256 content digest, receipt ID, and timestamp. SSRF-safe, no account.",
           extensions: {
             ...declareDiscoveryExtension({
