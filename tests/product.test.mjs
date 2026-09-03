@@ -2,13 +2,15 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { DatabaseSync } from "node:sqlite";
 import test from "node:test";
+import { buildCatalog, buildLlmsText, buildOpenApi, tools as productTools } from "../lib/product-catalog.mjs";
 
 const root = new URL("../", import.meta.url);
 
 test("public surface explains the paid agent product", async () => {
   const page = await readFile(new URL("app/page.tsx", root), "utf8");
-  for (const section of ["PAID APIs FOR AUTONOMOUS AGENTS", "Decision-ready checks", "Ask a question", "Connect via MCP", "QUESTION", "NEXT ACTION", "WHERE AGENTS FIND US", "MCP Registry", "Direct HTTP", "POST /api/payment-guard", "POST /api/merchant-snapshot", "POST /api/merchant-audit", "POST /api/treasury", "POST /api/base-balance", "POST /api/check", "POST /api/batch", "POST /api/verify", "CHOOSE BY JOB"]) {
-    assert.match(page, new RegExp(section));
+  const publicSurface = page + JSON.stringify(buildCatalog());
+  for (const section of ["PAID APIs FOR AUTONOMOUS AGENTS", "Decision-ready checks", "Ask a question", "Connect via MCP", "QUESTION", "NEXT ACTION", "WHERE AGENTS FIND US", "MCP Registry", "Direct HTTP", "/api/payment-guard", "/api/merchant-snapshot", "/api/merchant-audit", "/api/treasury", "/api/base-balance", "/api/check", "/api/batch", "/api/verify", "CHOOSE BY JOB"]) {
+    assert.match(publicSurface, new RegExp(section));
   }
 });
 
@@ -30,7 +32,7 @@ test("public discovery metadata identifies the canonical service", async () => {
   assert.match(brand, /decision-mark/);
   assert.match(quietCss, /#10162a/i);
   assert.match(quietCss, /#e7b85b/i);
-  assert.match(status, /Service is responding/);
+  assert.match(status, /gateway is responding/i);
   assert.match(status, /Raw health JSON/);
   assert.match(sitemap, /https:\/\/anywaypossible\.com\/status/);
 });
@@ -162,7 +164,7 @@ test("remote MCP surface exposes the strongest products with x402 payment metada
     readFile(new URL("app/api/mcp/route.ts", root), "utf8"),
     readFile(new URL("lib/mcp.ts", root), "utf8"),
     readFile(new URL("server.json", root), "utf8"),
-    readFile(new URL("public/llms.txt", root), "utf8"),
+    Promise.resolve(buildLlmsText()),
   ]);
   assert.match(route, /WebStandardStreamableHTTPServerTransport/);
   assert.match(route, /originAllowed/);
@@ -185,7 +187,7 @@ test("remote MCP surface exposes the strongest products with x402 payment metada
     assert.match(instructions, new RegExp(tool));
   }
   const parsed = JSON.parse(manifest);
-  assert.equal(parsed.version, "1.1.0");
+  assert.equal(parsed.version, "1.2.0");
   assert.equal(parsed.remotes[0].url, "https://anywaypossible.com/api/mcp");
   assert.equal(parsed.remotes[0].type, "streamable-http");
 });
@@ -297,15 +299,13 @@ test("secure monitor rollups avoid secrets and raw event scans", async () => {
 });
 
 test("agent documentation describes the transaction-level decision", async () => {
-  const [openapi, instructions] = await Promise.all([
-    readFile(new URL("public/openapi.json", root), "utf8"),
-    readFile(new URL("public/llms.txt", root), "utf8"),
-  ]);
+  const openapi = JSON.stringify(buildOpenApi());
+  const instructions = buildLlmsText();
   assert.doesNotThrow(() => JSON.parse(openapi));
   assert.match(openapi, /preflightBaseUsdcPayment/);
   assert.match(openapi, /destinationAddress/);
   assert.match(openapi, /safeToProceed/);
-  assert.match(instructions, /proceed\/fund\/review\/reject/);
+  assert.match(instructions, /proceed, fund, review, or reject/);
   assert.doesNotMatch(instructions, /\/api\/stats/);
 });
 
@@ -328,7 +328,7 @@ test("focused guides are indexable and explain x402 in plain English", async () 
     readFile(new URL("app/guides/[slug]/page.tsx", root), "utf8"),
     readFile(new URL("app/guides/content.ts", root), "utf8"),
     readFile(new URL("public/sitemap.xml", root), "utf8"),
-    readFile(new URL("public/llms.txt", root), "utf8"),
+    Promise.resolve(buildLlmsText()),
   ]);
   assert.match(home, /web payment standard that lets software pay for one API answer at a time/);
   assert.match(index, /Understand the system/);
@@ -341,32 +341,59 @@ test("focused guides are indexable and explain x402 in plain English", async () 
 });
 
 test("public capability descriptions expose all eight MCP tools", async () => {
-  const [health, status, openapi] = await Promise.all([
-    readFile(new URL("app/api/health/route.ts", root), "utf8"),
-    readFile(new URL("app/status/page.tsx", root), "utf8"),
-    readFile(new URL("public/openapi.json", root), "utf8"),
-  ]);
+  const health = await readFile(new URL("app/api/health/route.ts", root), "utf8");
+  const openapi = JSON.stringify(buildOpenApi());
   const tools = ["merchant_snapshot", "merchant_audit", "treasury_preflight", "payment_guard", "base_balance", "check_url", "verify_web_evidence", "batch_check_urls"];
   for (const tool of tools) {
     assert.match(health, new RegExp(tool));
-    assert.match(status, new RegExp(tool));
+    assert.ok(productTools.some((product) => product.mcpTool === tool));
     assert.match(openapi, new RegExp(tool));
   }
 });
 
 test("free machine-readable catalog previews every paid result before purchase", async () => {
-  const [catalogSource, page, instructions] = await Promise.all([
-    readFile(new URL("public/catalog.json", root), "utf8"),
+  const [page, instructions] = await Promise.all([
     readFile(new URL("app/page.tsx", root), "utf8"),
-    readFile(new URL("public/llms.txt", root), "utf8"),
+    Promise.resolve(buildLlmsText()),
   ]);
-  const catalog = JSON.parse(catalogSource);
-  assert.deepEqual(catalog.featured, ["merchant-snapshot", "treasury"]);
+  const catalog = buildCatalog();
+  assert.deepEqual(catalog.featured, ["merchant-snapshot", "treasury", "payment-guard"]);
   assert.equal(catalog.tools.length, 8);
   assert.equal(catalog.tools.find((tool) => tool.id === "merchant-audit").priceUsd, 0.25);
   assert.ok(catalog.tools.every((tool) => tool.sampleRequest && tool.sampleResponse));
   assert.match(page, /\/catalog\.json/);
   assert.match(instructions, /catalog\.json/);
+});
+
+test("one canonical manifest drives every public product contract", () => {
+  const catalog = buildCatalog();
+  const openapi = buildOpenApi();
+  const instructions = buildLlmsText();
+  assert.equal(productTools.length, 8);
+  assert.equal(new Set(productTools.map((tool) => tool.endpoint)).size, 8);
+  assert.equal(new Set(productTools.map((tool) => tool.mcpTool)).size, 8);
+  assert.equal(openapi.paths["/api/stats"], undefined);
+  for (const tool of productTools) {
+    assert.equal(catalog.tools.find((item) => item.id === tool.id)?.priceUsd, tool.priceUsd);
+    assert.equal(openapi.paths[tool.endpoint].post["x-x402"].amount, tool.amountAtomic);
+    assert.match(instructions, new RegExp(tool.mcpTool));
+  }
+  assert.deepEqual(productTools.find((tool) => tool.id === "payment-guard")?.inputSchema.required, ["payerAddress", "serviceUrl", "maxAmountUsdc"]);
+});
+
+test("human surfaces are readable, accessible, and project-specific", async () => {
+  const [layout, css, readme, sitemap] = await Promise.all([
+    readFile(new URL("app/layout.tsx", root), "utf8"),
+    readFile(new URL("app/quiet.css", root), "utf8"),
+    readFile(new URL("README.md", root), "utf8"),
+    readFile(new URL("public/sitemap.xml", root), "utf8"),
+  ]);
+  assert.match(layout, /Skip to content/);
+  assert.match(css, /:focus-visible/);
+  assert.match(readme, /Anyway Possible/);
+  assert.doesNotMatch(readme, /vinext-starter/);
+  assert.match(sitemap, /https:\/\/anywaypossible\.com\/docs/);
+  assert.match(sitemap, /https:\/\/anywaypossible\.com\/examples/);
 });
 
 test("paid verifier is bound to the authorized wallet and Base mainnet", async () => {

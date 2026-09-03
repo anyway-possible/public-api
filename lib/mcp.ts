@@ -269,7 +269,7 @@ function paidTool<TArgs extends Record<string, unknown>>(
 export async function createMcpServer() {
   const server = new McpServer({
     name: "Anyway Possible",
-    version: "1.1.0",
+    version: "1.2.0",
     title: "Anyway Possible Paid Agent Utilities",
     description: "Eight account-free x402 tools for merchant intelligence, Base payment readiness, payment safety, URL checks, and verifiable web evidence.",
     websiteUrl: "https://anywaypossible.com",

@@ -4,6 +4,7 @@ import { GeistMono } from "geist/font/mono";
 import "./globals.css";
 import "./quiet.css";
 import "./guides.css";
+import "./reference.css";
 
 const siteUrl = "https://anywaypossible.com";
 const description = "Decision-ready checks for autonomous agents before they pay, cite, or act—available over MCP and HTTP with x402 USDC payments.";
@@ -29,5 +30,5 @@ const structuredData = {
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="en"><head><script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} /></head><body className={`${GeistSans.variable} ${GeistMono.variable}`}>{children}</body></html>;
+  return <html lang="en"><head><script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} /></head><body className={`${GeistSans.variable} ${GeistMono.variable}`}><a className="skip-link" href="#main-content">Skip to content</a><div id="main-content">{children}</div></body></html>;
 }
