@@ -26,8 +26,8 @@ function getServer() {
       routes: {
         "POST /api/base-balance": {
           accepts: { scheme: "exact", price: "$0.001", network: "eip155:8453", payTo: PAY_TO, maxTimeoutSeconds: 60 },
-          serviceName: "Anyway Possible Base Wallet Balance",
-          tags: ["base", "wallet balance", "usdc balance", "eth balance", "onchain data", "agent treasury"],
+          serviceName: "Anyway Possible Base Balance",
+          tags: ["Base wallet balance", "USDC balance", "ETH balance", "onchain data", "agent treasury"],
           iconUrl: "https://anywaypossible.com/favicon.png",
           description: "Live Base wallet balance for AI agents. Returns native ETH and Circle USDC balances, atomic values, block height, contract address, and observation time for any EVM address. Includes a machine-readable upgrade path to treasury readiness for spend, gas-reserve, and wallet-health decisions. No API key.",
           extensions: {
@@ -99,5 +99,5 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET() {
-  return NextResponse.json({ service: "Anyway Possible Base Wallet Balance", price: "$0.001 USDC", network: "Base (eip155:8453)", method: "POST", request: { address: "0x0000000000000000000000000000000000000000" }, returns: ["ETH balance", "USDC balance", "block height", "observation time", "Treasury upgrade recommendation"], recommendedNext: { endpoint: "/api/treasury", price: "$0.02 USDC", useWhen: "An agent needs wallet readiness, gas reserve, or funding-shortfall decisions." } });
+  return NextResponse.json({ service: "Anyway Possible Base Balance", price: "$0.001 USDC", network: "Base (eip155:8453)", method: "POST", request: { address: "0x0000000000000000000000000000000000000000" }, returns: ["ETH balance", "USDC balance", "block height", "observation time", "Treasury upgrade recommendation"], recommendedNext: { endpoint: "/api/treasury", price: "$0.02 USDC", useWhen: "An agent needs wallet readiness, gas reserve, or funding-shortfall decisions." } });
 }

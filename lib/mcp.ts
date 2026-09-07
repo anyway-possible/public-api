@@ -40,6 +40,37 @@ function jsonResult(value: unknown) {
   return { content: [{ type: "text" as const, text: JSON.stringify(value) }] };
 }
 
+const FREE_TOOL_CHOICES = [
+  { toolName: "merchant_audit", title: "x402 Merchant Audit", priceUsd: 0.25, useWhen: "You need a full seller diagnosis with listing defects, search rank, competitor pricing, reliability, and prioritized revenue fixes.", requiredInputs: ["payTo", "queries"], keywords: ["full audit", "merchant audit", "competitor", "listing defects", "rankings"] },
+  { toolName: "merchant_snapshot", title: "x402 Merchant Snapshot", priceUsd: 0.05, useWhen: "You need a fast answer to why an x402 API is not selling before purchasing a full audit.", requiredInputs: ["payTo", "queries"], keywords: ["merchant", "seller", "bazaar", "revenue", "not selling", "adoption", "conversion"] },
+  { toolName: "payment_guard", title: "Agent Payment Safety", priceUsd: 0.01, useWhen: "You have a live x402 challenge and need to validate the price, network, asset, recipient, and buyer funding before signing.", requiredInputs: ["payerAddress", "serviceUrl", "maxAmountUsdc"], keywords: ["payment safety", "payment safe", "x402 challenge", "before signing", "safe to sign", "recipient", "price ceiling"] },
+  { toolName: "treasury_preflight", title: "Base Wallet Readiness", priceUsd: 0.02, useWhen: "You need a proceed, fund, review, or reject decision for a planned Base USDC payment.", requiredInputs: ["address"], keywords: ["wallet readiness", "wallet ready", "ready to pay", "safe to pay", "base payment", "funded", "funding", "gas", "treasury", "destination"] },
+  { toolName: "base_balance", title: "Base Wallet Balance", priceUsd: 0.001, useWhen: "You only need current Base ETH and Circle USDC balances and block height.", requiredInputs: ["address"], keywords: ["wallet balance", "usdc balance", "eth balance", "holdings", "base balance"] },
+  { toolName: "batch_check_urls", title: "Batch URL Check", priceUsd: 0.01, useWhen: "You need to check up to ten URLs while isolating partial failures.", requiredInputs: ["urls"], keywords: ["batch", "multiple urls", "many urls", "several links", "all sources"] },
+  { toolName: "verify_web_evidence", title: "Verify Web Evidence", priceUsd: 0.01, useWhen: "You need timestamped citation evidence, expected-text validation, a content hash, and a stable receipt.", requiredInputs: ["url"], keywords: ["citation", "evidence", "content hash", "expected text", "proof", "source validation"] },
+  { toolName: "check_url", title: "URL Check", priceUsd: 0.001, useWhen: "You only need URL reachability, status, latency, redirects, and content type.", requiredInputs: ["url"], keywords: ["url", "reachable", "status", "latency", "redirect", "website health", "uptime"] },
+] as const;
+
+function recommendTool(goal: string, maxPriceUsd?: number) {
+  const normalized = goal.toLowerCase();
+  const affordable = FREE_TOOL_CHOICES.filter((tool) => maxPriceUsd === undefined || tool.priceUsd <= maxPriceUsd);
+  const ranked = affordable
+    .map((tool) => ({ tool, score: tool.keywords.reduce((score, keyword) => score + (normalized.includes(keyword) ? keyword.length : 0), 0) }))
+    .sort((a, b) => b.score - a.score || a.tool.priceUsd - b.tool.priceUsd);
+  const selected = ranked[0]?.score ? ranked[0].tool : null;
+  const alternatives = ranked.filter(({ tool, score }) => tool.toolName !== selected?.toolName && score > 0).slice(0, 3).map(({ tool }) => tool);
+  return {
+    paymentRequired: false,
+    goal,
+    maxPriceUsd: maxPriceUsd ?? null,
+    recommendedTool: selected,
+    alternatives,
+    clarificationNeeded: !selected,
+    clarifyingQuestion: selected ? null : "Are you checking a Base wallet, validating a live x402 payment, diagnosing merchant revenue, or verifying web evidence?",
+    nextStep: selected ? `Call ${selected.toolName} with ${selected.requiredInputs.join(", ")}. The tool will return an x402 payment challenge for ${selected.priceUsd} USDC.` : "Clarify the decision you need, then call recommend_tool again.",
+  };
+}
+
 function payerFromPayload(paymentPayload: PaymentPayload) {
   const payment = paymentPayload as PaymentPayload & {
     payer?: string;
@@ -137,7 +168,7 @@ async function getToolSet() {
           price: "$0.05",
           amountUsd: 0.05,
           endpoint: "/api/mcp#merchant_snapshot",
-          serviceName: "Anyway Possible x402 Merchant Snapshot",
+          serviceName: "Anyway Possible x402 Snapshot",
           description: "Diagnose why an x402 API is not selling using Bazaar visibility, buyer signals, payment reliability, and observed Base USDC activity.",
           tags: ["x402 merchant analytics", "x402 seller intelligence", "Bazaar visibility", "agent revenue"],
           inputSchema: { type: "object", properties: { payTo: { type: "string", pattern: "^0x[a-fA-F0-9]{40}$" }, queries: { type: "array", minItems: 1, maxItems: 3, items: { type: "string", minLength: 2, maxLength: 100 } }, excludePayers: { type: "array", maxItems: 10, items: { type: "string", pattern: "^0x[a-fA-F0-9]{40}$" } } }, required: ["payTo", "queries"] },
@@ -149,7 +180,7 @@ async function getToolSet() {
           price: "$0.25",
           amountUsd: 0.25,
           endpoint: "/api/mcp#merchant_audit",
-          serviceName: "Anyway Possible x402 Merchant Audit",
+          serviceName: "Anyway Possible x402 Audit",
           description: "Audit an x402 merchant's listings, semantic rank, competitor prices, payment reliability, buyer reach, and observed Base USDC activity, then return prioritized revenue fixes.",
           tags: ["x402 revenue audit", "merchant intelligence", "competitor pricing", "Bazaar ranking"],
           inputSchema: { type: "object", properties: { payTo: { type: "string", pattern: "^0x[a-fA-F0-9]{40}$" }, queries: { type: "array", minItems: 1, maxItems: 5, items: { type: "string", minLength: 2, maxLength: 100 } }, excludePayers: { type: "array", maxItems: 10, items: { type: "string", pattern: "^0x[a-fA-F0-9]{40}$" } } }, required: ["payTo", "queries"] },
@@ -161,7 +192,7 @@ async function getToolSet() {
           price: "$0.02",
           amountUsd: 0.02,
           endpoint: "/api/mcp#treasury_preflight",
-          serviceName: "Anyway Possible Base Payment Preflight",
+          serviceName: "Anyway Possible Base Preflight",
           description: "Check Base ETH and USDC funding, gas, chain intent, destination type, and common payment hazards before an agent signs.",
           tags: ["Base USDC", "payment preflight", "agent treasury", "wallet readiness"],
           inputSchema: { type: "object", properties: { address: { type: "string", pattern: "^0x[a-fA-F0-9]{40}$" }, destinationAddress: { type: "string", pattern: "^0x[a-fA-F0-9]{40}$" }, plannedSpendUsdc: { type: "string" }, minGasReserveEth: { type: "string" }, expectedChainId: { type: "integer", enum: [8453] } }, required: ["address"] },
@@ -173,7 +204,7 @@ async function getToolSet() {
           price: "$0.01",
           amountUsd: 0.01,
           endpoint: "/api/mcp#payment_guard",
-          serviceName: "Anyway Possible x402 Payment Guard",
+          serviceName: "Anyway Possible Payment Guard",
           description: "Validate a live x402 challenge, Base network, USDC asset, recipient, price ceiling, buyer funding, gas reserve, and destination hazards immediately before signing.",
           tags: ["x402 payment safety", "verify before paying", "agent transaction guard", "Base USDC"],
           inputSchema: { type: "object", properties: { payerAddress: { type: "string", pattern: "^0x[a-fA-F0-9]{40}$" }, serviceUrl: { type: "string", format: "uri" }, maxAmountUsdc: { type: "string", pattern: "^[0-9]+(\\.[0-9]{1,6})?$" }, expectedPayTo: { type: "string", pattern: "^0x[a-fA-F0-9]{40}$" }, minGasReserveEth: { type: "string", pattern: "^[0-9]+(\\.[0-9]{1,18})?$" } }, required: ["payerAddress", "serviceUrl", "maxAmountUsdc"] },
@@ -185,7 +216,7 @@ async function getToolSet() {
           price: "$0.001",
           amountUsd: 0.001,
           endpoint: "/api/mcp#base_balance",
-          serviceName: "Anyway Possible Base Wallet Balance",
+          serviceName: "Anyway Possible Base Balance",
           description: "Read native ETH and Circle USDC balances, atomic values, and current block height for a Base wallet.",
           tags: ["Base", "wallet balance", "USDC balance", "onchain data"],
           inputSchema: { type: "object", properties: { address: { type: "string", pattern: "^0x[a-fA-F0-9]{40}$" } }, required: ["address"] },
@@ -221,7 +252,7 @@ async function getToolSet() {
           price: "$0.01",
           amountUsd: 0.01,
           endpoint: "/api/mcp#batch_check_urls",
-          serviceName: "Anyway Possible Batch URL Validator",
+          serviceName: "Anyway Possible Batch Check",
           description: "Check up to ten public URLs in one paid call; partial failures remain isolated and each result includes status, latency, redirects, and content type.",
           tags: ["batch URL check", "citation validation", "link checker", "API monitoring"],
           inputSchema: { type: "object", properties: { urls: { type: "array", minItems: 1, maxItems: 10, items: { type: "string", format: "uri" } }, expectedStatus: { type: "integer", minimum: 100, maximum: 599 } }, required: ["urls"] },
@@ -269,10 +300,21 @@ function paidTool<TArgs extends Record<string, unknown>>(
 export async function createMcpServer() {
   const server = new McpServer({
     name: "Anyway Possible",
-    version: "1.2.0",
-    title: "Anyway Possible Paid Agent Utilities",
-    description: "Eight account-free x402 tools for merchant intelligence, Base payment readiness, payment safety, URL checks, and verifiable web evidence.",
+    version: "1.3.0",
+    title: "Anyway Possible Agent Utilities",
+    description: "One free tool recommender and eight account-free x402 tools for merchant intelligence, Base wallet readiness, agent payment safety, URL checks, and verifiable web evidence.",
     websiteUrl: "https://anywaypossible.com",
+  });
+
+  server.registerTool("recommend_tool", {
+    title: "Start Here: Choose a Tool (Free)",
+    description: "Use this free tool before paying. Describe the decision you need and receive the best Anyway Possible tool, exact price, required inputs, alternatives, and next step. This tool never triggers payment or calls an external service.",
+    inputSchema: { goal: z.string().min(3).max(400), maxPriceUsd: z.number().min(0.001).max(10).optional() },
+    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+  }, async (args, extra) => {
+    const requestHeaders = (extra as { requestInfo?: { headers?: Record<string, string | string[] | undefined> } })?.requestInfo?.headers ?? {};
+    await recordMcpEvent("mcp_tool_call", "/api/mcp#recommend_tool", requestHeaders, 200);
+    return jsonResult(recommendTool((args as { goal: string }).goal, (args as { maxPriceUsd?: number }).maxPriceUsd));
   });
 
   server.registerTool("merchant_snapshot", {
@@ -290,15 +332,15 @@ export async function createMcpServer() {
   }, paidTool("merchantAudit", async (args) => jsonResult(await auditMerchant(args as { payTo: string; queries: string[]; excludePayers?: string[] }))));
 
   server.registerTool("treasury_preflight", {
-    title: "Base Payment Preflight ($0.02 USDC)",
-    description: "Check Base ETH and USDC funding, gas, chain intent, destination type, and common payment hazards before signing.",
+    title: "Base Wallet Readiness ($0.02 USDC)",
+    description: "Check Base wallet readiness, ETH and USDC funding, gas, chain intent, destination type, and common payment hazards before signing.",
     inputSchema: { address: addressSchema, destinationAddress: addressSchema.optional(), plannedSpendUsdc: z.string().optional(), minGasReserveEth: z.string().optional(), expectedChainId: z.literal(8453).optional() },
     annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: false, openWorldHint: true },
   }, paidTool("treasuryPreflight", async (args) => jsonResult(await createTreasuryPreflight(args as { address: string; destinationAddress?: string; plannedSpendUsdc?: string; minGasReserveEth?: string; expectedChainId?: number }))));
 
   server.registerTool("payment_guard", {
-    title: "x402 Payment Guard ($0.01 USDC)",
-    description: "Validate a live x402 challenge, price, Base network, USDC asset, recipient, funding, gas reserve, and destination immediately before signing.",
+    title: "Agent Payment Safety ($0.01 USDC)",
+    description: "Use for agent payment safety: validate a live x402 challenge, price, Base network, USDC asset, recipient, funding, gas reserve, and destination immediately before signing.",
     inputSchema: { payerAddress: addressSchema, serviceUrl: z.string().url(), maxAmountUsdc: z.string().regex(/^[0-9]+(\.[0-9]{1,6})?$/), expectedPayTo: addressSchema.optional(), minGasReserveEth: z.string().regex(/^[0-9]+(\.[0-9]{1,18})?$/).optional() },
     annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: false, openWorldHint: true },
   }, paidTool("paymentGuard", async (args) => jsonResult(await evaluatePaymentGuard(args as { payerAddress: string; serviceUrl: string; maxAmountUsdc: string; expectedPayTo?: string; minGasReserveEth?: string }))));

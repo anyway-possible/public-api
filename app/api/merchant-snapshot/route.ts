@@ -32,8 +32,8 @@ function getServer() {
     serverPromise = createX402Server({ apiKeyId: runtimeEnv.CDP_API_KEY_ID, apiKeySecret: runtimeEnv.CDP_API_KEY_SECRET, environment: "production", payToConfig: { type: "address", evm: PAY_TO }, builderCode: "anyway_possible", routes: {
       "POST /api/merchant-snapshot": {
         accepts: { scheme: "exact", price: "$0.05", network: "eip155:8453", payTo: PAY_TO, maxTimeoutSeconds: 60 },
-        serviceName: "Why Is My x402 API Not Selling? — Revenue Snapshot",
-        tags: ["x402 merchant analytics", "x402 API not selling", "increase x402 revenue", "x402 seller intelligence", "Coinbase Bazaar audit", "x402 merchant score"],
+        serviceName: "Anyway Possible x402 Snapshot",
+        tags: ["x402 merchant analytics", "x402 API not selling", "increase x402 revenue", "x402 seller intelligence", "Coinbase Bazaar audit"],
         iconUrl: "https://anywaypossible.com/favicon.png",
         description: "Get x402 merchant analytics and diagnose why an x402 API is not generating revenue. This $0.05 seller-intelligence snapshot scores Coinbase Bazaar discovery, buyer-search visibility, live payment reliability, 30-day demand signals, and observed Base USDC activity, then returns the biggest revenue issue and a full-audit upgrade. No account or API key.",
         extensions: { ...declareDiscoveryExtension({

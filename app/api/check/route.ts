@@ -33,7 +33,7 @@ function getServer() {
             maxTimeoutSeconds: 60,
           },
           serviceName: "Anyway Possible URL Check",
-          tags: ["url", "uptime", "website health", "http status", "link safety", "agent preflight"],
+          tags: ["URL check", "uptime", "website health", "HTTP status", "agent preflight"],
           iconUrl: "https://anywaypossible.com/favicon.png",
           description: "URL uptime and website health check for AI agents. Verify reachability, exact HTTP status, latency, content type, and safe redirect chain before following a link, citing a source, or calling an API. Deterministic, SSRF-safe, no account.",
           extensions: {

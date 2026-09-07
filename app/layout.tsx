@@ -25,7 +25,7 @@ const structuredData = {
   "@graph": [
     { "@type": "Organization", "@id": `${siteUrl}/#organization`, name: "Anyway Possible", url: siteUrl, logo: `${siteUrl}/favicon.png`, sameAs: ["https://github.com/anyway-possible"] },
     { "@type": "WebSite", "@id": `${siteUrl}/#website`, url: siteUrl, name: "Anyway Possible", description, publisher: { "@id": `${siteUrl}/#organization` } },
-    { "@type": "Service", "@id": `${siteUrl}/#service`, name: "Anyway Possible Agent Decision Infrastructure", description, url: siteUrl, provider: { "@id": `${siteUrl}/#organization` }, serviceType: "Paid decision-ready APIs and MCP tools for autonomous agents", areaServed: "Worldwide", hasOfferCatalog: { "@type": "OfferCatalog", name: "Agent decision tools", itemListElement: ["Merchant intelligence", "Base payment preflight", "Payment signing safety", "Verifiable web evidence", "Batch URL validation", "Base wallet balances"].map((name) => ({ "@type": "Offer", itemOffered: { "@type": "Service", name } })) } },
+    { "@type": "Service", "@id": `${siteUrl}/#service`, name: "Anyway Possible Agent Decision Infrastructure", description, url: siteUrl, provider: { "@id": `${siteUrl}/#organization` }, serviceType: "Decision-ready APIs and MCP tools for autonomous agents", areaServed: "Worldwide", hasOfferCatalog: { "@type": "OfferCatalog", name: "Agent decision tools", itemListElement: ["Free MCP tool recommendation", "Merchant intelligence", "Base wallet readiness", "Agent payment safety", "Verifiable web evidence", "Batch URL validation", "Base wallet balances"].map((name) => ({ "@type": "Offer", itemOffered: { "@type": "Service", name } })) } },
   ],
 };
 

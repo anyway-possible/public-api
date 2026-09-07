@@ -26,8 +26,8 @@ function getServer() {
       routes: {
         "POST /api/treasury": {
           accepts: { scheme: "exact", price: "$0.02", network: "eip155:8453", payTo: PAY_TO, maxTimeoutSeconds: 60 },
-          serviceName: "Anyway Possible Base Payment Preflight",
-          tags: ["payment preflight", "safe to pay", "agent treasury", "wallet readiness", "Base USDC balance", "USDC spend readiness", "destination check", "transaction safety", "Base gas reserve", "autonomous payments"],
+          serviceName: "Anyway Possible Base Preflight",
+          tags: ["Base wallet readiness", "payment preflight", "safe to pay", "agent treasury", "Base gas reserve"],
           iconUrl: "https://anywaypossible.com/favicon.png",
           description: "Preflight a Base USDC payment before an AI agent signs it. Check live ETH and USDC balance, spending capacity, gas, Base chain intent, and recipient type; catch zero-address, token-contract, and self-payment hazards; then receive a machine-readable proceed, fund, review, or reject decision plus the next Payment Guard request. No account or API key.",
           extensions: {
@@ -113,7 +113,7 @@ export async function POST(request: NextRequest) {
 
 export async function GET() {
   return NextResponse.json({
-    service: "Anyway Possible Base Payment Preflight", price: "$0.02 USDC", network: "Base (eip155:8453)", method: "POST",
+    service: "Anyway Possible Base Preflight", price: "$0.02 USDC", network: "Base (eip155:8453)", method: "POST",
     request: { address: "0x1111111111111111111111111111111111111111", destinationAddress: "0x2222222222222222222222222222222222222222", plannedSpendUsdc: "1.00", minGasReserveEth: "0.00005", expectedChainId: 8453 },
     returns: ["stable receipt ID", "safe-to-proceed decision", "destination classification", "basic payment hazards", "treasury readiness", "exact funding shortfalls", "x402 payment capacity", "prefilled Payment Guard request"],
   });

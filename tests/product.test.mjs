@@ -98,7 +98,7 @@ test("merchant snapshot is the low-friction audit funnel", async () => {
     readFile(new URL("lib/merchant-snapshot.ts", root), "utf8"),
   ]);
   const source = route + product;
-  assert.match(route, /Why Is My x402 API Not Selling/);
+  assert.match(route, /Anyway Possible x402 Snapshot/);
   assert.match(route, /\$0\.05/);
   assert.match(route, /amountUsd: 0\.05/);
   assert.match(route, /increase x402 revenue/);
@@ -113,7 +113,7 @@ test("merchant audit is the flagship revenue product", async () => {
     readFile(new URL("app/api/merchant-audit/route.ts", root), "utf8"),
     readFile(new URL("lib/merchant-audit.ts", root), "utf8"),
   ]);
-  assert.match(route, /x402 API Revenue Audit/);
+  assert.match(route, /Anyway Possible x402 Audit/);
   assert.match(route, /\$0\.25/);
   assert.match(route, /amountUsd: 0\.25/);
   assert.match(route, /merchant-audit-price-2026-09/);
@@ -130,13 +130,13 @@ test("merchant audit is the flagship revenue product", async () => {
   assert.match(audit, /limitations/);
 });
 
-test("Base payment preflight is the higher-value product", async () => {
+test("Base wallet readiness is the higher-value product", async () => {
   const [route, product] = await Promise.all([
     readFile(new URL("app/api/treasury/route.ts", root), "utf8"),
     readFile(new URL("lib/treasury.ts", root), "utf8"),
   ]);
   const source = route + product;
-  assert.match(route, /Anyway Possible Base Payment Preflight/);
+  assert.match(route, /Anyway Possible Base Preflight/);
   assert.match(route, /\$0\.02/);
   assert.match(source, /plannedSpendUsdc/);
   assert.match(source, /minGasReserveEth/);
@@ -177,17 +177,20 @@ test("remote MCP surface exposes the strongest products with x402 payment metada
   assert.match(mcp, /mcp_tool_call/);
   assert.match(mcp, /mcp_payment_attempt/);
   assert.match(mcp, /mcp_payment_failure/);
+  assert.match(mcp, /server\.registerTool\("recommend_tool"/);
+  assert.match(mcp, /paymentRequired: false/);
+  assert.match(mcp, /openWorldHint: false/);
   const analytics = await readFile(new URL("lib/mcp-analytics.ts", root), "utf8");
   assert.match(analytics, /SHA-256/);
   assert.match(analytics, /x-awp-self-test/);
   assert.doesNotMatch(analytics, /request\.json/);
-  const tools = ["merchant_snapshot", "merchant_audit", "treasury_preflight", "payment_guard", "base_balance", "check_url", "verify_web_evidence", "batch_check_urls"];
+  const tools = ["recommend_tool", "merchant_snapshot", "merchant_audit", "treasury_preflight", "payment_guard", "base_balance", "check_url", "verify_web_evidence", "batch_check_urls"];
   for (const tool of tools) {
     assert.match(mcp, new RegExp(tool));
     assert.match(instructions, new RegExp(tool));
   }
   const parsed = JSON.parse(manifest);
-  assert.equal(parsed.version, "1.2.0");
+  assert.equal(parsed.version, "1.3.0");
   assert.equal(parsed.name, "com.anywaypossible/agent-utilities");
   assert.equal(parsed.remotes[0].url, "https://anywaypossible.com/api/registry-mcp");
   const registryRoute = await readFile(new URL("app/api/registry-mcp/route.ts", root), "utf8");
@@ -201,7 +204,7 @@ test("Base wallet balance follows demonstrated agent demand", async () => {
     readFile(new URL("lib/base-balance.ts", root), "utf8"),
   ]);
   const source = route + product;
-  assert.match(route, /Anyway Possible Base Wallet Balance/);
+  assert.match(route, /Anyway Possible Base Balance/);
   assert.match(source, /eth_getBalance/);
   assert.match(source, /base-rpc\.publicnode\.com/);
   assert.match(source, /base-mainnet\.public\.blastapi\.io/);
@@ -219,7 +222,7 @@ test("one-cent entry check is discoverable and uses Base USDC", async () => {
   assert.match(route, /\$0\.001/);
   assert.match(route, /eip155:8453/);
   assert.match(route, /serviceName: "Anyway Possible URL Check"/);
-  assert.match(route, /tags: \["url", "uptime", "website health"/);
+  assert.match(route, /tags: \["URL check", "uptime", "website health"/);
   assert.match(route, /declareDiscoveryExtension/);
   assert.match(route, /\.\.\.declareDiscoveryExtension/);
   assert.doesNotMatch(route, /bazaar:\s*declareDiscoveryExtension/);
@@ -230,7 +233,7 @@ test("batch endpoint checks up to ten URLs for one cent", async () => {
   const route = await readFile(new URL("app/api/batch/route.ts", root), "utf8");
   assert.match(route, /\$0\.01/);
   assert.match(route, /maxItems: 10/);
-  assert.match(route, /serviceName: "Anyway Possible Batch URL Validator"/);
+  assert.match(route, /serviceName: "Anyway Possible Batch Check"/);
   assert.match(route, /Promise\.all/);
   assert.match(route, /\.\.\.declareDiscoveryExtension/);
 });
@@ -343,7 +346,7 @@ test("focused guides are indexable and explain x402 in plain English", async () 
   }
 });
 
-test("public capability descriptions expose all eight MCP tools", async () => {
+test("public capability descriptions expose one free router and all eight paid MCP tools", async () => {
   const health = await readFile(new URL("app/api/health/route.ts", root), "utf8");
   const openapi = JSON.stringify(buildOpenApi());
   const tools = ["merchant_snapshot", "merchant_audit", "treasury_preflight", "payment_guard", "base_balance", "check_url", "verify_web_evidence", "batch_check_urls"];
@@ -352,6 +355,8 @@ test("public capability descriptions expose all eight MCP tools", async () => {
     assert.ok(productTools.some((product) => product.mcpTool === tool));
     assert.match(openapi, new RegExp(tool));
   }
+  assert.match(health, /recommend_tool/);
+  assert.match(openapi, /recommend_tool for free/);
 });
 
 test("free machine-readable catalog previews every paid result before purchase", async () => {
@@ -361,6 +366,8 @@ test("free machine-readable catalog previews every paid result before purchase",
   ]);
   const catalog = buildCatalog();
   assert.deepEqual(catalog.featured, ["merchant-snapshot", "treasury", "payment-guard"]);
+  assert.deepEqual(catalog.freeMcpRouter.tool, "recommend_tool");
+  assert.equal(catalog.freeMcpRouter.paymentRequired, false);
   assert.equal(catalog.tools.length, 8);
   assert.equal(catalog.tools.find((tool) => tool.id === "merchant-audit").priceUsd, 0.25);
   assert.ok(catalog.tools.every((tool) => tool.sampleRequest && tool.sampleResponse));
@@ -441,4 +448,17 @@ test("MCP Registry ownership uses a public domain proof without a private key", 
   const proof = await readFile(new URL("public/.well-known/mcp-registry-auth", root), "utf8");
   assert.match(proof, /^v=MCPv1; k=ed25519; p=[A-Za-z0-9+/]+=*\s*$/);
   assert.doesNotMatch(proof, /PRIVATE KEY/);
+});
+
+test("Bazaar brand metadata stays within Coinbase discovery limits", async () => {
+  const routes = ["payment-guard", "merchant-snapshot", "merchant-audit", "treasury", "base-balance", "check", "batch", "verify"];
+  for (const routeName of routes) {
+    const route = await readFile(new URL(`app/api/${routeName}/route.ts`, root), "utf8");
+    const serviceName = route.match(/serviceName: "([^"]+)"/)?.[1];
+    const tags = route.match(/tags: \[([^\]]+)\]/)?.[1].match(/"([^"]+)"/g)?.map((tag) => tag.slice(1, -1)) ?? [];
+    assert.ok(serviceName, `${routeName} must declare a serviceName`);
+    assert.ok(serviceName.length <= 32, `${routeName} serviceName exceeds 32 characters`);
+    assert.ok(tags.length > 0 && tags.length <= 5, `${routeName} must declare one to five tags`);
+    assert.ok(tags.every((tag) => tag.length <= 32), `${routeName} contains a tag over 32 characters`);
+  }
 });
