@@ -36,9 +36,30 @@ test("public discovery metadata identifies the canonical service", async () => {
   assert.match(status, /gateway is responding/i);
   assert.match(status, /raw health JSON/i);
   assert.match(status, /PUBLIC OPERATING EVIDENCE/);
-  assert.match(status, /Independent uptime monitor/);
+  assert.match(status, /Independent availability checks/);
   assert.match(status, /Security contact/);
   assert.match(sitemap, /https:\/\/anywaypossible\.com\/status/);
+});
+
+test("external production monitor is public, independent, and excluded from adoption", async () => {
+  const [workflow, monitor, status, trust] = await Promise.all([
+    readFile(new URL(".github/workflows/production-monitor.yml", root), "utf8"),
+    readFile(new URL("scripts/monitor-production.mjs", root), "utf8"),
+    readFile(new URL("app/status/page.tsx", root), "utf8"),
+    readFile(new URL("app/api/trust/route.ts", root), "utf8"),
+  ]);
+  assert.match(workflow, /cron: "\*\/15 \* \* \* \*"/);
+  assert.match(workflow, /workflow_dispatch/);
+  assert.match(workflow, /permissions:\s+contents: read/);
+  for (const path of ["/status", "/api/health", "/api/trust", "/openapi.json", "/llms.txt", "/api/mcp", "/api/check"]) assert.match(monitor, new RegExp(path.replaceAll("/", "\\/")));
+  assert.match(monitor, /"x-awp-self-test": "1"/);
+  assert.match(monitor, /assert\.equal\(result\.response\.status, 402\)/);
+  assert.doesNotMatch(monitor, /authorization|payment-signature|private.?key|seed.?phrase/i);
+  assert.match(status, /Independent availability checks/);
+  assert.match(status, /Every 15 minutes/);
+  assert.match(status, /not a contractual uptime SLA/i);
+  assert.match(trust, /selfTestTrafficExcludedFromCustomerMetrics: true/);
+  assert.match(trust, /paidRequests: false/);
 });
 
 test("public trust evidence is aggregate, defined, and indexed for bounded queries", async () => {

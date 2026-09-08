@@ -16,6 +16,15 @@ export async function GET() {
       recordedServiceErrors: "Application-level service errors recorded while handling tool requests.",
       observedSuccessRate: "Successful paid calls divided by successful paid calls plus recorded service errors. This is not an independently measured uptime SLA.",
     },
+    externalMonitoring: {
+      provider: "GitHub Actions",
+      cadenceMinutes: 15,
+      coverage: ["status page", "health contract", "trust evidence", "OpenAPI", "llms.txt", "MCP initialize", "x402 payment boundary"],
+      paidRequests: false,
+      selfTestTrafficExcludedFromCustomerMetrics: true,
+      publicHistory: "https://github.com/anyway-possible/public-api/actions/workflows/production-monitor.yml",
+      limitation: "Public run history is independent availability evidence, not a contractual uptime SLA.",
+    },
     privacy: "Only aggregate counts and incident summaries are published. No wallet addresses, agent identifiers, transaction hashes, revenue, or request contents are returned.",
   }, { headers: { "cache-control": "public, max-age=60, stale-while-revalidate=300" } });
 }
