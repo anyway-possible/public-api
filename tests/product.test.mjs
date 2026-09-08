@@ -33,7 +33,7 @@ test("public discovery metadata identifies the canonical service", async () => {
   assert.match(quietCss, /#10162a/i);
   assert.match(quietCss, /#e7b85b/i);
   assert.match(status, /gateway is responding/i);
-  assert.match(status, /Raw health JSON/);
+  assert.match(status, /raw health JSON/i);
   assert.match(sitemap, /https:\/\/anywaypossible\.com\/status/);
 });
 
@@ -421,6 +421,21 @@ test("human surfaces are readable, accessible, and project-specific", async () =
   assert.doesNotMatch(readme, /vinext-starter/);
   assert.match(sitemap, /https:\/\/anywaypossible\.com\/docs/);
   assert.match(sitemap, /https:\/\/anywaypossible\.com\/examples/);
+});
+
+test("every human-readable route uses the canonical site chrome", async () => {
+  const chrome = await readFile(new URL("app/site-chrome.tsx", root), "utf8");
+  const css = await readFile(new URL("app/quiet.css", root), "utf8");
+  const routeFiles = ["app/page.tsx", "app/docs/page.tsx", "app/examples/page.tsx", "app/guides/page.tsx", "app/guides/[slug]/page.tsx", "app/status/page.tsx"];
+  assert.match(chrome, /Agent decision infrastructure/);
+  assert.match(chrome, /SiteHeader/);
+  assert.match(chrome, /SiteFooter/);
+  assert.match(css, /:root \{ --q-navy:/);
+  for (const routeFile of routeFiles) {
+    const route = await readFile(new URL(routeFile, root), "utf8");
+    assert.match(route, /<SiteHeader \/>/, `${routeFile} must use the shared header`);
+    assert.match(route, /<SiteFooter \/>/, `${routeFile} must use the shared footer`);
+  }
 });
 
 test("paid verifier is bound to the authorized wallet and Base mainnet", async () => {

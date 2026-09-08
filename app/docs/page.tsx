@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { BrandMark } from "../brand-mark";
+import { SiteFooter, SiteHeader } from "../site-chrome";
 import { SITE_URL, tools } from "../../lib/product-catalog.mjs";
 
 export const metadata: Metadata = {
@@ -9,16 +8,12 @@ export const metadata: Metadata = {
   alternates: { canonical: "/docs" },
 };
 
-function Header() {
-  return <nav className="reference-nav"><Link href="/" aria-label="Anyway Possible home"><span className="quiet-wordmark"><BrandMark /><span><strong>Anyway Possible</strong><small>Agent integration guide</small></span></span></Link><div><Link href="/examples">Examples</Link><Link href="/guides">Guides</Link><Link href="/status">Status</Link><a className="reference-cta" href="#tools">Choose a tool</a></div></nav>;
-}
-
 export default function DocsPage() {
   const endpoint = `${SITE_URL}/api/mcp`;
   const sharedConfig = { mcpServers: { "anyway-possible": { url: endpoint } } };
 
   return <main className="reference-shell">
-    <Header />
+    <SiteHeader />
     <section className="reference-hero">
       <p className="reference-eyebrow">EXACT CONTRACTS · NO ACCOUNT · PAY PER ANSWER</p>
       <h1>Connect once.<br />Choose by decision.</h1>
@@ -63,6 +58,6 @@ export default function DocsPage() {
       {tools.map((tool) => <article className="reference-card" id={tool.id} key={tool.id}><header><div><span>{tool.tag}</span><h2>{tool.name}</h2><p className="reference-question">{tool.question}</p></div><strong className="reference-price">{tool.price} USDC</strong></header><p>{tool.description}</p><div className="reference-meta"><code>POST {tool.endpoint}</code><code>MCP {tool.mcpTool}</code><code>Base · x402 v2</code></div><div className="reference-code-grid"><div className="reference-code"><span>REQUEST</span><pre><code>{JSON.stringify(tool.sampleRequest, null, 2)}</code></pre></div><div className="reference-code"><span>REPRESENTATIVE RESULT</span><pre><code>{JSON.stringify(tool.sampleResponse, null, 2)}</code></pre></div></div></article>)}
     </section>
     <section className="reference-callout"><h2>Payment stays under agent control.</h2><p>The first HTTP request returns the exact price, network, asset, recipient, and timeout. The agent signs only when those terms match its policy. Payment Guard can perform the final validation immediately before signing another x402 purchase.</p><nav><a href="/guarded-purchase.json">Purchase workflow ↗</a><a href="/openapi.json">OpenAPI JSON ↗</a><a href="/catalog.json">Machine catalog ↗</a><a href="/llms.txt">llms.txt ↗</a></nav></section>
-    <footer className="reference-footer"><Link href="/">Anyway Possible</Link><span>One free router and eight paid tools over MCP.</span><Link href="/examples">View complete examples →</Link></footer>
+    <SiteFooter />
   </main>;
 }

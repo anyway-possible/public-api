@@ -1,20 +1,14 @@
 import Link from "next/link";
 import { BrandMark } from "./brand-mark";
+import { SiteFooter, SiteHeader } from "./site-chrome";
 import { tools as products } from "../lib/product-catalog.mjs";
 
 export const dynamic = "force-dynamic";
 
-function Wordmark({ detail = "Agent decision infrastructure" }: { detail?: string }) {
-  return <span className="quiet-wordmark"><BrandMark /><span><strong>Anyway Possible</strong><small>{detail}</small></span></span>;
-}
-
 export default function PublicHome() {
   return (
     <main className="quiet-shell">
-      <nav className="quiet-nav">
-        <Link href="/" aria-label="Anyway Possible home"><Wordmark /></Link>
-        <div><a href="#products">Tools</a><a href="#how-it-works">How it works</a><Link href="/guides">Guides</Link><Link href="/docs">Docs</Link><a className="quiet-nav-cta" href="#api">Connect agent</a></div>
-      </nav>
+      <SiteHeader />
 
       <section className="quiet-hero">
         <div className="quiet-orbit" aria-hidden="true"><span>PAY</span><span>CITE</span><span>ACT</span></div>
@@ -71,7 +65,7 @@ export default function PublicHome() {
       </section>
 
       <section className="quiet-closing"><BrandMark /><p>One careful check can change what happens next.</p><a href="#api">Connect via MCP <span>→</span></a></section>
-      <footer className="quiet-footer"><Link href="/"><Wordmark detail="Decision infrastructure for agents" /></Link><span>Base mainnet · x402 USDC</span><nav><Link href="/guides">Guides</Link><Link href="/status">Status</Link><Link href="/examples">Examples</Link><Link href="/docs">Docs</Link><a href="/llms.txt">llms.txt</a></nav><small>© 2026 Anyway Possible</small></footer>
+      <SiteFooter />
     </main>
   );
 }
