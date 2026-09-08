@@ -41,6 +41,12 @@ test("public discovery metadata identifies the canonical service", async () => {
   assert.match(sitemap, /https:\/\/anywaypossible\.com\/status/);
 });
 
+test("public discovery links include verified MCP directories", async () => {
+  const page = await readFile(new URL("app/page.tsx", root), "utf8");
+  assert.match(page, /https:\/\/smithery\.ai\/servers\/anyway-possible\/agent-utilities/);
+  assert.match(page, /https:\/\/glama\.ai\/mcp\/connectors\/com\.anywaypossible\/agent-utilities/);
+});
+
 test("external production monitor is public, independent, and excluded from adoption", async () => {
   const [workflow, monitor, status, trust] = await Promise.all([
     readFile(new URL(".github/workflows/production-monitor.yml", root), "utf8"),
