@@ -570,6 +570,13 @@ test("MCP Registry ownership uses a public domain proof without a private key", 
   assert.doesNotMatch(proof, /PRIVATE KEY/);
 });
 
+test("Glama ownership uses a project-only HTTP claim", async () => {
+  const claim = JSON.parse(await readFile(new URL("public/.well-known/glama.json", root), "utf8"));
+  assert.equal(claim.$schema, "https://glama.ai/mcp/schemas/connector.json");
+  assert.match(claim.claim, /^glama_claim_[A-Za-z0-9_-]+$/);
+  assert.doesNotMatch(JSON.stringify(claim), /jason|melody|gmail|routeready|stackpassport/i);
+});
+
 test("Bazaar brand metadata stays within Coinbase discovery limits", async () => {
   const routes = ["payment-guard", "merchant-snapshot", "merchant-audit", "treasury", "base-balance", "check", "batch", "verify"];
   for (const routeName of routes) {
