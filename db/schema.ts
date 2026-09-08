@@ -14,7 +14,9 @@ export const events = sqliteTable("events", {
   transactionHash: text("transaction_hash"),
   network: text("network"),
   occurredAt: text("occurred_at").notNull(),
-});
+}, (table) => ({
+  kindOccurredAtIdx: index("idx_events_kind_occurred_at").on(table.kind, table.occurredAt),
+}));
 
 export const expenses = sqliteTable("expenses", {
   id: integer("id").primaryKey({ autoIncrement: true }),

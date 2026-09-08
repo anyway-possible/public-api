@@ -16,6 +16,7 @@ export async function GET() {
       paidTools: ["merchant_snapshot", "merchant_audit", "treasury_preflight", "payment_guard", "base_balance", "check_url", "verify_web_evidence", "batch_check_urls"],
       tools: ["recommend_tool", "merchant_snapshot", "merchant_audit", "treasury_preflight", "payment_guard", "base_balance", "check_url", "verify_web_evidence", "batch_check_urls"],
     },
+    trust: { human: "/status", machine: "/api/trust" },
     checkedAt: new Date().toISOString(),
   }, { headers: { "cache-control": "no-store" } });
 }

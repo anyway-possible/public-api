@@ -29,6 +29,13 @@
       "when": 1788879080450,
       "tag": "0003_young_black_tarantula",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1788890835999,
+      "tag": "0004_shallow_sway",
+      "breakpoints": true
     }
   ]
 }

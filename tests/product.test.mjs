@@ -35,7 +35,36 @@ test("public discovery metadata identifies the canonical service", async () => {
   assert.match(quietCss, /#e7b85b/i);
   assert.match(status, /gateway is responding/i);
   assert.match(status, /raw health JSON/i);
+  assert.match(status, /PUBLIC OPERATING EVIDENCE/);
+  assert.match(status, /Independent uptime monitor/);
+  assert.match(status, /Security contact/);
   assert.match(sitemap, /https:\/\/anywaypossible\.com\/status/);
+});
+
+test("public trust evidence is aggregate, defined, and indexed for bounded queries", async () => {
+  const [route, query, schema, migration, instructions] = await Promise.all([
+    readFile(new URL("app/api/trust/route.ts", root), "utf8"),
+    readFile(new URL("db/public-trust.ts", root), "utf8"),
+    readFile(new URL("db/schema.ts", root), "utf8"),
+    readFile(new URL("drizzle/0004_shallow_sway.sql", root), "utf8"),
+    Promise.resolve(buildLlmsText()),
+  ]);
+  assert.match(route, /observedSuccessRate/);
+  assert.match(route, /not an independently measured uptime SLA/i);
+  assert.match(route, /No wallet addresses, agent identifiers, transaction hashes, revenue, or request contents/);
+  assert.match(query, /kind IN \('paid_call', 'service_error'\)/);
+  assert.match(query, /'-30 days'/);
+  assert.match(schema, /idx_events_kind_occurred_at/);
+  assert.match(migration, /idx_events_kind_occurred_at/);
+  assert.match(migration, /PRAGMA optimize/);
+  assert.match(instructions, /\/api\/trust/);
+  assert.doesNotMatch(route + query, /agent_id|transaction_hash|amount_usd|revenue_usd/);
+  const trustDb = new DatabaseSync(":memory:");
+  trustDb.exec("CREATE TABLE events (id INTEGER PRIMARY KEY, kind TEXT NOT NULL, occurred_at TEXT NOT NULL)");
+  trustDb.exec(migration.replaceAll("--> statement-breakpoint", ""));
+  const plan = trustDb.prepare("EXPLAIN QUERY PLAN SELECT substr(occurred_at, 1, 10) FROM events WHERE kind IN ('paid_call', 'service_error') AND occurred_at >= datetime('now', '-30 days')").all();
+  assert.match(plan.map((step) => step.detail).join(" "), /USING COVERING INDEX idx_events_kind_occurred_at/);
+  trustDb.close();
 });
 
 test("commercial metrics require a private bearer token and exclude payer identities", async () => {
