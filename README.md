@@ -14,6 +14,8 @@ Remote MCP endpoint:
 https://anywaypossible.com/api/mcp
 ```
 
+Client-specific setup for Codex, Claude Code, Cursor, and any Streamable HTTP MCP client is published in the [agent integration guide](https://anywaypossible.com/docs#connect). Connecting and calling the free `recommend_tool` router does not require an account or payment. Paid tools require an x402-capable client with a funded Base USDC wallet; connecting the server alone does not grant spending authority.
+
 Machine-readable contracts:
 
 - [Human integration guide](https://anywaypossible.com/docs)
@@ -39,7 +41,7 @@ All prices are USDC on Base mainnet. An unpaid request returns an x402 v2 paymen
 
 ## Discovery
 
-The service is discoverable through Coinbase x402 Bazaar metadata, the official MCP Registry, direct HTTP/OpenAPI, `llms.txt`, and the public catalog. Human-facing guides explain x402, payment safety, and merchant conversion in plain language.
+The service is discoverable through Coinbase x402 Bazaar metadata, the official MCP Registry, Smithery-compatible server-card metadata, downstream registries that ingest the official Registry, direct HTTP/OpenAPI, `llms.txt`, and the public catalog. Human-facing guides explain x402, payment safety, and merchant conversion in plain language.
 
 ## Local development
 

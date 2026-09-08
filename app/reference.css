@@ -9,6 +9,18 @@
 .reference-eyebrow { margin:0 0 22px; color:#d8aa50; font:700 12px var(--font-geist-mono),monospace; letter-spacing:.12em; }
 .reference-hero h1 { max-width:1050px; margin:0; font:400 clamp(52px,7.2vw,104px)/.94 Georgia,serif; letter-spacing:-.06em; }
 .reference-hero>p:last-child { max-width:760px; margin:32px 0 0; color:#c6c0b6; font-size:18px; line-height:1.7; }
+.reference-connect { padding:clamp(65px,8vw,110px) clamp(24px,7vw,110px); background:#e7e1d6; }
+.reference-connect>header { display:grid; grid-template-columns:1fr minmax(280px,.52fr); gap:28px 60px; align-items:end; margin-bottom:42px; }
+.reference-connect>header .reference-eyebrow { grid-column:1/-1; margin:0; }
+.reference-connect h2 { margin:0; font:400 clamp(42px,5.6vw,76px)/.95 Georgia,serif; letter-spacing:-.055em; }
+.reference-connect>header>p:last-child { margin:0; color:#555d5a; font-size:16px; line-height:1.7; }
+.reference-client-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:14px; }
+.reference-client-grid article { min-width:0; padding:clamp(24px,3.2vw,38px); border:1px solid #c8bfaf; border-radius:16px; background:#f4f0e6; }
+.reference-client-grid article>span { color:#8a6222; font:700 12px var(--font-geist-mono),monospace; letter-spacing:.09em; }
+.reference-client-grid h3 { margin:28px 0 10px; font:400 clamp(26px,3vw,38px)/1 Georgia,serif; letter-spacing:-.04em; }
+.reference-client-grid p { min-height:52px; color:#555d5a; font-size:15px; line-height:1.6; }
+.reference-client-grid pre { margin:24px 0 0; padding:17px; overflow:auto; border-radius:10px; background:#18213a; color:#ead298; font:12px/1.6 var(--font-geist-mono),monospace; }
+.reference-wallet-note { margin:20px 0 0; padding:18px 20px; border-left:4px solid #8a6222; background:rgba(244,240,230,.68); color:#444a49; font-size:15px; line-height:1.65; }
 .reference-grid { padding:clamp(65px,8vw,110px) clamp(24px,7vw,110px); display:grid; gap:24px; }
 .reference-intro { max-width:940px; margin-bottom:24px; }
 .reference-intro h2,.reference-card h2 { font-family:Georgia,serif; font-weight:400; letter-spacing:-.04em; }
@@ -34,5 +46,4 @@
 .reference-callout a { padding:12px 15px; border-radius:999px; background:#10162a; color:#f4f0e6; text-decoration:none; font-weight:750; }
 .reference-footer { min-height:120px; padding:30px clamp(24px,5vw,80px); display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:24px; background:#10162a; color:#aeb5c4; font-size:14px; }
 .reference-footer a { color:#f4f0e6; }
-@media(max-width:760px){.reference-nav>div a:not(.reference-cta){display:none}.reference-code-grid{grid-template-columns:1fr}.reference-card>header{display:grid}.reference-price{font-size:18px}.reference-card{padding:24px}.reference-footer{align-items:flex-start;flex-direction:column}}
-
+@media(max-width:760px){.reference-nav>div a:not(.reference-cta){display:none}.reference-connect>header,.reference-client-grid,.reference-code-grid{grid-template-columns:1fr}.reference-client-grid p{min-height:0}.reference-card>header{display:grid}.reference-price{font-size:18px}.reference-card{padding:24px}.reference-footer{align-items:flex-start;flex-direction:column}}

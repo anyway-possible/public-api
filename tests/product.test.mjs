@@ -198,6 +198,23 @@ test("remote MCP surface exposes the strongest products with x402 payment metada
   assert.equal(parsed.remotes[0].type, "streamable-http");
 });
 
+test("agents get client-specific setup and downstream registry metadata", async () => {
+  const [docs, readme, serverCard] = await Promise.all([
+    readFile(new URL("app/docs/page.tsx", root), "utf8"),
+    readFile(new URL("README.md", root), "utf8"),
+    readFile(new URL("public/.well-known/mcp/server-card.json", root), "utf8"),
+  ]);
+  for (const client of ["CODEX", "CLAUDE CODE", "CURSOR", "ANY MCP CLIENT"]) {
+    assert.match(docs, new RegExp(client));
+  }
+  assert.match(docs, /x402-capable wallet or client/);
+  assert.match(docs, /claude mcp add --transport http/);
+  assert.match(readme, /docs#connect/);
+  assert.match(serverCard, /com\.anywaypossible\/agent-utilities/);
+  assert.match(serverCard, /streamable-http/);
+  assert.equal(JSON.parse(serverCard).transport.url, "https://anywaypossible.com/api/registry-mcp");
+});
+
 test("Base wallet balance follows demonstrated agent demand", async () => {
   const [route, product] = await Promise.all([
     readFile(new URL("app/api/base-balance/route.ts", root), "utf8"),
