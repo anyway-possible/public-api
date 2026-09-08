@@ -49,4 +49,15 @@ export async function POST(request: NextRequest) {
   catch (error) { console.error("x402 initialization failed", error); await recordServiceError(request, "/api/merchant-audit", 503); return NextResponse.json({ error: "Payment service is temporarily unavailable." }, { status: 503 }); }
 }
 
-export async function GET() { return NextResponse.json({ service: "x402 API Revenue Audit — Anyway Possible", useWhen: "An x402 seller needs a complete diagnosis of weak discovery, conversion, payer demand, or revenue.", price: "$0.25 USDC", network: "Base (eip155:8453)", method: "POST", request: { payTo: PAY_TO, queries: ["why is my x402 API not selling", "increase x402 revenue", "x402 seller intelligence"], excludePayers: ["0x44D2DC46f987D1f2fa55e281934aDDd193a1A377"] }, returns: ["merchant score and grade", "Bazaar listing quality", "semantic search rankings", "competitor prices", "x402 reliability", "Base USDC activity", "prioritized fixes"], experiment: { id: "merchant-audit-price-2026-09", previousPriceUsd: 0.5, priceUsd: 0.25, startsAt: "2026-09-02T00:00:00.000Z", endsAt: "2026-09-16T23:59:59.999Z" } }); }
+export async function GET() {
+  return NextResponse.json({
+    service: "x402 API Revenue Audit — Anyway Possible",
+    useWhen: "An x402 seller needs a complete diagnosis or comparable score history across repeated audits.",
+    price: "$0.25 USDC",
+    network: "Base (eip155:8453)",
+    method: "POST",
+    request: { payTo: PAY_TO, queries: ["why is my x402 API not selling", "increase x402 revenue", "x402 seller intelligence"], excludePayers: ["0x44D2DC46f987D1F2fa55e281934aDDd193a1A377"] },
+    returns: ["merchant score and grade", "Bazaar listing quality", "semantic search rankings", "competitor prices", "x402 reliability", "Base USDC activity", "prioritized fixes", "privacy-safe score history", "change direction and decline alerts"],
+    experiment: { id: "merchant-audit-price-2026-09", previousPriceUsd: 0.5, priceUsd: 0.25, startsAt: "2026-09-02T00:00:00.000Z", endsAt: "2026-09-16T23:59:59.999Z" },
+  });
+}
