@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
+import { readFile, stat } from "node:fs/promises";
 import { DatabaseSync } from "node:sqlite";
 import test from "node:test";
 import { buildCatalog, buildLlmsText, buildOpenApi, tools as productTools } from "../lib/product-catalog.mjs";
@@ -333,15 +333,24 @@ test("agent documentation describes the transaction-level decision", async () =>
 });
 
 test("typography is self-hosted and compatible with the browser security policy", async () => {
-  const [layout, config] = await Promise.all([
+  const [layout, config, sansFont, monoFont] = await Promise.all([
     readFile(new URL("app/layout.tsx", root), "utf8"),
     readFile(new URL("next.config.ts", root), "utf8"),
+    stat(new URL("public/fonts/geist-sans/Geist-Variable.woff2", root)),
+    stat(new URL("public/fonts/geist-mono/GeistMono-Variable.woff2", root)),
   ]);
   assert.match(layout, /geist\/font\/sans/);
   assert.match(layout, /geist\/font\/mono/);
   assert.doesNotMatch(layout, /next\/font\/google/);
   assert.doesNotMatch(layout + config, /fonts\.(googleapis|gstatic)\.com/);
   assert.match(config, /font-src 'self' data:/);
+  assert.ok(sansFont.size > 10_000, "Geist Sans font asset must be committed");
+  assert.ok(monoFont.size > 10_000, "Geist Mono font asset must be committed");
+});
+
+test("social preview stays lightweight", async () => {
+  const preview = await stat(new URL("public/og.webp", root));
+  assert.ok(preview.size < 150_000, "social preview should remain below 150 KB");
 });
 
 test("focused guides are indexable and explain x402 in plain English", async () => {

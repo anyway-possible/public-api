@@ -43,6 +43,7 @@
 .reference-callout h2 { margin:0 0 14px; font:400 clamp(34px,5vw,62px)/1 Georgia,serif; letter-spacing:-.05em; }
 .reference-callout p { max-width:780px; font-size:17px; line-height:1.65; }
 .reference-callout nav { display:flex; flex-wrap:wrap; gap:12px; margin-top:25px; }
+.reference-meta a,.reference-callout a { min-height:44px; display:inline-flex; align-items:center; }
 .reference-callout a { padding:12px 15px; border-radius:999px; background:#10162a; color:#f4f0e6; text-decoration:none; font-weight:750; }
 .reference-footer { min-height:120px; padding:30px clamp(24px,5vw,80px); display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:24px; background:#10162a; color:#aeb5c4; font-size:14px; }
 .reference-footer a { color:#f4f0e6; }

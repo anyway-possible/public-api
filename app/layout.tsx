@@ -16,8 +16,8 @@ export const metadata: Metadata = {
   alternates: { canonical: "/" },
   icons: { icon: "/favicon.png" },
   robots: { index: true, follow: true },
-  openGraph: { title: "Anyway Possible — Confidence for the Decisions Agents Make", description, url: siteUrl, siteName: "Anyway Possible", type: "website", images: [{ url: "/og.png", width: 1200, height: 630, alt: "Anyway Possible — Confidence for the decisions agents make" }] },
-  twitter: { card: "summary_large_image", title: "Anyway Possible — Confidence for the Decisions Agents Make", description, images: ["/og.png"] },
+  openGraph: { title: "Anyway Possible — Confidence for the Decisions Agents Make", description, url: siteUrl, siteName: "Anyway Possible", type: "website", images: [{ url: "/og.webp", width: 1200, height: 630, alt: "Anyway Possible — Confidence for the decisions agents make" }] },
+  twitter: { card: "summary_large_image", title: "Anyway Possible — Confidence for the Decisions Agents Make", description, images: ["/og.webp"] },
 };
 
 const structuredData = {
