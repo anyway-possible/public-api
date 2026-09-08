@@ -59,7 +59,7 @@ export const guides: Guide[] = [
     ],
     faq: [
       { question: "What is the fastest diagnostic?", answer: "A Merchant Snapshot identifies the single largest observable revenue problem using discovery, reliability, buyer, and Base USDC signals." },
-      { question: "When is a full audit useful?", answer: "Use a full Merchant Audit when you need listing-level defects, exact search rankings, competitor prices, payment reliability, and prioritized fixes." },
+      { question: "When is a full audit useful?", answer: "Use a full Merchant Audit when you need listing-level defects, exact search rankings, competitor prices, payment reliability, and prioritized fixes. Repeat it with the same wallet and queries to receive comparable score history and change alerts." },
       { question: "Can public data prove revenue?", answer: "No. Marketplace and onchain activity are useful signals, but they cannot prove that every payment is a customer purchase." },
     ],
     relatedTool: { name: "Merchant Snapshot", price: "$0.05 USDC", endpoint: "/api/merchant-snapshot", reason: "Find the largest observable reason an x402 listing is not earning." },

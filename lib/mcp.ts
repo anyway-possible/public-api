@@ -10,7 +10,7 @@ import { z } from "zod";
 import { getDb } from "../db";
 import { events } from "../db/schema";
 import { createMerchantSnapshot } from "./merchant-snapshot";
-import { auditMerchant } from "./merchant-audit";
+import { auditAndMonitorMerchant } from "./merchant-monitoring";
 import { readBaseBalance } from "./base-balance";
 import { evaluatePaymentGuard } from "./payment-guard";
 import { createTreasuryPreflight } from "./treasury";
@@ -41,7 +41,7 @@ function jsonResult(value: unknown) {
 }
 
 const FREE_TOOL_CHOICES = [
-  { toolName: "merchant_audit", title: "x402 Merchant Audit", priceUsd: 0.25, useWhen: "You need a full seller diagnosis with listing defects, search rank, competitor pricing, reliability, and prioritized revenue fixes.", requiredInputs: ["payTo", "queries"], keywords: ["full audit", "merchant audit", "competitor", "listing defects", "rankings"] },
+  { toolName: "merchant_audit", title: "x402 Merchant Audit", priceUsd: 0.25, useWhen: "You need a full seller diagnosis or a comparable score history with change alerts.", requiredInputs: ["payTo", "queries"], keywords: ["full audit", "merchant audit", "merchant monitoring", "score history", "alert", "competitor", "listing defects", "rankings"] },
   { toolName: "merchant_snapshot", title: "x402 Merchant Snapshot", priceUsd: 0.05, useWhen: "You need a fast answer to why an x402 API is not selling before purchasing a full audit.", requiredInputs: ["payTo", "queries"], keywords: ["merchant", "seller", "bazaar", "revenue", "not selling", "adoption", "conversion"] },
   { toolName: "payment_guard", title: "Agent Payment Safety", priceUsd: 0.01, useWhen: "You have a live x402 challenge and need to validate the price, network, asset, recipient, and buyer funding before signing.", requiredInputs: ["payerAddress", "serviceUrl", "maxAmountUsdc"], keywords: ["payment safety", "payment safe", "x402 challenge", "before signing", "safe to sign", "recipient", "price ceiling"] },
   { toolName: "treasury_preflight", title: "Base Wallet Readiness", priceUsd: 0.02, useWhen: "You need a proceed, fund, review, or reject decision for a planned Base USDC payment.", requiredInputs: ["address"], keywords: ["wallet readiness", "wallet ready", "ready to pay", "safe to pay", "base payment", "funded", "funding", "gas", "treasury", "destination"] },
@@ -326,10 +326,10 @@ export async function createMcpServer() {
 
   server.registerTool("merchant_audit", {
     title: "x402 Merchant Audit ($0.25 USDC)",
-    description: "Audit listings, semantic rank, competitor prices, payment reliability, buyer reach, and observed Base USDC activity, then return prioritized revenue fixes.",
+    description: "Audit listings, semantic rank, competitor prices, payment reliability, buyer reach, and observed Base USDC activity. Repeated runs with the same wallet and queries return privacy-safe score history and change alerts.",
     inputSchema: { payTo: addressSchema, queries: z.array(z.string().min(2).max(100)).min(1).max(5), excludePayers: z.array(addressSchema).max(10).optional() },
     annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: false, openWorldHint: true },
-  }, paidTool("merchantAudit", async (args) => jsonResult(await auditMerchant(args as { payTo: string; queries: string[]; excludePayers?: string[] }))));
+  }, paidTool("merchantAudit", async (args) => jsonResult(await auditAndMonitorMerchant(args as { payTo: string; queries: string[]; excludePayers?: string[] }))));
 
   server.registerTool("treasury_preflight", {
     title: "Base Wallet Readiness ($0.02 USDC)",

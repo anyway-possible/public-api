@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { readFile, stat } from "node:fs/promises";
 import { DatabaseSync } from "node:sqlite";
 import test from "node:test";
+import { compareMerchantAudit } from "../lib/merchant-monitoring-core.mjs";
 import { buildCatalog, buildLlmsText, buildOpenApi, tools as productTools } from "../lib/product-catalog.mjs";
 
 const root = new URL("../", import.meta.url);
@@ -109,9 +110,13 @@ test("merchant snapshot is the low-friction audit funnel", async () => {
 });
 
 test("merchant audit is the flagship revenue product", async () => {
-  const [route, audit] = await Promise.all([
+  const [route, audit, monitoring, monitoringCore, schema, migration] = await Promise.all([
     readFile(new URL("app/api/merchant-audit/route.ts", root), "utf8"),
     readFile(new URL("lib/merchant-audit.ts", root), "utf8"),
+    readFile(new URL("lib/merchant-monitoring.ts", root), "utf8"),
+    readFile(new URL("lib/merchant-monitoring-core.mjs", root), "utf8"),
+    readFile(new URL("db/schema.ts", root), "utf8"),
+    readFile(new URL("drizzle/0003_young_black_tarantula.sql", root), "utf8"),
   ]);
   assert.match(route, /Anyway Possible x402 Audit/);
   assert.match(route, /\$0\.25/);
@@ -128,6 +133,30 @@ test("merchant audit is the flagship revenue product", async () => {
   assert.match(audit, /listingSampleLimited/);
   assert.match(audit, /topCompetitors/);
   assert.match(audit, /limitations/);
+  assert.match(route, /auditAndMonitorMerchant/);
+  assert.match(monitoring, /one-way wallet-and-query fingerprint/);
+  assert.match(monitoringCore, /score dropped/);
+  assert.match(monitoring, /nextRecommendedCheck/);
+  assert.match(monitoring, /current audit result is complete/);
+  assert.doesNotMatch(schema + migration, /pay_to|wallet_address|email/i);
+  assert.match(migration, /idx_merchant_audit_history_merchant_observed_at/);
+  assert.match(migration, /PRAGMA optimize/);
+  const historyDb = new DatabaseSync(":memory:");
+  historyDb.exec(migration.replaceAll("--> statement-breakpoint", ""));
+  const indexes = historyDb.prepare("SELECT name FROM sqlite_schema WHERE type = 'index' AND tbl_name = 'merchant_audit_history'").all();
+  assert.ok(indexes.some((entry) => entry.name === "idx_merchant_audit_history_merchant_observed_at"));
+  historyDb.close();
+});
+
+test("merchant monitoring reports comparable declines without merchant identity data", () => {
+  const current = { score: 68, listingCount: 2, indexedCalls30d: 8, maxResourceUniquePayers30d: 1 };
+  const previous = { score: 74, listing_count: 3, indexed_calls_30d: 12, max_resource_unique_payers_30d: 2 };
+  const comparison = compareMerchantAudit(current, previous);
+  assert.equal(comparison.direction, "declined");
+  assert.equal(comparison.scoreDelta, -6);
+  assert.equal(comparison.alerts.length, 4);
+  assert.match(comparison.alerts.join(" "), /score dropped 6 points/);
+  assert.deepEqual(compareMerchantAudit(current), { direction: "first_observation", scoreDelta: null, alerts: [] });
 });
 
 test("Base wallet readiness is the higher-value product", async () => {

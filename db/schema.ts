@@ -1,4 +1,4 @@
-import { integer, real, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { index, integer, real, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
 export const events = sqliteTable("events", {
   id: integer("id").primaryKey({ autoIncrement: true }),
@@ -84,3 +84,18 @@ export const funnelMonitorEndpoints = sqliteTable("funnel_monitor_endpoints", {
   revenueUsd: real("revenue_usd").notNull().default(0),
   updatedAt: text("updated_at").notNull(),
 });
+
+export const merchantAuditHistory = sqliteTable("merchant_audit_history", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  auditId: text("audit_id").notNull().unique(),
+  merchantKey: text("merchant_key").notNull(),
+  score: integer("score").notNull(),
+  grade: text("grade").notNull(),
+  listingCount: integer("listing_count").notNull(),
+  indexedCalls30d: integer("indexed_calls_30d").notNull(),
+  maxResourceUniquePayers30d: integer("max_resource_unique_payers_30d").notNull(),
+  externalInboundUsdc: real("external_inbound_usdc").notNull(),
+  observedAt: text("observed_at").notNull(),
+}, (table) => ({
+  merchantObservedAtIdx: index("idx_merchant_audit_history_merchant_observed_at").on(table.merchantKey, table.observedAt),
+}));

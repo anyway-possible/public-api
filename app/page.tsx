@@ -44,7 +44,7 @@ export default function PublicHome() {
       </section>
 
       <section className="quiet-proof" aria-labelledby="proof-title">
-        <div className="quiet-proof-copy"><p className="quiet-label">PROOF, NOT PROMISES</p><h2 id="proof-title">We use it<br />on ourselves.</h2><p>This public merchant snapshot shows the complete job: ask a business question, inspect live evidence, identify the problem, and return the next action.</p><div><a href="/docs#merchant-snapshot">Get the request example <span>→</span></a><a href="/examples#merchant-snapshot">See the complete result</a></div></div>
+        <div className="quiet-proof-copy"><p className="quiet-label">PROOF, NOT PROMISES</p><h2 id="proof-title">We use it<br />on ourselves.</h2><p>A Merchant Audit now does more than score one moment. Repeat the same audit to see comparable history, detect declines, and receive an explicit alert when discovery or buyer signals deteriorate.</p><div><a href="/docs#merchant-audit">Get the request example <span>→</span></a><a href="/examples#merchant-audit">See the complete result</a></div></div>
         <article className="quiet-proof-card"><header><span>MERCHANT SNAPSHOT</span><code>$0.05 USDC</code></header><p className="proof-question"><small>QUESTION</small>Why isn&apos;t this x402 API generating more revenue?</p><div className="proof-decision"><small>NEXT ACTION</small><strong>IMPROVE BUYER-SEARCH VISIBILITY</strong><p>The service is reliable. Broader purchase-intent discovery is the main gap.</p></div><dl><div><dt>Merchant score</dt><dd>88 / 100</dd></div><div><dt>Reliable listings</dt><dd>5 / 5</dd></div><div><dt>Independent payers</dt><dd>2</dd></div></dl><footer><span>Evidence observed live</span><b>GRADE B</b></footer></article>
       </section>
 
