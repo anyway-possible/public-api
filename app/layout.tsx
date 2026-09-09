@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
 import "./globals.css";
@@ -29,6 +30,7 @@ const structuredData = {
   ],
 };
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="en"><head><script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} /></head><body className={`${GeistSans.variable} ${GeistMono.variable}`}><a className="skip-link" href="#main-content">Skip to content</a><div id="main-content">{children}</div></body></html>;
+export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const nonce = (await headers()).get("x-nonce") ?? undefined;
+  return <html lang="en"><head><script nonce={nonce} type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} /></head><body className={`${GeistSans.variable} ${GeistMono.variable}`}><a className="skip-link" href="#main-content">Skip to content</a><div id="main-content">{children}</div></body></html>;
 }

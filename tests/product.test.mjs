@@ -451,9 +451,10 @@ test("agent documentation describes the transaction-level decision", async () =>
 });
 
 test("typography is self-hosted and compatible with the browser security policy", async () => {
-  const [layout, config, styles, quietStyles, sansFont, monoFont] = await Promise.all([
+  const [layout, config, proxy, styles, quietStyles, sansFont, monoFont] = await Promise.all([
     readFile(new URL("app/layout.tsx", root), "utf8"),
     readFile(new URL("next.config.ts", root), "utf8"),
+    readFile(new URL("proxy.ts", root), "utf8"),
     readFile(new URL("app/globals.css", root), "utf8"),
     readFile(new URL("app/quiet.css", root), "utf8"),
     stat(new URL("public/fonts/geist-sans/Geist-Variable.woff2", root)),
@@ -462,8 +463,8 @@ test("typography is self-hosted and compatible with the browser security policy"
   assert.match(layout, /geist\/font\/sans/);
   assert.match(layout, /geist\/font\/mono/);
   assert.doesNotMatch(layout, /next\/font\/google/);
-  assert.doesNotMatch(layout + config, /fonts\.(googleapis|gstatic)\.com/);
-  assert.match(config, /font-src 'self' data:/);
+  assert.doesNotMatch(layout + config + proxy, /fonts\.(googleapis|gstatic)\.com/);
+  assert.match(proxy, /font-src 'self' data:/);
   assert.match(styles, /body[^}]+var\(--font-geist-sans\)/s);
   assert.doesNotMatch(styles, /body[^}]+Arial/s);
   assert.match(quietStyles, /quiet-code>footer b \{ color: var\(--q-ivory\)/);
@@ -482,6 +483,7 @@ test("social preview stays lightweight", async () => {
   assert.ok(favicon.size > 1_000, "conventional favicon must be a real image");
   assert.match(layout, /\/og\.jpg/);
   assert.doesNotMatch(layout, /\/og\.webp/);
+  await assert.rejects(stat(new URL("public/og.webp", root)), { code: "ENOENT" });
 });
 
 test("focused guides are indexable and explain x402 in plain English", async () => {
@@ -496,6 +498,8 @@ test("focused guides are indexable and explain x402 in plain English", async () 
   assert.match(home, /web payment standard that lets software pay for one API answer at a time/);
   assert.match(index, /Understand the system/);
   assert.match(guidePage, /FAQPage/);
+  assert.match(guidePage, /headers\(\)/);
+  assert.match(guidePage, /nonce=\{nonce\}/);
   for (const slug of ["what-is-x402", "x402-payment-safety", "x402-api-not-selling"]) {
     assert.match(content, new RegExp(slug));
     assert.match(sitemap, new RegExp(`https://anywaypossible\\.com/guides/${slug}`));
@@ -563,6 +567,33 @@ test("human surfaces are readable, accessible, and project-specific", async () =
   assert.match(sitemap, /https:\/\/anywaypossible\.com\/examples/);
 });
 
+test("brand tokens stay used and small text stays legible", async () => {
+  const css = (await Promise.all([
+    "app/globals.css",
+    "app/quiet.css",
+    "app/guides.css",
+    "app/reference.css",
+  ].map((path) => readFile(new URL(path, root), "utf8")))).join("\n");
+  const definitions = [...css.matchAll(/(--[a-z0-9-]+)\s*:/g)].map((match) => match[1]);
+  for (const name of new Set(definitions)) {
+    const references = css.match(new RegExp(`var\\(${name}\\)`, "g")) ?? [];
+    assert.ok(references.length > 0, `${name} must paint at least one declared style`);
+  }
+  assert.doesNotMatch(css, /font-size:\s*(?:[0-9]|1[01])px/);
+  assert.doesNotMatch(css, /font:[^;]*\s(?:[0-9]|1[01])px(?:[\/\s]|;)/);
+  const linkColor = css.match(/\.quiet-gloss a \{ color: (#[0-9a-f]{6})/i)?.[1];
+  assert.ok(linkColor, "guide link must declare an explicit color");
+  const luminance = (hex) => {
+    const channels = hex.slice(1).match(/.{2}/g).map((value) => Number.parseInt(value, 16) / 255);
+    return channels.map((value) => value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4)
+      .reduce((sum, value, index) => sum + value * [0.2126, 0.7152, 0.0722][index], 0);
+  };
+  const foreground = luminance(linkColor);
+  const background = luminance("#ece5d8");
+  const contrast = (Math.max(foreground, background) + 0.05) / (Math.min(foreground, background) + 0.05);
+  assert.ok(contrast >= 4.5, `guide-link contrast must be at least 4.5:1, received ${contrast.toFixed(2)}:1`);
+});
+
 test("every human-readable route uses the canonical site chrome", async () => {
   const chrome = await readFile(new URL("app/site-chrome.tsx", root), "utf8");
   const [css, globals] = await Promise.all([
@@ -611,13 +642,22 @@ test("verification blocks local targets and bounds response size", async () => {
 });
 
 test("public responses define defense-in-depth browser headers and a security contact", async () => {
-  const [config, security] = await Promise.all([
+  const [config, proxy, layout, security] = await Promise.all([
     readFile(new URL("next.config.ts", root), "utf8"),
+    readFile(new URL("proxy.ts", root), "utf8"),
+    readFile(new URL("app/layout.tsx", root), "utf8"),
     readFile(new URL("public/.well-known/security.txt", root), "utf8"),
   ]);
-  for (const header of ["Strict-Transport-Security", "Content-Security-Policy", "X-Content-Type-Options", "X-Frame-Options", "Referrer-Policy", "Permissions-Policy"]) {
+  for (const header of ["Strict-Transport-Security", "X-Content-Type-Options", "X-Frame-Options", "Referrer-Policy", "Permissions-Policy"]) {
     assert.match(config, new RegExp(header));
   }
+  assert.doesNotMatch(config, /Content-Security-Policy/);
+  assert.match(proxy, /Content-Security-Policy/);
+  assert.match(proxy, /crypto\.randomUUID\(\)/);
+  assert.match(proxy, /script-src 'self' 'nonce-\$\{nonce\}'/);
+  assert.match(proxy, /script-src-attr 'none'/);
+  assert.doesNotMatch(proxy, /script-src[^;]*unsafe-inline/);
+  assert.match(layout, /nonce=\{nonce\}/);
   assert.match(security, /Contact:/);
   assert.match(security, /Canonical: https:\/\/anywaypossible\.com\/\.well-known\/security\.txt/);
 });
