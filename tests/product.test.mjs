@@ -3,6 +3,7 @@ import { readFile, stat } from "node:fs/promises";
 import { DatabaseSync } from "node:sqlite";
 import test from "node:test";
 import { compareMerchantAudit } from "../lib/merchant-monitoring-core.mjs";
+import { CHALLENGE_LIMIT, CHALLENGE_WINDOW_MS, consumeChallengeToken, resetChallengeLimitsForTest } from "../lib/challenge-rate-limit.mjs";
 import { buildCatalog, buildLlmsText, buildOpenApi, tools as productTools } from "../lib/product-catalog.mjs";
 
 const root = new URL("../", import.meta.url);
@@ -370,13 +371,41 @@ test("analytics separates internal validation from customer revenue", async () =
   assert.match(dashboard, /noiseChallenges/);
 });
 
-test("every HTTP payment challenge uses centralized privacy-safe attribution", async () => {
+test("every HTTP payment challenge uses centralized privacy-safe attribution and abuse protection", async () => {
+  const analytics = await readFile(new URL("lib/analytics.ts", root), "utf8");
+  assert.match(analytics, /cf-connecting-ip/);
+  assert.match(analytics, /SHA-256/);
+  assert.match(analytics, /status: 429/);
+  assert.match(analytics, /Retry-After/);
+  assert.match(analytics, /RateLimit-Remaining/);
+  assert.match(analytics, /x-awp-self-test/);
+  assert.match(analytics, /CoinbaseBazaarDiscovery/);
+  assert.match(analytics, /response\.status !== 402/);
   const routes = ["payment-guard", "merchant-snapshot", "merchant-audit", "treasury", "base-balance", "check", "batch", "verify"];
   for (const routeName of routes) {
     const route = await readFile(new URL(`app/api/${routeName}/route.ts`, root), "utf8");
-    assert.match(route, /recordPaymentChallenge/);
+    assert.match(route, /protectPaymentChallenge/);
+    assert.doesNotMatch(route, /recordPaymentChallenge/);
     assert.doesNotMatch(route, /kind: identity\.isSelfTest \? "test_challenge"/);
   }
+});
+
+test("payment challenge abuse protection allows a burst, then resets cleanly", () => {
+  resetChallengeLimitsForTest();
+  const startedAt = 1_000_000;
+  for (let requestNumber = 1; requestNumber <= CHALLENGE_LIMIT; requestNumber += 1) {
+    const result = consumeChallengeToken("one-client", startedAt);
+    assert.equal(result.allowed, true);
+    assert.equal(result.remaining, CHALLENGE_LIMIT - requestNumber);
+  }
+  const blocked = consumeChallengeToken("one-client", startedAt);
+  assert.equal(blocked.allowed, false);
+  assert.equal(blocked.remaining, 0);
+  assert.equal(consumeChallengeToken("another-client", startedAt).allowed, true);
+  const reset = consumeChallengeToken("one-client", startedAt + CHALLENGE_WINDOW_MS);
+  assert.equal(reset.allowed, true);
+  assert.equal(reset.remaining, CHALLENGE_LIMIT - 1);
+  resetChallengeLimitsForTest();
 });
 
 test("secure monitor rollups avoid secrets and raw event scans", async () => {
@@ -577,6 +606,8 @@ test("verification blocks local targets and bounds response size", async () => {
   assert.match(verifier, /contentSha256/);
   assert.match(verifier, /receiptId/);
   assert.match(workerConfig, /global_fetch_strictly_public/);
+  assert.match(workerConfig, /Public-network fetch protection must remain enabled/);
+  assert.match(workerConfig, /compatibility_flags: WORKER_COMPATIBILITY_FLAGS/);
 });
 
 test("public responses define defense-in-depth browser headers and a security contact", async () => {

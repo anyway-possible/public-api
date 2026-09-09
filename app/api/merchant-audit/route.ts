@@ -5,7 +5,7 @@ import { env } from "cloudflare:workers";
 import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "../../../db";
 import { events } from "../../../db/schema";
-import { identifyAgent, recordPaymentChallenge, recordServiceError } from "../../../lib/analytics";
+import { identifyAgent, protectPaymentChallenge, recordServiceError } from "../../../lib/analytics";
 import { auditAndMonitorMerchant } from "../../../lib/merchant-monitoring";
 
 export const runtime = "edge";
@@ -45,7 +45,7 @@ async function paidHandler(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  try { const response = await withX402FromHTTPServer(paidHandler, await getServer())(request); if (response.status === 402) await recordPaymentChallenge(request, "/api/merchant-audit"); return response; }
+  try { const response = await withX402FromHTTPServer(paidHandler, await getServer())(request); return await protectPaymentChallenge(request, "/api/merchant-audit", response); }
   catch (error) { console.error("x402 initialization failed", error); await recordServiceError(request, "/api/merchant-audit", 503); return NextResponse.json({ error: "Payment service is temporarily unavailable." }, { status: 503 }); }
 }
 

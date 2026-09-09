@@ -5,7 +5,7 @@ import { env } from "cloudflare:workers";
 import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "../../../db";
 import { events } from "../../../db/schema";
-import { identifyAgent, recordPaymentChallenge, recordServiceError } from "../../../lib/analytics";
+import { identifyAgent, protectPaymentChallenge, recordServiceError } from "../../../lib/analytics";
 import { createTreasuryPreflight, type TreasuryInput } from "../../../lib/treasury";
 
 export const runtime = "edge";
@@ -100,10 +100,7 @@ async function paidHandler(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const response = await withX402FromHTTPServer(paidHandler, await getServer())(request);
-    if (response.status === 402) {
-      await recordPaymentChallenge(request, "/api/treasury");
-    }
-    return response;
+    return await protectPaymentChallenge(request, "/api/treasury", response);
   } catch (error) {
     console.error("x402 initialization failed", error);
     await recordServiceError(request, "/api/treasury", 503);

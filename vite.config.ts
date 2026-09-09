@@ -5,6 +5,11 @@ import { sites } from "./build/sites-vite-plugin";
 
 const SITE_CREATOR_PLACEHOLDER_DATABASE_ID =
   "00000000-0000-4000-8000-000000000000";
+const WORKER_COMPATIBILITY_FLAGS = ["nodejs_compat", "global_fetch_strictly_public"];
+
+if (!WORKER_COMPATIBILITY_FLAGS.includes("global_fetch_strictly_public")) {
+  throw new Error("Public-network fetch protection must remain enabled.");
+}
 
 const { d1, r2 } = hostingConfig;
 
@@ -17,7 +22,7 @@ const localBindingConfig = {
   // keeps a DNS rebinding response from turning URL verification into access
   // to a private origin while the application-level DNS checks provide an
   // earlier, clearer rejection.
-  compatibility_flags: ["nodejs_compat", "global_fetch_strictly_public"],
+  compatibility_flags: WORKER_COMPATIBILITY_FLAGS,
   d1_databases: d1
     ? [
         {

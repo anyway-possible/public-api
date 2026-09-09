@@ -5,7 +5,7 @@ import { env } from "cloudflare:workers";
 import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "../../../db";
 import { events } from "../../../db/schema";
-import { identifyAgent, recordPaymentChallenge, recordServiceError } from "../../../lib/analytics";
+import { identifyAgent, protectPaymentChallenge, recordServiceError } from "../../../lib/analytics";
 import { verifyUrl, type VerificationInput } from "../../../lib/verification";
 
 export const runtime = "edge";
@@ -123,10 +123,7 @@ export async function POST(request: NextRequest) {
   try {
     const server = await getServer();
     const response = await withX402FromHTTPServer(paidHandler, server)(request);
-    if (response.status === 402) {
-      await recordPaymentChallenge(request, "/api/verify");
-    }
-    return response;
+    return await protectPaymentChallenge(request, "/api/verify", response);
   } catch (error) {
     console.error("x402 initialization failed", error);
     await recordServiceError(request, "/api/verify", 503);
