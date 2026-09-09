@@ -265,6 +265,9 @@ test("remote MCP surface exposes the strongest products with x402 payment metada
   assert.match(mcp, /server\.registerTool\("recommend_tool"/);
   assert.match(mcp, /paymentRequired: false/);
   assert.match(mcp, /openWorldHint: false/);
+  assert.equal((mcp.match(/outputSchema: toolOutputSchemas\./g) ?? []).length, 9);
+  assert.ok((mcp.match(/\.describe\(/g) ?? []).length >= 20);
+  assert.match(mcp, /structuredContent: value/);
   const analytics = await readFile(new URL("lib/mcp-analytics.ts", root), "utf8");
   assert.match(analytics, /SHA-256/);
   assert.match(analytics, /x-awp-self-test/);
@@ -275,7 +278,7 @@ test("remote MCP surface exposes the strongest products with x402 payment metada
     assert.match(instructions, new RegExp(tool));
   }
   const parsed = JSON.parse(manifest);
-  assert.equal(parsed.version, "1.3.0");
+  assert.equal(parsed.version, "1.4.0");
   assert.equal(parsed.name, "com.anywaypossible/agent-utilities");
   assert.equal(parsed.remotes[0].url, "https://anywaypossible.com/api/registry-mcp");
   const registryRoute = await readFile(new URL("app/api/registry-mcp/route.ts", root), "utf8");

@@ -21,6 +21,63 @@ const PAY_TO = "0xe5690D37805107C56f6195E65A262b234E0E5e75" as const;
 const NETWORK = "eip155:8453" as const;
 const SELF_TEST_PAYER = "0x44d2dc46f987d1f2fa55e281934addd193a1a377";
 const addressSchema = z.string().regex(/^0x[a-fA-F0-9]{40}$/, "Expected a 20-byte EVM address");
+const objectDetailsSchema = z.record(z.unknown());
+
+const toolOutputSchemas = {
+  recommendTool: {
+    paymentRequired: z.boolean(),
+    goal: z.string(),
+    maxPriceUsd: z.number().nullable(),
+    recommendedTool: objectDetailsSchema.nullable(),
+    alternatives: z.array(objectDetailsSchema),
+    clarificationNeeded: z.boolean(),
+    clarifyingQuestion: z.string().nullable(),
+    nextStep: z.string(),
+  },
+  merchantSnapshot: {
+    snapshotId: z.string(), merchant: z.string(), network: z.string(), observedAt: z.string(),
+    score: z.number().int().min(0).max(100), grade: z.enum(["A", "B", "C", "D", "F"]),
+    signals: objectDetailsSchema, visibility: z.array(objectDetailsSchema), biggestIssue: z.string(),
+    upgrade: objectDetailsSchema, limitations: z.array(z.string()),
+  },
+  merchantAudit: {
+    auditId: z.string(), merchant: z.string(), network: z.string(), observedAt: z.string(),
+    score: z.number().int().min(0).max(100), grade: z.enum(["A", "B", "C", "D", "F"]),
+    scoreBreakdown: objectDetailsSchema, summary: objectDetailsSchema, listings: z.array(objectDetailsSchema),
+    rankings: z.array(objectDetailsSchema), onchain: objectDetailsSchema, actions: z.array(z.string()),
+    monitoring: objectDetailsSchema, limitations: z.array(z.string()),
+  },
+  treasuryPreflight: {
+    address: z.string(), destinationAddress: z.string().nullable(), network: z.string(), chainId: z.number().int(),
+    safeToProceed: z.boolean(), decision: z.enum(["safe_to_pay", "needs_funding", "needs_gas", "review_destination", "reject"]),
+    riskLevel: z.enum(["low", "medium", "high"]), recommendedAction: z.string(), eth: z.string(), usdc: z.string(),
+    checks: z.array(objectDetailsSchema), alerts: z.array(z.string()), limitations: z.array(z.string()),
+    blockNumber: z.number().int(), observedAt: z.string(),
+  },
+  paymentGuard: {
+    decision: z.enum(["safe_to_sign", "needs_funding", "review_recipient", "reject"]), safeToSign: z.boolean(),
+    riskLevel: z.enum(["low", "medium", "high"]), quotedAmountUsdc: z.string(), quotedPayTo: z.string(),
+    network: z.string(), asset: z.string(), checks: z.array(objectDetailsSchema), alerts: z.array(z.string()),
+    recommendedAction: z.string(),
+  },
+  baseBalance: {
+    address: z.string(), network: z.string(), chainId: z.number().int(), eth: z.string(), usdc: z.string(),
+    ethAtomic: z.string(), usdcAtomic: z.string(), blockNumber: z.number().int(), observedAt: z.string(),
+  },
+  urlCheck: {
+    reachable: z.boolean(), verified: z.boolean(), status: z.number().int(), finalUrl: z.string().url(),
+    redirectChain: z.array(z.string().url()), responseTimeMs: z.number().int(), contentType: z.string().optional(),
+    observedAt: z.string(),
+  },
+  verifyEvidence: {
+    verified: z.boolean(), status: z.number().int(), title: z.string().nullable().optional(), finalUrl: z.string().url(),
+    redirectChain: z.array(z.string().url()), responseTimeMs: z.number().int(), contentSha256: z.string(),
+    receiptId: z.string(), observedAt: z.string(),
+  },
+  batchCheck: {
+    verified: z.boolean(), count: z.number().int(), checkedAt: z.string(), results: z.array(objectDetailsSchema),
+  },
+} as const;
 
 type PaidTool = ReturnType<typeof createPaymentWrapper>;
 type ToolSet = {
@@ -36,8 +93,8 @@ type ToolSet = {
 
 let toolSetPromise: Promise<ToolSet> | undefined;
 
-function jsonResult(value: unknown) {
-  return { content: [{ type: "text" as const, text: JSON.stringify(value) }] };
+function jsonResult(value: Record<string, unknown>) {
+  return { content: [{ type: "text" as const, text: JSON.stringify(value) }], structuredContent: value };
 }
 
 const FREE_TOOL_CHOICES = [
@@ -300,7 +357,7 @@ function paidTool<TArgs extends Record<string, unknown>>(
 export async function createMcpServer() {
   const server = new McpServer({
     name: "Anyway Possible",
-    version: "1.3.0",
+    version: "1.4.0",
     title: "Anyway Possible Agent Utilities",
     description: "One free tool recommender and eight account-free x402 tools for merchant intelligence, Base wallet readiness, agent payment safety, URL checks, and verifiable web evidence.",
     websiteUrl: "https://anywaypossible.com",
@@ -309,7 +366,11 @@ export async function createMcpServer() {
   server.registerTool("recommend_tool", {
     title: "Start Here: Choose a Tool (Free)",
     description: "Use this free tool before paying. Describe the decision you need and receive the best Anyway Possible tool, exact price, required inputs, alternatives, and next step. This tool never triggers payment or calls an external service.",
-    inputSchema: { goal: z.string().min(3).max(400), maxPriceUsd: z.number().min(0.001).max(10).optional() },
+    inputSchema: {
+      goal: z.string().min(3).max(400).describe("Plain-language description of the decision or evidence the agent needs."),
+      maxPriceUsd: z.number().min(0.001).max(10).optional().describe("Optional maximum price in USDC that the recommended paid tool may cost."),
+    },
+    outputSchema: toolOutputSchemas.recommendTool,
     annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
   }, async (args, extra) => {
     const requestHeaders = (extra as { requestInfo?: { headers?: Record<string, string | string[] | undefined> } })?.requestInfo?.headers ?? {};
@@ -320,56 +381,94 @@ export async function createMcpServer() {
   server.registerTool("merchant_snapshot", {
     title: "x402 Merchant Snapshot ($0.05 USDC)",
     description: "Score an x402 merchant's discovery, reliability, buyer signals, and observed Base USDC activity, then identify the largest revenue issue.",
-    inputSchema: { payTo: addressSchema, queries: z.array(z.string().min(2).max(100)).min(1).max(3), excludePayers: z.array(addressSchema).max(10).optional() },
+    inputSchema: {
+      payTo: addressSchema.describe("Merchant payment-recipient wallet address on Base."),
+      queries: z.array(z.string().min(2).max(100)).min(1).max(3).describe("One to three buyer search phrases used to evaluate marketplace visibility."),
+      excludePayers: z.array(addressSchema).max(10).optional().describe("Optional wallet addresses to exclude from external-buyer activity signals, such as self-test wallets."),
+    },
+    outputSchema: toolOutputSchemas.merchantSnapshot,
     annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: false, openWorldHint: true },
   }, paidTool("merchantSnapshot", async (args) => jsonResult(await createMerchantSnapshot(args as { payTo: string; queries: string[]; excludePayers?: string[] }))));
 
   server.registerTool("merchant_audit", {
     title: "x402 Merchant Audit ($0.25 USDC)",
     description: "Audit listings, semantic rank, competitor prices, payment reliability, buyer reach, and observed Base USDC activity. Repeated runs with the same wallet and queries return privacy-safe score history and change alerts.",
-    inputSchema: { payTo: addressSchema, queries: z.array(z.string().min(2).max(100)).min(1).max(5), excludePayers: z.array(addressSchema).max(10).optional() },
+    inputSchema: {
+      payTo: addressSchema.describe("Merchant payment-recipient wallet address on Base."),
+      queries: z.array(z.string().min(2).max(100)).min(1).max(5).describe("One to five buyer search phrases used for listing rank and competitor analysis."),
+      excludePayers: z.array(addressSchema).max(10).optional().describe("Optional wallet addresses to exclude from buyer and revenue signals, such as self-test wallets."),
+    },
+    outputSchema: toolOutputSchemas.merchantAudit,
     annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: false, openWorldHint: true },
   }, paidTool("merchantAudit", async (args) => jsonResult(await auditAndMonitorMerchant(args as { payTo: string; queries: string[]; excludePayers?: string[] }))));
 
   server.registerTool("treasury_preflight", {
     title: "Base Wallet Readiness ($0.02 USDC)",
     description: "Check Base wallet readiness, ETH and USDC funding, gas, chain intent, destination type, and common payment hazards before signing.",
-    inputSchema: { address: addressSchema, destinationAddress: addressSchema.optional(), plannedSpendUsdc: z.string().optional(), minGasReserveEth: z.string().optional(), expectedChainId: z.literal(8453).optional() },
+    inputSchema: {
+      address: addressSchema.describe("Base wallet address that will fund and sign the planned payment."),
+      destinationAddress: addressSchema.optional().describe("Optional expected recipient address to screen for destination hazards."),
+      plannedSpendUsdc: z.string().regex(/^[0-9]+(\.[0-9]{1,6})?$/).optional().describe("Planned USDC spend as a decimal string with up to six fractional digits."),
+      minGasReserveEth: z.string().regex(/^[0-9]+(\.[0-9]{1,18})?$/).optional().describe("Minimum ETH balance to preserve for Base gas after the payment."),
+      expectedChainId: z.literal(8453).optional().describe("Expected EVM chain ID; Anyway Possible currently supports Base mainnet 8453."),
+    },
+    outputSchema: toolOutputSchemas.treasuryPreflight,
     annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: false, openWorldHint: true },
   }, paidTool("treasuryPreflight", async (args) => jsonResult(await createTreasuryPreflight(args as { address: string; destinationAddress?: string; plannedSpendUsdc?: string; minGasReserveEth?: string; expectedChainId?: number }))));
 
   server.registerTool("payment_guard", {
     title: "Agent Payment Safety ($0.01 USDC)",
     description: "Use for agent payment safety: validate a live x402 challenge, price, Base network, USDC asset, recipient, funding, gas reserve, and destination immediately before signing.",
-    inputSchema: { payerAddress: addressSchema, serviceUrl: z.string().url(), maxAmountUsdc: z.string().regex(/^[0-9]+(\.[0-9]{1,6})?$/), expectedPayTo: addressSchema.optional(), minGasReserveEth: z.string().regex(/^[0-9]+(\.[0-9]{1,18})?$/).optional() },
+    inputSchema: {
+      payerAddress: addressSchema.describe("Base wallet address that would sign and fund the x402 payment."),
+      serviceUrl: z.string().url().describe("Public HTTPS endpoint whose live x402 payment challenge should be validated."),
+      maxAmountUsdc: z.string().regex(/^[0-9]+(\.[0-9]{1,6})?$/).describe("Maximum acceptable USDC charge as a decimal string."),
+      expectedPayTo: addressSchema.optional().describe("Optional recipient address that the payment challenge must match."),
+      minGasReserveEth: z.string().regex(/^[0-9]+(\.[0-9]{1,18})?$/).optional().describe("Optional minimum ETH balance to preserve for Base gas."),
+    },
+    outputSchema: toolOutputSchemas.paymentGuard,
     annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: false, openWorldHint: true },
   }, paidTool("paymentGuard", async (args) => jsonResult(await evaluatePaymentGuard(args as { payerAddress: string; serviceUrl: string; maxAmountUsdc: string; expectedPayTo?: string; minGasReserveEth?: string }))));
 
   server.registerTool("base_balance", {
     title: "Base Wallet Balance ($0.001 USDC)",
     description: "Read native ETH and Circle USDC balances plus current block height for a Base wallet.",
-    inputSchema: { address: addressSchema },
+    inputSchema: { address: addressSchema.describe("Base wallet address whose native ETH and Circle USDC balances should be read.") },
+    outputSchema: toolOutputSchemas.baseBalance,
     annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: false, openWorldHint: true },
   }, paidTool("baseBalance", async (args) => jsonResult(await readBaseBalance((args as { address: string }).address))));
 
   server.registerTool("check_url", {
     title: "URL Check ($0.001 USDC)",
     description: "Check one public URL's reachability, HTTP status, latency, redirects, and content type before using it.",
-    inputSchema: { url: z.string().url(), expectedStatus: z.number().int().min(100).max(599).optional() },
+    inputSchema: {
+      url: z.string().url().describe("Public HTTP or HTTPS URL to check."),
+      expectedStatus: z.number().int().min(100).max(599).optional().describe("Optional HTTP status code that the final response must match."),
+    },
+    outputSchema: toolOutputSchemas.urlCheck,
     annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: false, openWorldHint: true },
   }, paidTool("urlCheck", async (args) => jsonResult(await checkUrl(args as { url: string; expectedStatus?: number }))));
 
   server.registerTool("verify_web_evidence", {
     title: "Verify Web Evidence ($0.01 USDC)",
     description: "Verify one public URL and return timestamped status, redirects, metadata, content hash, and a receipt.",
-    inputSchema: { url: z.string().url(), expectedStatus: z.number().int().min(100).max(599).optional(), expectedText: z.string().max(500).optional() },
+    inputSchema: {
+      url: z.string().url().describe("Public HTTP or HTTPS URL whose current contents should be verified."),
+      expectedStatus: z.number().int().min(100).max(599).optional().describe("Optional HTTP status code that the final response must match."),
+      expectedText: z.string().max(500).optional().describe("Optional case-insensitive text that must appear in the bounded response body."),
+    },
+    outputSchema: toolOutputSchemas.verifyEvidence,
     annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: false, openWorldHint: true },
   }, paidTool("verifyEvidence", async (args) => jsonResult(await verifyUrl(args as { url: string; expectedStatus?: number; expectedText?: string }))));
 
   server.registerTool("batch_check_urls", {
     title: "Batch URL Check ($0.01 USDC)",
     description: "Check up to ten public URLs in one paid call with isolated results for partial failures.",
-    inputSchema: { urls: z.array(z.string().url()).min(1).max(10), expectedStatus: z.number().int().min(100).max(599).optional() },
+    inputSchema: {
+      urls: z.array(z.string().url()).min(1).max(10).describe("One to ten public HTTP or HTTPS URLs to check independently."),
+      expectedStatus: z.number().int().min(100).max(599).optional().describe("Optional HTTP status code expected from every URL."),
+    },
+    outputSchema: toolOutputSchemas.batchCheck,
     annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: false, openWorldHint: true },
   }, paidTool("batchCheck", async (args) => {
     const input = args as { urls: string[]; expectedStatus?: number };
