@@ -14,10 +14,10 @@ export const metadata: Metadata = {
   title: "Anyway Possible — Decision Infrastructure for Agents",
   description,
   alternates: { canonical: "/" },
-  icons: { icon: "/favicon.png" },
+  icons: { icon: [{ url: "/favicon.ico", sizes: "any" }, { url: "/favicon.png", type: "image/png" }] },
   robots: { index: true, follow: true },
-  openGraph: { title: "Anyway Possible — Confidence for the Decisions Agents Make", description, url: siteUrl, siteName: "Anyway Possible", type: "website", images: [{ url: "/og.webp", width: 1200, height: 630, alt: "Anyway Possible — Confidence for the decisions agents make" }] },
-  twitter: { card: "summary_large_image", title: "Anyway Possible — Confidence for the Decisions Agents Make", description, images: ["/og.webp"] },
+  openGraph: { title: "Anyway Possible — Confidence for the Decisions Agents Make", description, url: siteUrl, siteName: "Anyway Possible", type: "website", images: [{ url: "/og.jpg", width: 1200, height: 630, alt: "Anyway Possible — Confidence for the decisions agents make" }] },
+  twitter: { card: "summary_large_image", title: "Anyway Possible — Confidence for the Decisions Agents Make", description, images: ["/og.jpg"] },
 };
 
 const structuredData = {

@@ -27,6 +27,7 @@ test("public discovery metadata identifies the canonical service", async () => {
   assert.match(layout, /application\/ld\+json/);
   assert.match(layout, /"@type": "Organization"/);
   assert.match(layout, /"@type": "Service"/);
+  assert.match(layout, /favicon\.ico/);
   assert.match(layout, /favicon\.png/);
   assert.match(page, /Confidence for/);
   assert.match(page, /BrandMark/);
@@ -421,9 +422,11 @@ test("agent documentation describes the transaction-level decision", async () =>
 });
 
 test("typography is self-hosted and compatible with the browser security policy", async () => {
-  const [layout, config, sansFont, monoFont] = await Promise.all([
+  const [layout, config, styles, quietStyles, sansFont, monoFont] = await Promise.all([
     readFile(new URL("app/layout.tsx", root), "utf8"),
     readFile(new URL("next.config.ts", root), "utf8"),
+    readFile(new URL("app/globals.css", root), "utf8"),
+    readFile(new URL("app/quiet.css", root), "utf8"),
     stat(new URL("public/fonts/geist-sans/Geist-Variable.woff2", root)),
     stat(new URL("public/fonts/geist-mono/GeistMono-Variable.woff2", root)),
   ]);
@@ -432,13 +435,24 @@ test("typography is self-hosted and compatible with the browser security policy"
   assert.doesNotMatch(layout, /next\/font\/google/);
   assert.doesNotMatch(layout + config, /fonts\.(googleapis|gstatic)\.com/);
   assert.match(config, /font-src 'self' data:/);
+  assert.match(styles, /body[^}]+var\(--font-geist-sans\)/s);
+  assert.doesNotMatch(styles, /body[^}]+Arial/s);
+  assert.match(quietStyles, /quiet-code>footer b \{ color: var\(--q-ivory\)/);
+  assert.doesNotMatch(quietStyles, /font: 7px/);
   assert.ok(sansFont.size > 10_000, "Geist Sans font asset must be committed");
   assert.ok(monoFont.size > 10_000, "Geist Mono font asset must be committed");
 });
 
 test("social preview stays lightweight", async () => {
-  const preview = await stat(new URL("public/og.webp", root));
+  const [preview, favicon, layout] = await Promise.all([
+    stat(new URL("public/og.jpg", root)),
+    stat(new URL("public/favicon.ico", root)),
+    readFile(new URL("app/layout.tsx", root), "utf8"),
+  ]);
   assert.ok(preview.size < 150_000, "social preview should remain below 150 KB");
+  assert.ok(favicon.size > 1_000, "conventional favicon must be a real image");
+  assert.match(layout, /\/og\.jpg/);
+  assert.doesNotMatch(layout, /\/og\.webp/);
 });
 
 test("focused guides are indexable and explain x402 in plain English", async () => {
@@ -522,12 +536,16 @@ test("human surfaces are readable, accessible, and project-specific", async () =
 
 test("every human-readable route uses the canonical site chrome", async () => {
   const chrome = await readFile(new URL("app/site-chrome.tsx", root), "utf8");
-  const css = await readFile(new URL("app/quiet.css", root), "utf8");
+  const [css, globals] = await Promise.all([
+    readFile(new URL("app/quiet.css", root), "utf8"),
+    readFile(new URL("app/globals.css", root), "utf8"),
+  ]);
   const routeFiles = ["app/page.tsx", "app/docs/page.tsx", "app/examples/page.tsx", "app/guides/page.tsx", "app/guides/[slug]/page.tsx", "app/status/page.tsx"];
   assert.match(chrome, /Agent decision infrastructure/);
   assert.match(chrome, /SiteHeader/);
   assert.match(chrome, /SiteFooter/);
-  assert.match(css, /:root \{ --q-navy:/);
+  assert.match(globals, /--q-navy:#10162a/);
+  assert.match(css, /var\(--q-navy\)/);
   for (const routeFile of routeFiles) {
     const route = await readFile(new URL(routeFile, root), "utf8");
     assert.match(route, /<SiteHeader \/>/, `${routeFile} must use the shared header`);
