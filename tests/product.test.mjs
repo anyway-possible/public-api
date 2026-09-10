@@ -581,6 +581,7 @@ test("brand tokens stay used and small text stays legible", async () => {
   }
   assert.doesNotMatch(css, /font-size:\s*(?:[0-9]|1[01])px/);
   assert.doesNotMatch(css, /font:[^;]*\s(?:[0-9]|1[01])px(?:[\/\s]|;)/);
+  assert.match(css, /\.quiet-hero h1 \{[^}]*font-kerning: none;[^}]*font-variant-ligatures: none;[^}]*letter-spacing: -\.03em;/);
   const linkColor = css.match(/\.quiet-gloss a \{ color: (#[0-9a-f]{6})/i)?.[1];
   assert.ok(linkColor, "guide link must declare an explicit color");
   const luminance = (hex) => {
