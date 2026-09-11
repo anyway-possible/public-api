@@ -66,7 +66,12 @@ export const funnelMonitorSummary = sqliteTable("funnel_monitor_summary", {
   httpPaymentChallenges: integer("http_payment_challenges").notNull().default(0),
   mcpInitializations: integer("mcp_initializations").notNull().default(0),
   mcpToolLists: integer("mcp_tool_lists").notNull().default(0),
+  mcpToolCalls: integer("mcp_tool_calls").notNull().default(0),
+  mcpPaymentAttempts: integer("mcp_payment_attempts").notNull().default(0),
   mcpPaymentChallenges: integer("mcp_payment_challenges").notNull().default(0),
+  mcpPaymentFailures: integer("mcp_payment_failures").notNull().default(0),
+  mcpRegistryInspections: integer("mcp_registry_inspections").notNull().default(0),
+  mcpDetailStartedAt: text("mcp_detail_started_at"),
   mcpPaidCalls: integer("mcp_paid_calls").notNull().default(0),
   updatedAt: text("updated_at").notNull(),
 });
@@ -74,7 +79,12 @@ export const funnelMonitorSummary = sqliteTable("funnel_monitor_summary", {
 export const funnelMonitorClients = sqliteTable("funnel_monitor_clients", {
   clientType: text("client_type").primaryKey(),
   httpChallenges: integer("http_challenges").notNull().default(0),
+  mcpInitializations: integer("mcp_initializations").notNull().default(0),
+  mcpToolLists: integer("mcp_tool_lists").notNull().default(0),
+  mcpToolCalls: integer("mcp_tool_calls").notNull().default(0),
+  mcpPaymentAttempts: integer("mcp_payment_attempts").notNull().default(0),
   mcpChallenges: integer("mcp_challenges").notNull().default(0),
+  mcpPaymentFailures: integer("mcp_payment_failures").notNull().default(0),
   paidCalls: integer("paid_calls").notNull().default(0),
   updatedAt: text("updated_at").notNull(),
 });
@@ -82,6 +92,9 @@ export const funnelMonitorClients = sqliteTable("funnel_monitor_clients", {
 export const funnelMonitorEndpoints = sqliteTable("funnel_monitor_endpoints", {
   endpoint: text("endpoint").primaryKey(),
   paymentChallenges: integer("payment_challenges").notNull().default(0),
+  mcpToolCalls: integer("mcp_tool_calls").notNull().default(0),
+  mcpPaymentAttempts: integer("mcp_payment_attempts").notNull().default(0),
+  mcpPaymentFailures: integer("mcp_payment_failures").notNull().default(0),
   paidCalls: integer("paid_calls").notNull().default(0),
   revenueUsd: real("revenue_usd").notNull().default(0),
   updatedAt: text("updated_at").notNull(),

@@ -54,7 +54,7 @@ export default function PublicHome() {
       </section>
 
       <section className="quiet-api" id="api">
-        <div><p className="quiet-label">CONNECT ONCE</p><h2>Give your agent<br />the whole toolkit.</h2><p>Add one remote MCP endpoint. The agent can call <code>recommend_tool</code> for free, see the right paid tool and exact price, then receive structured evidence—without an account or SDK.</p><div className="quiet-endpoint"><span>MCP ENDPOINT</span><code>https://anywaypossible.com/api/mcp</code></div><nav><a href="/docs">Integration guide ↗</a><a href="/examples">Result examples ↗</a><a href="/openapi.json">OpenAPI ↗</a><a href="/llms.txt">Agent instructions ↗</a></nav></div>
+        <div><p className="quiet-label">CONNECT ONCE</p><h2>Give your agent<br />the whole toolkit.</h2><p>Add one remote MCP endpoint. The agent can call <code>recommend_tool</code> for free, see the right paid tool and exact price, then receive structured evidence—without an Anyway Possible account. Paid execution requires an x402-capable client and a funded Base USDC wallet.</p><div className="quiet-endpoint"><span>MCP ENDPOINT</span><code>https://anywaypossible.com/api/mcp</code></div><nav><a href="/docs#paid-client">Payment-capable setup ↗</a><a href="/examples">Result examples ↗</a><a href="/openapi.json">OpenAPI ↗</a><a href="/llms.txt">Agent instructions ↗</a></nav></div>
         <div className="quiet-code"><header><i /><i /><i /><span>agent-config.json</span></header><pre><code>{`{
   "mcpServers": {
     "anyway-possible": {

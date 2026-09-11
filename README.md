@@ -14,7 +14,7 @@ Remote MCP endpoint:
 https://anywaypossible.com/api/mcp
 ```
 
-Client-specific setup for Codex, Claude Code, Cursor, and any Streamable HTTP MCP client is published in the [agent integration guide](https://anywaypossible.com/docs#connect). Connecting and calling the free `recommend_tool` router does not require an account or payment. Paid tools require an x402-capable client with a funded Base USDC wallet; connecting the server alone does not grant spending authority.
+Client-specific setup for Codex, Claude Code, Cursor, and any Streamable HTTP MCP client is published in the [agent integration guide](https://anywaypossible.com/docs#connect). Connecting and calling the free `recommend_tool` router does not require an account or payment. Paid tools require an x402-capable client with a funded Base USDC wallet; connecting the server alone does not grant spending authority. A [payment-capable TypeScript example](https://anywaypossible.com/docs#paid-client) shows the complete discover, approve, pay, retry, and receive-result path.
 
 Machine-readable contracts:
 

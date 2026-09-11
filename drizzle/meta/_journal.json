@@ -36,6 +36,13 @@
       "when": 1788890835999,
       "tag": "0004_shallow_sway",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1789101702590,
+      "tag": "0005_dapper_mojo",
+      "breakpoints": true
     }
   ]
 }

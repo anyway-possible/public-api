@@ -116,6 +116,8 @@ test("commercial metrics require a private bearer token and exclude payer identi
   assert.match(dashboard, /mcpToolCalls/);
   assert.match(dashboard, /mcpPaymentAttempts/);
   assert.match(dashboard, /mcpPaymentFailures/);
+  assert.match(dashboard, /mcpClientFingerprints/);
+  assert.match(dashboard, /mcpEventsByClientType/);
   assert.match(dashboard, /mcpConversionRate/);
   assert.match(dashboard, /multiProductAgents/);
   assert.match(dashboard, /productPairs/);
@@ -298,6 +300,9 @@ test("agents get client-specific setup and downstream registry metadata", async 
     assert.match(docs, new RegExp(client));
   }
   assert.match(docs, /x402-capable wallet or client/);
+  assert.match(docs, /wrapMCPClientWithPayment/);
+  assert.match(docs, /payment-capable/);
+  assert.match(docs, /Never embed a private key/);
   assert.match(docs, /claude mcp add --transport http/);
   assert.match(readme, /docs#connect/);
   assert.match(serverCard, /com\.anywaypossible\/agent-utilities/);
@@ -359,7 +364,7 @@ test("analytics separates internal validation from customer revenue", async () =
   assert.match(analytics, /recordPaymentChallenge/);
   assert.match(analytics, /clientType: identity\.clientType/);
   assert.match(schema, /clientType: text\("client_type"\)/);
-  for (const type of ["internal_probe", "marketplace_probe", "crawler_monitor", "agent_sdk", "command_line", "browser", "programmatic", "unknown"]) {
+  for (const type of ["internal_probe", "marketplace_probe", "registry_inspector", "crawler_monitor", "agent_sdk", "command_line", "browser", "programmatic", "unknown"]) {
     assert.match(classification, new RegExp(type));
   }
   assert.doesNotMatch(schema, /user_agent/);
@@ -411,6 +416,7 @@ test("payment challenge abuse protection allows a burst, then resets cleanly", (
 test("secure monitor rollups avoid secrets and raw event scans", async () => {
   const schema = await readFile(new URL("db/schema.ts", root), "utf8");
   const migration = await readFile(new URL("drizzle/0002_wakeful_adam_destine.sql", root), "utf8");
+  const detailMigration = await readFile(new URL("drizzle/0005_dapper_mojo.sql", root), "utf8");
   for (const table of ["funnel_monitor_summary", "funnel_monitor_clients", "funnel_monitor_endpoints"]) {
     assert.match(schema, new RegExp(table));
     assert.match(migration, new RegExp(table));
@@ -418,7 +424,12 @@ test("secure monitor rollups avoid secrets and raw event scans", async () => {
   assert.match(migration, /CREATE TRIGGER/);
   assert.match(migration, /AFTER INSERT ON `events`/);
   assert.match(migration, /COUNT\(DISTINCT `agent_id`\)/);
+  assert.match(detailMigration, /mcp_registry_inspections/);
+  assert.match(detailMigration, /mcp_payment_attempts/);
+  assert.match(detailMigration, /mcp_payment_failures/);
+  assert.match(detailMigration, /funnel_monitor_mcp_detail_after_event/);
   assert.doesNotMatch(migration, /user_agent/);
+  assert.doesNotMatch(detailMigration, /user_agent/);
   assert.doesNotMatch(migration, /METRICS_TOKEN/);
 
   const db = new DatabaseSync(":memory:");
@@ -429,9 +440,16 @@ test("secure monitor rollups avoid secrets and raw event scans", async () => {
   insert.run("c", "payment_challenge", "/api/check", "crawler", "crawler_monitor", 0, "2026-09-03T03:00:00Z");
   insert.run("d", "mcp_initialize", "/api/mcp", "mcp", "agent_sdk", 0, "2026-09-03T04:00:00Z");
   db.exec(migration);
+  db.exec(detailMigration.replaceAll("--> statement-breakpoint", ""));
   insert.run("e", "payment_challenge", "/api/verify", "agent-2", "programmatic", 0, "2026-09-03T05:00:00Z");
+  insert.run("f", "mcp_tools_list", "/api/mcp", "registry", "registry_inspector", 0, "2026-09-03T06:00:00Z");
+  insert.run("g", "mcp_tool_call", "/api/mcp#recommend_tool", "registry", "registry_inspector", 0, "2026-09-03T06:01:00Z");
+  insert.run("h", "mcp_payment_attempt", "/api/mcp#treasury_preflight", "buyer", "agent_sdk", 0, "2026-09-03T07:00:00Z");
+  insert.run("i", "mcp_payment_failure", "/api/mcp#treasury_preflight", "buyer", "agent_sdk", 0, "2026-09-03T07:00:01Z");
   const summary = db.prepare("SELECT paid_calls, unique_agents, repeat_agents, http_payment_challenges, mcp_initializations FROM funnel_monitor_summary").get();
   assert.deepEqual({ ...summary }, { paid_calls: 2, unique_agents: 1, repeat_agents: 1, http_payment_challenges: 2, mcp_initializations: 1 });
+  const mcpDetail = db.prepare("SELECT mcp_tool_calls, mcp_payment_attempts, mcp_payment_failures, mcp_registry_inspections, mcp_detail_started_at FROM funnel_monitor_summary").get();
+  assert.deepEqual({ ...mcpDetail }, { mcp_tool_calls: 1, mcp_payment_attempts: 1, mcp_payment_failures: 1, mcp_registry_inspections: 2, mcp_detail_started_at: "2026-09-03T06:00:00Z" });
   const programmatic = db.prepare("SELECT http_challenges, paid_calls FROM funnel_monitor_clients WHERE client_type = 'programmatic'").get();
   assert.deepEqual({ ...programmatic }, { http_challenges: 1, paid_calls: 0 });
   const verify = db.prepare("SELECT payment_challenges, paid_calls FROM funnel_monitor_endpoints WHERE endpoint = '/api/verify'").get();

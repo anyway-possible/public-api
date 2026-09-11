@@ -21,6 +21,11 @@
 .reference-client-grid p { min-height:52px; color:#555d5a; font-size:var(--type-body); line-height:1.6; }
 .reference-client-grid pre { margin:24px 0 0; padding:17px; overflow:auto; border-radius:10px; background:#18213a; color:#ead298; font:12px/1.6 var(--font-geist-mono),monospace; }
 .reference-wallet-note { margin:20px 0 0; padding:18px 20px; border-left:4px solid #8a6222; background:rgba(244,240,230,.68); color:#444a49; font-size:var(--type-body); line-height:1.65; }
+.reference-paid-client { padding:clamp(65px,8vw,110px) clamp(24px,7vw,110px); background:#f4f0e6; }
+.reference-paid-client>header { max-width:880px; margin-bottom:32px; }
+.reference-paid-client h2 { margin:0 0 18px; font:400 clamp(42px,5.6vw,76px)/.95 Georgia,serif; letter-spacing:-.055em; }
+.reference-paid-client>header>p:last-child { margin:0; color:#555d5a; font-size:17px; line-height:1.7; }
+.reference-paid-client>.reference-code { max-width:1120px; }
 .reference-grid { padding:clamp(65px,8vw,110px) clamp(24px,7vw,110px); display:grid; gap:24px; }
 .reference-intro { max-width:940px; margin-bottom:24px; }
 .reference-intro h2,.reference-card h2 { font-family:Georgia,serif; font-weight:400; letter-spacing:-.04em; }

@@ -32,10 +32,12 @@ export type DashboardSnapshot = {
   mcpPaymentChallenges: number;
   mcpPaymentFailures: number;
   mcpPaidCalls: number;
+  mcpClientFingerprints: number;
   mcpUniqueAgents: number;
   mcpConversionRate: number;
   mcpChallengesByTool: Record<string, number>;
   mcpToolCallsByTool: Record<string, number>;
+  mcpEventsByClientType: Record<string, { initializations: number; toolLists: number; toolCalls: number; paymentAttempts: number; paymentChallenges: number; paymentFailures: number; paidCalls: number }>;
   repeatAgents: number;
   multiDayAgents: number;
   repeatRate: number;
@@ -57,7 +59,7 @@ function lastUtcDays(count: number) {
 }
 
 export async function getDashboardSnapshot(): Promise<DashboardSnapshot> {
-  const empty: DashboardSnapshot = { paidCalls: 0, uniqueAgents: 0, grossRevenue: 0, testCalls: 0, testVolumeUsd: 0, paymentChallenges: 0, conversionRate: 0, attributedPaymentChallenges: 0, legacyUnattributedChallenges: 0, challengeAttributionStartedAt: null, challengesByClientType: {}, paidCallsByClientType: {}, buyerLikeChallenges: 0, noiseChallenges: 0, callsByEndpoint: {}, revenueByEndpoint: {}, challengesByEndpoint: {}, mcpInitializations: 0, mcpToolLists: 0, mcpToolCalls: 0, mcpPaymentAttempts: 0, mcpPaymentChallenges: 0, mcpPaymentFailures: 0, mcpPaidCalls: 0, mcpUniqueAgents: 0, mcpConversionRate: 0, mcpChallengesByTool: {}, mcpToolCallsByTool: {}, repeatAgents: 0, multiDayAgents: 0, repeatRate: 0, multiProductAgents: 0, productPairs: [], lastPaidAt: null, reliability: { successfulPaidCalls: 0, serviceErrors: 0, errorRate: 0, averageLatencyMs: null, p95LatencyMs: null, generatedAt: new Date().toISOString() }, operatingCost: 0, openDecisions: 0, openIncidents: 0, recentSettlements: [], dailyActivity: [] };
+  const empty: DashboardSnapshot = { paidCalls: 0, uniqueAgents: 0, grossRevenue: 0, testCalls: 0, testVolumeUsd: 0, paymentChallenges: 0, conversionRate: 0, attributedPaymentChallenges: 0, legacyUnattributedChallenges: 0, challengeAttributionStartedAt: null, challengesByClientType: {}, paidCallsByClientType: {}, buyerLikeChallenges: 0, noiseChallenges: 0, callsByEndpoint: {}, revenueByEndpoint: {}, challengesByEndpoint: {}, mcpInitializations: 0, mcpToolLists: 0, mcpToolCalls: 0, mcpPaymentAttempts: 0, mcpPaymentChallenges: 0, mcpPaymentFailures: 0, mcpPaidCalls: 0, mcpClientFingerprints: 0, mcpUniqueAgents: 0, mcpConversionRate: 0, mcpChallengesByTool: {}, mcpToolCallsByTool: {}, mcpEventsByClientType: {}, repeatAgents: 0, multiDayAgents: 0, repeatRate: 0, multiProductAgents: 0, productPairs: [], lastPaidAt: null, reliability: { successfulPaidCalls: 0, serviceErrors: 0, errorRate: 0, averageLatencyMs: null, p95LatencyMs: null, generatedAt: new Date().toISOString() }, operatingCost: 0, openDecisions: 0, openIncidents: 0, recentSettlements: [], dailyActivity: [] };
   try {
     const db = getDb();
     const [eventRows, expenseRows, decisionRows, incidentRows, recentSettlements] = await Promise.all([
@@ -95,6 +97,20 @@ export async function getDashboardSnapshot(): Promise<DashboardSnapshot> {
       counts[tool] = (counts[tool] ?? 0) + 1;
       return counts;
     }, {});
+    const mcpEventsByClientType: DashboardSnapshot["mcpEventsByClientType"] = {};
+    const addMcpClientEvent = (clientType: string | null, field: keyof DashboardSnapshot["mcpEventsByClientType"][string]) => {
+      const key = clientType ?? "unknown";
+      const current = mcpEventsByClientType[key] ?? { initializations: 0, toolLists: 0, toolCalls: 0, paymentAttempts: 0, paymentChallenges: 0, paymentFailures: 0, paidCalls: 0 };
+      current[field] += 1;
+      mcpEventsByClientType[key] = current;
+    };
+    for (const row of mcpInitializations) addMcpClientEvent(row.clientType, "initializations");
+    for (const row of mcpToolLists) addMcpClientEvent(row.clientType, "toolLists");
+    for (const row of mcpToolCalls) addMcpClientEvent(row.clientType, "toolCalls");
+    for (const row of mcpPaymentAttempts) addMcpClientEvent(row.clientType, "paymentAttempts");
+    for (const row of mcpChallengeEvents) addMcpClientEvent(row.clientType, "paymentChallenges");
+    for (const row of mcpPaymentFailures) addMcpClientEvent(row.clientType, "paymentFailures");
+    for (const row of mcpPaidEvents) addMcpClientEvent(row.clientType, "paidCalls");
     const paymentChallenges = challengeEvents.length;
     const attributedChallengeEvents = challengeEvents.filter((row) => Boolean(row.clientType));
     const challengesByClientType = attributedChallengeEvents.reduce<Record<string, number>>((counts, row) => {
@@ -189,10 +205,12 @@ export async function getDashboardSnapshot(): Promise<DashboardSnapshot> {
       mcpPaymentChallenges: mcpChallengeEvents.length,
       mcpPaymentFailures: mcpPaymentFailures.length,
       mcpPaidCalls: mcpPaidEvents.length,
+      mcpClientFingerprints: mcpAgentIds.size,
       mcpUniqueAgents: mcpAgentIds.size,
       mcpConversionRate: mcpChallengeEvents.length ? Math.min(100, (mcpPaidEvents.length / mcpChallengeEvents.length) * 100) : 0,
       mcpChallengesByTool,
       mcpToolCallsByTool,
+      mcpEventsByClientType,
       repeatAgents,
       multiDayAgents,
       repeatRate: uniqueAgents ? (repeatAgents / uniqueAgents) * 100 : 0,

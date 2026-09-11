@@ -11,6 +11,40 @@ export const metadata: Metadata = {
 export default function DocsPage() {
   const endpoint = `${SITE_URL}/api/mcp`;
   const sharedConfig = { mcpServers: { "anyway-possible": { url: endpoint } } };
+  const paidClientExample = `import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
+import { x402Client } from "@x402/core/client";
+import { ExactEvmScheme } from "@x402/evm/exact/client";
+import { wrapMCPClientWithPayment } from "@x402/mcp";
+
+// Supply walletAccount through your secure signer. Never embed a private key.
+const mcp = new Client({ name: "buyer-agent", version: "1.0.0" });
+const payments = new x402Client().register(
+  "eip155:8453",
+  new ExactEvmScheme(walletAccount),
+);
+const client = wrapMCPClientWithPayment(mcp, payments, {
+  autoPayment: true,
+  onPaymentRequested: async ({ paymentRequired }) => {
+    const quote = paymentRequired.accepts[0];
+    if (!quote) return false;
+    return quote.network === "eip155:8453" && Number(quote.amount) <= 20_000;
+  },
+});
+
+await client.connect(
+  new StreamableHTTPClientTransport(new URL("${endpoint}")),
+);
+await client.callTool("recommend_tool", {
+  goal: "Is this Base wallet ready to pay 0.05 USDC?",
+  maxPriceUsd: 0.02,
+});
+const result = await client.callTool("treasury_preflight", {
+  address: walletAccount.address,
+  plannedSpendUsdc: "0.05",
+  expectedChainId: 8453,
+});
+console.log(result.content, result.paymentResponse?.transaction);`;
 
   return <main className="reference-shell">
     <SiteHeader />
@@ -52,6 +86,15 @@ export default function DocsPage() {
         </article>
       </div>
       <p className="reference-wallet-note"><strong>Important:</strong> Connecting exposes the tools, but it does not give the agent spending authority. Paid execution only works when its client can answer an x402 payment challenge with a funded Base USDC wallet.</p>
+    </section>
+    <section className="reference-paid-client" id="paid-client">
+      <header>
+        <p className="reference-eyebrow">DISCOVERY IS FREE · PAYMENT IS EXPLICIT</p>
+        <h2>Make the client payment-capable.</h2>
+        <p>A normal MCP client can initialize, list tools, and call the free recommender. To run a paid tool, wrap the MCP client with <code>@x402/mcp</code>, provide a secure Base signer, and enforce a spending policy before automatic payment is allowed.</p>
+      </header>
+      <div className="reference-code"><span>COMPLETE MCP PURCHASE FLOW · TYPESCRIPT</span><pre><code>{paidClientExample}</code></pre></div>
+      <p className="reference-wallet-note"><strong>Safety:</strong> This example approves only Base mainnet quotes up to 0.02 USDC. Keep signing material in a wallet or secret manager, fund the wallet with Base USDC, and tighten the policy for your environment.</p>
     </section>
     <section className="reference-grid" id="tools">
       <div className="reference-intro"><h2>Start free. Pay only for evidence.</h2><p>Describe the decision to <code>recommend_tool</code>. It returns the best tool, exact price, required inputs, alternatives, and next step without triggering payment. Every paid request below is generated from the same product catalog as the machine-readable OpenAPI and JSON catalog.</p><div className="reference-code"><span>FREE MCP ROUTER</span><pre><code>{JSON.stringify({ tool: "recommend_tool", arguments: { goal: "Is this x402 payment safe to sign?", maxPriceUsd: 0.02 } }, null, 2)}</code></pre></div><div className="reference-code"><span>MCP CONFIGURATION</span><pre><code>{JSON.stringify(sharedConfig, null, 2)}</code></pre></div></div>

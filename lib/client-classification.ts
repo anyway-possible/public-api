@@ -1,6 +1,7 @@
 export type ClientType =
   | "internal_probe"
   | "marketplace_probe"
+  | "registry_inspector"
   | "crawler_monitor"
   | "agent_sdk"
   | "command_line"
@@ -17,6 +18,7 @@ export function classifyUserAgent(
 
   if (flags.selfTest || flags.releaseProbe || flags.emptyNodeProbe) return "internal_probe";
   if (normalized.includes("coinbasebazaardiscovery/")) return "marketplace_probe";
+  if (/smithery|glama|mcp[- /]?registry|registry\.modelcontextprotocol\.io|model context protocol registry/.test(normalized)) return "registry_inspector";
   if (/bot\b|crawler|spider|preview|uptime|monitor|healthcheck|statuscake|pingdom|headless/.test(normalized)) return "crawler_monitor";
   if (/modelcontextprotocol|\bmcp\b|langchain|crewai|agentkit|autogpt|openai|anthropic|coinbase agent|eliza/.test(normalized)) return "agent_sdk";
   if (/curl\/|wget\/|httpie|postmanruntime|insomnia/.test(normalized)) return "command_line";
