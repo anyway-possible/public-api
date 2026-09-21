@@ -9,6 +9,12 @@ const blockedHosts = new Set([
   "metadata.google.internal",
 ]);
 
+const ownServiceHosts = new Set([
+  "anywaypossible.com",
+  "www.anywaypossible.com",
+  "anyway-possible-api.jchromem.chatgpt.site",
+]);
+
 function isPrivateIpv4(hostname: string) {
   const parts = hostname.split(".").map(Number);
   if (parts.length !== 4 || parts.some((part) => !Number.isInteger(part) || part < 0 || part > 255)) return false;
@@ -87,6 +93,9 @@ export function parsePublicUrl(value: unknown) {
   if (url.username || url.password) throw new Error("URLs with embedded credentials are not supported");
   if (blockedHosts.has(hostname) || hostname.endsWith(".local") || hostname.endsWith(".internal") || isNonPublicIp(hostname)) {
     throw new Error("private and local network targets are not supported");
+  }
+  if (ownServiceHosts.has(hostname)) {
+    throw new Error("Anyway Possible cannot inspect its own service origin; use /api/health or the external status monitor instead");
   }
   return url;
 }

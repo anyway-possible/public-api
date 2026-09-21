@@ -1,8 +1,8 @@
 import { createX402Server, type X402Server } from "@coinbase/cdp-sdk/x402";
 import { declareDiscoveryExtension } from "@x402/extensions/bazaar";
-import { withX402FromHTTPServer } from "@x402/next";
 import { env } from "cloudflare:workers";
 import { NextRequest, NextResponse } from "next/server";
+import { withEdgeX402FromHTTPServer } from "../../../lib/x402-edge-next";
 import { getDb } from "../../../db";
 import { events } from "../../../db/schema";
 import { identifyAgent, protectPaymentChallenge, recordServiceError } from "../../../lib/analytics";
@@ -47,5 +47,5 @@ async function paidHandler(request: NextRequest) {
   } catch (error) { await recordServiceError(request, "/api/payment-guard", 502, started); return NextResponse.json({ error: error instanceof Error ? error.message : "Payment guard failed." }, { status: 502 }); }
 }
 
-export async function POST(request: NextRequest) { try { const response = await withX402FromHTTPServer(paidHandler, await getServer())(request); return await protectPaymentChallenge(request, "/api/payment-guard", response); } catch { await recordServiceError(request, "/api/payment-guard", 503); return NextResponse.json({ error: "Payment service is temporarily unavailable." }, { status: 503 }); } }
+export async function POST(request: NextRequest) { try { const response = await withEdgeX402FromHTTPServer(paidHandler, await getServer())(request); return await protectPaymentChallenge(request, "/api/payment-guard", response); } catch { await recordServiceError(request, "/api/payment-guard", 503); return NextResponse.json({ error: "Payment service is temporarily unavailable." }, { status: 503 }); } }
 export async function GET() { return NextResponse.json({ service: "x402 Payment Guard — Verify Before Signing", price: "$0.01 USDC", network: "Base", method: "POST", request: { payerAddress: "0x1111111111111111111111111111111111111111", serviceUrl: "https://example.com/api/report", maxAmountUsdc: "0.10", expectedPayTo: "0x2222222222222222222222222222222222222222", minGasReserveEth: "0" }, returns: ["safe-to-sign decision", "live x402 contract validation", "price and recipient checks", "buyer funding", "destination hazards"] }); }

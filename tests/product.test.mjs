@@ -341,6 +341,38 @@ test("one-cent entry check is discoverable and uses Base USDC", async () => {
   assert.match(route, /amountUsd: 0\.001/);
 });
 
+test("URL products reject self-origin targets before payment", async () => {
+  const [verification, check, batch, verify] = await Promise.all([
+    readFile(new URL("lib/verification.ts", root), "utf8"),
+    readFile(new URL("app/api/check/route.ts", root), "utf8"),
+    readFile(new URL("app/api/batch/route.ts", root), "utf8"),
+    readFile(new URL("app/api/verify/route.ts", root), "utf8"),
+  ]);
+  for (const hostname of ["anywaypossible.com", "www.anywaypossible.com", "anyway-possible-api.jchromem.chatgpt.site"]) {
+    assert.match(verification, new RegExp(hostname.replaceAll(".", "\\.")));
+  }
+  assert.match(verification, /cannot inspect its own service origin/);
+  for (const route of [check, batch, verify]) {
+    assert.match(route, /request\.clone\(\)\.json/);
+    assert.match(route, /parsePublicUrl/);
+    assert.match(route, /request\.clone\(\)\.json[\s\S]+parsePublicUrl[\s\S]+withEdgeX402FromHTTPServer\(paidHandler/);
+  }
+});
+
+test("HTTP payment routes use Edge-safe Bazaar validation", async () => {
+  const adapter = await readFile(new URL("lib/x402-edge-next.ts", root), "utf8");
+  assert.match(adapter, /validateDiscoveryExtensionSpec/);
+  assert.doesNotMatch(adapter, /validateDiscoveryExtension\(/);
+  assert.doesNotMatch(adapter, /new Function|eval\(/);
+  assert.match(adapter, /processHTTPRequest/);
+  assert.match(adapter, /processSettlement/);
+  for (const routeName of ["payment-guard", "merchant-snapshot", "merchant-audit", "treasury", "base-balance", "check", "batch", "verify"]) {
+    const route = await readFile(new URL(`app/api/${routeName}/route.ts`, root), "utf8");
+    assert.match(route, /withEdgeX402FromHTTPServer/);
+    assert.doesNotMatch(route, /withX402FromHTTPServer/);
+  }
+});
+
 test("batch endpoint checks up to ten URLs for one cent", async () => {
   const route = await readFile(new URL("app/api/batch/route.ts", root), "utf8");
   assert.match(route, /\$0\.01/);
@@ -637,7 +669,7 @@ test("paid verifier is bound to the authorized wallet and Base mainnet", async (
   assert.match(route, /0xe5690D37805107C56f6195E65A262b234E0E5e75/);
   assert.match(route, /eip155:8453/);
   assert.match(route, /\$0\.01/);
-  assert.match(route, /withX402FromHTTPServer/);
+  assert.match(route, /withEdgeX402FromHTTPServer/);
   assert.match(route, /serviceName: "Anyway Possible Web Evidence"/);
   assert.match(route, /\.\.\.declareDiscoveryExtension/);
 });

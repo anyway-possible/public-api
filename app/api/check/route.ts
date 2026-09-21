@@ -1,12 +1,12 @@
 import { createX402Server, type X402Server } from "@coinbase/cdp-sdk/x402";
 import { declareDiscoveryExtension } from "@x402/extensions/bazaar";
-import { withX402FromHTTPServer } from "@x402/next";
 import { env } from "cloudflare:workers";
 import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "../../../db";
 import { events } from "../../../db/schema";
 import { identifyAgent, protectPaymentChallenge, recordServiceError } from "../../../lib/analytics";
-import { checkUrl } from "../../../lib/verification";
+import { checkUrl, parsePublicUrl } from "../../../lib/verification";
+import { withEdgeX402FromHTTPServer } from "../../../lib/x402-edge-next";
 
 export const runtime = "edge";
 export const dynamic = "force-dynamic";
@@ -118,7 +118,14 @@ async function paidHandler(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const response = await withX402FromHTTPServer(paidHandler, await getServer())(request);
+    try {
+      const input = await request.clone().json() as { url?: unknown };
+      parsePublicUrl(input.url);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Request body must contain a supported public URL.";
+      return NextResponse.json({ error: message }, { status: 400 });
+    }
+    const response = await withEdgeX402FromHTTPServer(paidHandler, await getServer())(request);
     return await protectPaymentChallenge(request, "/api/check", response);
   } catch (error) {
     console.error("x402 initialization failed", error);

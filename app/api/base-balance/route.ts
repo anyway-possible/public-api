@@ -1,8 +1,8 @@
 import { createX402Server, type X402Server } from "@coinbase/cdp-sdk/x402";
 import { declareDiscoveryExtension } from "@x402/extensions/bazaar";
-import { withX402FromHTTPServer } from "@x402/next";
 import { env } from "cloudflare:workers";
 import { NextRequest, NextResponse } from "next/server";
+import { withEdgeX402FromHTTPServer } from "../../../lib/x402-edge-next";
 import { getDb } from "../../../db";
 import { events } from "../../../db/schema";
 import { identifyAgent, protectPaymentChallenge, recordServiceError } from "../../../lib/analytics";
@@ -86,7 +86,7 @@ async function paidHandler(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const response = await withX402FromHTTPServer(paidHandler, await getServer())(request);
+    const response = await withEdgeX402FromHTTPServer(paidHandler, await getServer())(request);
     return await protectPaymentChallenge(request, "/api/base-balance", response);
   } catch (error) {
     console.error("x402 initialization failed", error);
