@@ -61,6 +61,8 @@ test("external production monitor is public, independent, and excluded from adop
   assert.match(workflow, /permissions:\s+contents: read/);
   for (const path of ["/status", "/api/health", "/api/trust", "/openapi.json", "/llms.txt", "/api/mcp", "/api/check"]) assert.match(monitor, new RegExp(path.replaceAll("/", "\\/")));
   assert.match(monitor, /"x-awp-self-test": "1"/);
+  assert.match(monitor, /url: "https:\/\/example\.com"/);
+  assert.doesNotMatch(monitor, /url: "https:\/\/anywaypossible\.com/);
   assert.match(monitor, /assert\.equal\(result\.response\.status, 402\)/);
   assert.doesNotMatch(monitor, /authorization|payment-signature|private.?key|seed.?phrase/i);
   assert.match(status, /Independent availability checks/);

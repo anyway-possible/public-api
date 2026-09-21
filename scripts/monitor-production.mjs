@@ -83,7 +83,7 @@ await check("x402 payment boundary", async () => {
   const result = await request("/api/check", {
     method: "POST",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify({ url: "https://anywaypossible.com/api/health" }),
+    body: JSON.stringify({ url: "https://example.com" }),
   });
   assert.equal(result.response.status, 402);
   assert.ok(result.response.headers.get("payment-required"));
