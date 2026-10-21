@@ -14,7 +14,7 @@ export async function GET() {
     definitions: {
       successfulPaidCalls: "Completed non-test paid tool calls recorded by the service.",
       recordedServiceErrors: "Application-level service errors recorded while handling tool requests.",
-      observedSuccessRate: "Successful paid calls divided by successful paid calls plus recorded service errors. This is not an independently measured uptime SLA.",
+      observedSuccessRate: "Deprecated compatibility field. Paid completions and service errors cover different traffic populations, so this percentage must not be interpreted as reliability, conversion, or uptime.",
     },
     externalMonitoring: {
       provider: "GitHub Actions",

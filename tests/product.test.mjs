@@ -73,15 +73,20 @@ test("external production monitor is public, independent, and excluded from adop
 });
 
 test("public trust evidence is aggregate, defined, and indexed for bounded queries", async () => {
-  const [route, query, schema, migration, instructions] = await Promise.all([
+  const [route, status, query, schema, migration, instructions] = await Promise.all([
     readFile(new URL("app/api/trust/route.ts", root), "utf8"),
+    readFile(new URL("app/status/page.tsx", root), "utf8"),
     readFile(new URL("db/public-trust.ts", root), "utf8"),
     readFile(new URL("db/schema.ts", root), "utf8"),
     readFile(new URL("drizzle/0004_shallow_sway.sql", root), "utf8"),
     Promise.resolve(buildLlmsText()),
   ]);
   assert.match(route, /observedSuccessRate/);
-  assert.match(route, /not an independently measured uptime SLA/i);
+  assert.match(route, /Deprecated compatibility field/);
+  assert.match(route, /must not be interpreted as reliability, conversion, or uptime/i);
+  assert.match(status, /30-DAY RECORDED EVENTS/);
+  assert.match(status, /different traffic populations/);
+  assert.doesNotMatch(status, /observedSuccessRate/);
   assert.match(route, /No wallet addresses, agent identifiers, transaction hashes, revenue, or request contents/);
   assert.match(query, /kind IN \('paid_call', 'service_error'\)/);
   assert.match(query, /'-30 days'/);
