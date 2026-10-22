@@ -79,6 +79,17 @@ await check("MCP initialize handshake", async () => {
   return result;
 });
 
+await check("MCP unsupported methods terminate cleanly", async () => {
+  let maxLatencyMs = 0;
+  for (const path of ["/api/mcp", "/api/registry-mcp"]) {
+    const result = await request(path, { method: "GET" });
+    assert.equal(result.response.status, 405);
+    assert.equal(result.response.headers.get("allow"), "POST");
+    maxLatencyMs = Math.max(maxLatencyMs, result.latencyMs);
+  }
+  return { latencyMs: maxLatencyMs };
+});
+
 await check("x402 payment boundary", async () => {
   const result = await request("/api/check", {
     method: "POST",

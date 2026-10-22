@@ -13,7 +13,8 @@ export async function GET() {
     evidence: snapshot,
     definitions: {
       successfulPaidCalls: "Completed non-test paid tool calls recorded by the service.",
-      recordedServiceErrors: "Application-level service errors recorded while handling tool requests.",
+      recordedServiceErrors: "Application execution failures recorded after payment handling. Legacy x402 protocol failures are excluded.",
+      recordedPaymentProtocolErrors: "Malformed or failed x402 protocol handling, tracked separately from product execution reliability.",
       observedSuccessRate: "Deprecated compatibility field. Paid completions and service errors cover different traffic populations, so this percentage must not be interpreted as reliability, conversion, or uptime.",
     },
     externalMonitoring: {

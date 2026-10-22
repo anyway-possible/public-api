@@ -129,12 +129,12 @@ export async function protectPaymentChallenge(request: NextRequest, endpoint: st
   return withRateLimitHeaders(response, bucket.remaining, bucket.resetsAt);
 }
 
-export async function recordServiceError(request: NextRequest, endpoint: string, statusCode: number, startedAt?: number) {
+async function recordOperationalError(request: NextRequest, endpoint: string, statusCode: number, kind: "service_error" | "payment_protocol_error", startedAt?: number) {
   try {
     const identity = await identifyAgent(request);
     await getDb().insert(events).values({
       eventId: crypto.randomUUID(),
-      kind: identity.isSelfTest ? "test_service_error" : "service_error",
+      kind: identity.isSelfTest ? `test_${kind}` : kind,
       endpoint,
       agentId: identity.agentId,
       clientType: identity.clientType,
@@ -148,4 +148,14 @@ export async function recordServiceError(request: NextRequest, endpoint: string,
   } catch {
     // Product responses remain available if reliability telemetry is unavailable.
   }
+}
+
+/** Records a failure after payment handling reached product execution. */
+export async function recordServiceError(request: NextRequest, endpoint: string, statusCode: number, startedAt?: number) {
+  return recordOperationalError(request, endpoint, statusCode, "service_error", startedAt);
+}
+
+/** Records malformed or failed x402 protocol handling separately from product reliability. */
+export async function recordPaymentProtocolError(request: NextRequest, endpoint: string, statusCode = 503) {
+  return recordOperationalError(request, endpoint, statusCode, "payment_protocol_error");
 }

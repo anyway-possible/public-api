@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { withEdgeX402FromHTTPServer } from "../../../lib/x402-edge-next";
 import { getDb } from "../../../db";
 import { events } from "../../../db/schema";
-import { identifyAgent, protectPaymentChallenge, recordServiceError } from "../../../lib/analytics";
+import { identifyAgent, protectPaymentChallenge, recordPaymentProtocolError, recordServiceError } from "../../../lib/analytics";
 import { createMerchantSnapshot } from "../../../lib/merchant-snapshot";
 
 export const runtime = "edge";
@@ -64,7 +64,7 @@ async function paidHandler(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try { const response = await withEdgeX402FromHTTPServer(paidHandler, await getServer())(request); return await protectPaymentChallenge(request, "/api/merchant-snapshot", response); }
-  catch (error) { console.error("x402 initialization failed", error); await recordServiceError(request, "/api/merchant-snapshot", 503); return NextResponse.json({ error: "Payment service is temporarily unavailable." }, { status: 503 }); }
+  catch (error) { console.error("x402 initialization failed", error); await recordPaymentProtocolError(request, "/api/merchant-snapshot"); return NextResponse.json({ error: "Payment service is temporarily unavailable." }, { status: 503 }); }
 }
 
 export async function GET() { return NextResponse.json({ service: "Why Is My x402 API Not Selling? — Revenue Snapshot", useWhen: "An x402 seller needs to diagnose weak discovery, demand, or revenue before purchasing a full audit.", price: "$0.05 USDC", network: "Base (eip155:8453)", method: "POST", request: { payTo: PAY_TO, queries: ["why is my x402 API not selling", "increase x402 revenue", "x402 seller intelligence"], excludePayers: ["0x44D2DC46f987D1f2fa55e281934aDDd193a1A377"] }, returns: ["merchant score and grade", "Bazaar inventory", "semantic visibility", "buyer and USDC signals", "biggest revenue issue", "$0.25 full-audit upgrade"] }); }

@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { withEdgeX402FromHTTPServer } from "../../../lib/x402-edge-next";
 import { getDb } from "../../../db";
 import { events } from "../../../db/schema";
-import { identifyAgent, protectPaymentChallenge, recordServiceError } from "../../../lib/analytics";
+import { identifyAgent, protectPaymentChallenge, recordPaymentProtocolError } from "../../../lib/analytics";
 import { checkUrl, parsePublicUrl } from "../../../lib/verification";
 
 export const runtime = "edge";
@@ -119,7 +119,7 @@ export async function POST(request: NextRequest) {
     return await protectPaymentChallenge(request, "/api/batch", response);
   } catch (error) {
     console.error("x402 initialization failed", error);
-    await recordServiceError(request, "/api/batch", 503);
+    await recordPaymentProtocolError(request, "/api/batch");
     return NextResponse.json({ error: "Payment service is temporarily unavailable." }, { status: 503 });
   }
 }

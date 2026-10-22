@@ -4,7 +4,7 @@ import { env } from "cloudflare:workers";
 import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "../../../db";
 import { events } from "../../../db/schema";
-import { identifyAgent, protectPaymentChallenge, recordServiceError } from "../../../lib/analytics";
+import { identifyAgent, protectPaymentChallenge, recordPaymentProtocolError, recordServiceError } from "../../../lib/analytics";
 import { checkUrl, parsePublicUrl } from "../../../lib/verification";
 import { withEdgeX402FromHTTPServer } from "../../../lib/x402-edge-next";
 
@@ -129,7 +129,7 @@ export async function POST(request: NextRequest) {
     return await protectPaymentChallenge(request, "/api/check", response);
   } catch (error) {
     console.error("x402 initialization failed", error);
-    await recordServiceError(request, "/api/check", 503);
+    await recordPaymentProtocolError(request, "/api/check");
     return NextResponse.json({ error: "Payment service is temporarily unavailable." }, { status: 503 });
   }
 }

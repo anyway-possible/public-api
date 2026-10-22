@@ -64,6 +64,8 @@ test("external production monitor is public, independent, and excluded from adop
   assert.match(monitor, /url: "https:\/\/example\.com"/);
   assert.doesNotMatch(monitor, /url: "https:\/\/anywaypossible\.com/);
   assert.match(monitor, /assert\.equal\(result\.response\.status, 402\)/);
+  assert.match(monitor, /MCP unsupported methods terminate cleanly/);
+  assert.match(monitor, /assert\.equal\(result\.response\.status, 405\)/);
   assert.doesNotMatch(monitor, /authorization|payment-signature|private.?key|seed.?phrase/i);
   assert.match(status, /Independent availability checks/);
   assert.match(status, /Every 15 minutes/);
@@ -84,11 +86,13 @@ test("public trust evidence is aggregate, defined, and indexed for bounded queri
   assert.match(route, /observedSuccessRate/);
   assert.match(route, /Deprecated compatibility field/);
   assert.match(route, /must not be interpreted as reliability, conversion, or uptime/i);
+  assert.match(route, /recordedPaymentProtocolErrors/);
   assert.match(status, /30-DAY RECORDED EVENTS/);
-  assert.match(status, /different traffic populations/);
+  assert.match(status, /post-payment product execution failures/);
   assert.doesNotMatch(status, /observedSuccessRate/);
   assert.match(route, /No wallet addresses, agent identifiers, transaction hashes, revenue, or request contents/);
-  assert.match(query, /kind IN \('paid_call', 'service_error'\)/);
+  assert.match(query, /kind IN \('paid_call', 'service_error', 'payment_protocol_error'\)/);
+  assert.match(query, /status_code = 503/);
   assert.match(query, /'-30 days'/);
   assert.match(schema, /idx_events_kind_occurred_at/);
   assert.match(migration, /idx_events_kind_occurred_at/);
@@ -96,7 +100,7 @@ test("public trust evidence is aggregate, defined, and indexed for bounded queri
   assert.match(instructions, /\/api\/trust/);
   assert.doesNotMatch(route + query, /agent_id|transaction_hash|amount_usd|revenue_usd/);
   const trustDb = new DatabaseSync(":memory:");
-  trustDb.exec("CREATE TABLE events (id INTEGER PRIMARY KEY, kind TEXT NOT NULL, occurred_at TEXT NOT NULL)");
+  trustDb.exec("CREATE TABLE events (id INTEGER PRIMARY KEY, kind TEXT NOT NULL, status_code INTEGER, occurred_at TEXT NOT NULL)");
   trustDb.exec(migration.replaceAll("--> statement-breakpoint", ""));
   const plan = trustDb.prepare("EXPLAIN QUERY PLAN SELECT substr(occurred_at, 1, 10) FROM events WHERE kind IN ('paid_call', 'service_error') AND occurred_at >= datetime('now', '-30 days')").all();
   assert.match(plan.map((step) => step.detail).join(" "), /USING COVERING INDEX idx_events_kind_occurred_at/);
@@ -116,6 +120,7 @@ test("commercial metrics require a private bearer token and exclude payer identi
   assert.match(dashboard, /revenueByEndpoint/);
   assert.match(dashboard, /lastPaidAt/);
   assert.match(dashboard, /dailyActivity/);
+  assert.match(dashboard, /row\.kind === "service_error" && row\.statusCode !== 503/);
   assert.match(dashboard, /lastUtcDays\(30\)/);
   assert.match(dashboard, /paymentChallenges: challengeEvents\.filter/);
   assert.match(dashboard, /mcpInitializations/);
@@ -266,6 +271,11 @@ test("remote MCP surface exposes the strongest products with x402 payment metada
   assert.match(route, /originAllowed/);
   assert.match(route, /mcp_initialize/);
   assert.match(route, /mcp_tools_list/);
+  assert.match(route, /methodNotAllowed/);
+  assert.match(route, /status: 405/);
+  assert.match(route, /Allow: "POST"/);
+  assert.match(route, /export const GET = methodNotAllowed/);
+  assert.match(route, /export const DELETE = methodNotAllowed/);
   assert.match(mcp, /createPaymentWrapper/);
   assert.match(mcp, /createCdpFacilitatorClient/);
   assert.match(mcp, /bazaarResourceServerExtension/);
@@ -429,6 +439,8 @@ test("every HTTP payment challenge uses centralized privacy-safe attribution and
   for (const routeName of routes) {
     const route = await readFile(new URL(`app/api/${routeName}/route.ts`, root), "utf8");
     assert.match(route, /protectPaymentChallenge/);
+    assert.match(route, /recordPaymentProtocolError/);
+    assert.doesNotMatch(route, /recordServiceError\(request, [^\n]+503/);
     assert.doesNotMatch(route, /recordPaymentChallenge/);
     assert.doesNotMatch(route, /kind: identity\.isSelfTest \? "test_challenge"/);
   }

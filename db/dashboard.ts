@@ -82,7 +82,7 @@ export async function getDashboardSnapshot(): Promise<DashboardSnapshot> {
     const mcpPaymentAttempts = eventRows.filter((row) => row.kind === "mcp_payment_attempt");
     const mcpChallengeEvents = eventRows.filter((row) => row.kind === "mcp_payment_challenge");
     const mcpPaymentFailures = eventRows.filter((row) => row.kind === "mcp_payment_failure");
-    const serviceErrors = eventRows.filter((row) => row.kind === "service_error");
+    const serviceErrors = eventRows.filter((row) => row.kind === "service_error" && row.statusCode !== 503);
     const mcpPaidEvents = customerEvents.filter((row) => row.endpoint?.startsWith("/api/mcp#") || row.endpoint?.startsWith("/mcp#"));
     const mcpAgentIds = new Set(
       [...mcpInitializations, ...mcpToolLists, ...mcpToolCalls, ...mcpChallengeEvents].map((row) => row.agentId).filter((id): id is string => Boolean(id)),
