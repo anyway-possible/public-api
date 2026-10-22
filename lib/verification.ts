@@ -161,7 +161,25 @@ export async function checkUrl(input: Pick<VerificationInput, "url" | "expectedS
     throw new Error("expectedStatus must be an integer from 100 to 599");
   }
   const started = Date.now();
-  const { response, finalUrl, redirectChain } = await fetchPublic(requestedUrl);
+  let fetched: Awaited<ReturnType<typeof fetchPublic>>;
+  try {
+    fetched = await fetchPublic(requestedUrl);
+  } catch (error) {
+    return {
+      reachable: false,
+      verified: false,
+      requestedUrl: requestedUrl.toString(),
+      finalUrl: requestedUrl.toString(),
+      status: null,
+      statusMatch: input.expectedStatus === undefined ? null : false,
+      redirectChain: [requestedUrl.toString()],
+      responseTimeMs: Date.now() - started,
+      contentType: "unknown",
+      observedAt: new Date().toISOString(),
+      error: error instanceof Error ? error.message : "The target could not be reached.",
+    };
+  }
+  const { response, finalUrl, redirectChain } = fetched;
   await response.body?.cancel().catch(() => undefined);
   const statusMatch = input.expectedStatus === undefined ? null : response.status === input.expectedStatus;
   return {
@@ -188,7 +206,37 @@ export async function verifyUrl(input: VerificationInput) {
   }
 
   const started = Date.now();
-  const { response, finalUrl, redirectChain } = await fetchPublic(requestedUrl);
+  let fetched: Awaited<ReturnType<typeof fetchPublic>>;
+  try {
+    fetched = await fetchPublic(requestedUrl);
+  } catch (error) {
+    const observedAt = new Date().toISOString();
+    const message = error instanceof Error ? error.message : "The target could not be reached.";
+    const contentSha256 = await sha256("");
+    const receiptId = await sha256(JSON.stringify({ requestedUrl: requestedUrl.toString(), status: null, error: message, observedAt }));
+    return {
+      verified: false,
+      requestedUrl: requestedUrl.toString(),
+      finalUrl: requestedUrl.toString(),
+      status: null,
+      statusMatch: input.expectedStatus === undefined ? null : false,
+      expectedTextFound: input.expectedText === undefined ? null : false,
+      title: null,
+      description: null,
+      canonicalUrl: null,
+      contentType: "unknown",
+      contentSha256,
+      receiptId,
+      redirectChain: [requestedUrl.toString()],
+      responseTimeMs: Date.now() - started,
+      bytesInspected: 0,
+      observedAt,
+      responseHeaders: { etag: null, lastModified: null, cacheControl: null, contentLanguage: null },
+      evidence: [{ source: requestedUrl.toString(), observedAt, contentSha256 }],
+      error: message,
+    };
+  }
+  const { response, finalUrl, redirectChain } = fetched;
   const contentType = response.headers.get("content-type")?.split(";")[0] ?? "unknown";
   const body = await readLimitedText(response);
   const title = extractTag(body, /<title[^>]*>([\s\S]*?)<\/title>/i, 240);

@@ -87,12 +87,16 @@ test("public trust evidence is aggregate, defined, and indexed for bounded queri
   assert.match(route, /Deprecated compatibility field/);
   assert.match(route, /must not be interpreted as reliability, conversion, or uptime/i);
   assert.match(route, /recordedPaymentProtocolErrors/);
+  assert.match(route, /recordedTargetObservationFailures/);
+  assert.match(route, /Aggregate execution-error counts by endpoint, coarse client class/);
   assert.match(status, /30-DAY RECORDED EVENTS/);
-  assert.match(status, /post-payment product execution failures/);
+  assert.match(status, /Only failures in our own product execution/);
   assert.doesNotMatch(status, /observedSuccessRate/);
   assert.match(route, /No wallet addresses, agent identifiers, transaction hashes, revenue, or request contents/);
   assert.match(query, /kind IN \('paid_call', 'service_error', 'payment_protocol_error'\)/);
   assert.match(query, /status_code = 503/);
+  assert.match(query, /endpoint IN \('\/api\/check', '\/api\/verify'\) AND status_code = 502/);
+  assert.match(query, /GROUP BY endpoint, COALESCE\(client_type, 'unattributed'\), status_code/);
   assert.match(query, /'-30 days'/);
   assert.match(schema, /idx_events_kind_occurred_at/);
   assert.match(migration, /idx_events_kind_occurred_at/);
@@ -121,6 +125,7 @@ test("commercial metrics require a private bearer token and exclude payer identi
   assert.match(dashboard, /lastPaidAt/);
   assert.match(dashboard, /dailyActivity/);
   assert.match(dashboard, /row\.kind === "service_error" && row\.statusCode !== 503/);
+  assert.match(dashboard, /\["\/api\/check", "\/api\/verify"\]\.includes/);
   assert.match(dashboard, /lastUtcDays\(30\)/);
   assert.match(dashboard, /paymentChallenges: challengeEvents\.filter/);
   assert.match(dashboard, /mcpInitializations/);
@@ -700,6 +705,8 @@ test("verification blocks local targets and bounds response size", async () => {
   assert.match(verifier, /private and local network targets/);
   assert.match(verifier, /MAX_BYTES = 128 \* 1024/);
   assert.match(verifier, /MAX_REDIRECTS = 3/);
+  assert.match(verifier, /reachable: false/);
+  assert.match(verifier, /The target could not be reached/);
   assert.match(verifier, /cloudflare-dns\.com\/dns-query/);
   assert.match(verifier, /assertPublicDns/);
   assert.match(verifier, /a === 100 && b >= 64/);
